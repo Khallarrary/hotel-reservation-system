@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using HotelApp.Domain;
-using HotelApp.Application;
 using Microsoft.EntityFrameworkCore;
+using HotelApp.Application.Interfaces;
 
 namespace HotelApp.Infrastructure
 {
@@ -27,6 +27,11 @@ namespace HotelApp.Infrastructure
         {
             await _context.Reservas.AddAsync(reserva);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Reserva>> ListarReservasAsync()
+        {
+            return await _context.Reservas.ToListAsync();
         }
     }
 }

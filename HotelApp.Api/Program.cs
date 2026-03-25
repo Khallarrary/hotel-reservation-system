@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using HotelApp.Infrastructure;
-using HotelApp.Application;
+using HotelApp.Application.Services;
+using HotelApp.Application.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // DI
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<ReservaService>();
+
+builder.Services.AddScoped<IQuartoRepository, QuartoRepository>();
+builder.Services.AddScoped<QuartoService>();
 
 builder.Services.AddControllers();
 

@@ -1,4 +1,4 @@
-﻿using HotelApp.Application;
+﻿using HotelApp.Application.Interfaces;
 using HotelApp.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -39,8 +39,8 @@ namespace HotelApp.Infrastructure
         {
             var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoId);
 
-            if(quarto == null)
-                return;
+            if (quarto == null)
+                throw new Exception("Quarto não encontrado");
 
             _context.Quartos.Remove(quarto);
             await _context.SaveChangesAsync();
