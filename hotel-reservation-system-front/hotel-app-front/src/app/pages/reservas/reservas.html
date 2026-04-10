@@ -1,0 +1,56 @@
+<h2>Mapa de Reservas</h2>
+
+<div class="acoes">
+  <button (click)="mostrarForm = !mostrarForm">
+    + Criar Quarto
+  </button>
+</div>
+
+<div *ngIf="mostrarForm" class="form-quarto">
+  <h3>Novo Quarto</h3>
+
+  <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Número">
+  <input type="text" [(ngModel)]="novoQuarto.tipo" placeholder="Tipo">
+
+  <button type="button" (click)="criarQuarto()">Salvar</button>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="quarto-label">Quarto</div>
+
+  <div class="dias">
+    <div *ngFor="let dia of dias" class="dia">
+      {{ dia.getDate() }}/{{ dia.getMonth() + 1 }}
+    </div>
+  </div>
+</div>
+
+<!-- LINHAS -->
+<div *ngFor="let quarto of quartos" class="linha">
+
+  <div class="quarto-label">
+    <strong>{{ quarto.numero }}</strong> -
+    <small>{{ quarto.tipo }}</small>
+  </div>
+
+ 
+
+  <div class="timeline">
+
+    <!-- grid base -->
+    <div *ngFor="let dia of dias" class="celula"></div>
+
+    <!-- blocos -->
+    <div *ngFor="let reserva of quarto.reservaList || []"
+         class="reserva-bloco"
+         [style.left.%]="getOffset(reserva) * (100 / dias.length)"
+         [style.width.%]="getDuracao(reserva) * (100 / dias.length)">
+
+      {{ reserva.nomeDoHospede }}
+
+    </div>
+
+  </div>
+
+</div>
