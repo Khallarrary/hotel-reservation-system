@@ -1,101 +1,134 @@
 # Hotel Reservation System
 
-API backend para gerenciamento de reservas de hotel, desenvolvida com .NET seguindo princípios de Clean Architecture.
+Sistema de gerenciamento de reservas de hotel com visualização em timeline (estilo PMS), desenvolvido com .NET e Angular.
 
-## Tecnologias utilizadas
-
-- .NET / ASP.NET Core  
-- Entity Framework Core  
-- PostgreSQL  
-- Swagger (documentação da API)
-
-## Arquitetura
-
-O projeto foi estruturado utilizando Clean Architecture, separando responsabilidades em camadas:
-
-- Domain → Entidades e regras de negócio  
-- Application → Serviços e interfaces  
-- Infrastructure → Acesso a dados (EF Core, repositórios)  
-- API → Controllers e exposição dos endpoints  
+---
 
 ## Funcionalidades
 
-- Cadastro de reservas  
-- Validação de conflito de datas (não permite reservas sobrepostas)  
-- Integração com banco de dados PostgreSQL  
-- Estrutura preparada para CRUD de quartos  
-- CRUD completo de quartos (em desenvolvimento)
+* Cadastro de quartos
+* Criação de reservas com validação de conflitos
+* Visualização de reservas em formato de mapa (timeline)
+* Identificação visual de períodos ocupados por quarto
+* API com tratamento global de exceções
+* Integração completa entre backend e frontend
 
-## Como executar o projeto
+---
 
-### 1. Clonar o repositório
+## Destaque do Projeto
+
+O principal diferencial deste projeto é a implementação de um mapa de reservas com blocos contínuos, inspirado em sistemas profissionais de hotelaria (PMS).
+
+As reservas são exibidas como blocos posicionados dinamicamente com base em:
+
+* Data de check-in (offset)
+* Duração da estadia (width)
+
+---
+
+## Tecnologias Utilizadas
+
+### Backend
+
+* .NET (ASP.NET Core)
+* Entity Framework Core
+* PostgreSQL
+* Arquitetura em camadas (Domain, Application, Infrastructure)
+* Middleware global para tratamento de exceções
+
+### Frontend
+
+* Angular (Standalone Components)
+* TypeScript
+* HTML e CSS (Grid e posicionamento absoluto)
+* Consumo de API REST
+
+---
+
+## Estrutura da API
+
+### Quartos
+
+* GET /api/Quarto → Lista quartos com reservas
+* POST /api/Quarto → Cria novo quarto
+* DELETE /api/Quarto/{id} → Remove quarto
+
+### Reservas
+
+* GET /api/Reserva
+* POST /api/Reserva
+
+---
+
+## Como rodar o projeto
+
+### Backend
 
 ```bash
-git clone https://github.com/Khallarrary/hotel-reservation-system.git
-```
-
-### 2. Configurar a conexão com o banco
-
-No arquivo `appsettings.json`, configure sua connection string:
-
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Host=localhost;Port=5432;Database=hotelapp;Username=seu_usuario;Password=sua_senha"
-}
-```
-
-### 3. Aplicar as migrations
-
-```bash
-dotnet ef database update
-```
-
-### 4. Executar a aplicação
-
-```bash
+cd hotel-reservation-system
 dotnet run
 ```
 
-### 5. Acessar o Swagger
+Acesse:
 
-A API será aberta automaticamente em:
-
-https://localhost:{porta}/swagger
-
-## Exemplos de uso
-
-### Criar uma reserva
-
-```json
-{
-  "quartoId": 1,
-  "checkIn": "2026-03-25",
-  "checkOut": "2026-03-28",
-  "nome": "João"
-}
+```
+https://localhost:7265/swagger
 ```
 
-## Objetivo do projeto
+---
 
-Este projeto foi desenvolvido como parte do meu processo de transição de carreira para desenvolvimento de software, com foco em:
+### Frontend
 
-- boas práticas de backend  
-- organização de código  
-- arquitetura escalável  
-- integração com banco de dados real  
+```bash
+cd hotel-app-front
+ng serve
+```
+
+Acesse:
+
+```
+http://localhost:4200
+```
+
+---
+
+## Regras de Negócio
+
+* Não é permitido criar reservas com datas inválidas
+* Não é permitido conflito de reservas no mesmo quarto
+* Quartos devem possuir número e tipo válidos
+* Tratamento de erros padronizado via middleware
+
+---
+
+## Aprendizados
+
+Durante o desenvolvimento foram abordados:
+
+* Integração frontend e backend
+* Modelagem de domínio
+* Validação de regras de negócio
+* Manipulação de datas e intervalos
+* Renderização dinâmica baseada em tempo (timeline)
+* Debug de problemas reais (binding, validação e change detection)
+
+---
 
 ## Próximos passos
 
-- Implementar CRUD completo de quartos  
-- Melhorar validações de negócio  
-- Adicionar autenticação  
-- Criar front-end (React) com mapa de reservas  
+* Criar reserva diretamente pelo mapa
+* Melhorias de experiência do usuário
+* Separação de DTOs por responsabilidade
+* Implementação de autenticação
 
-## Autor
+---
 
-Khallarrary  
-https://github.com/Khallarrary
+## Preview
+
+Adicionar imagem do sistema
+
+---
 
 ## Licença
 
-Este projeto é para fins de estudo e portfólio.
+Projeto desenvolvido para fins de estudo e portfólio.
