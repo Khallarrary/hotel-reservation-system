@@ -12,13 +12,13 @@ public class ReservaService
 
     public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo)
     {
-        _repo = repo;
-        _quartoRepo = quartoRepo;
+        _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
     }
 
-    public async Task<List<ReservaDto>> ListarReservas()
+    public async Task<List<ReservaDto>> ListarReservas() 
     {
-        var reserva = await _repo.ListarReservasAsync();
+        var reserva = await _repo.ListarReservasAsync() ?? new List<Reserva>();
 
         return reserva.Select(reserva => new ReservaDto
         {
@@ -34,6 +34,16 @@ public class ReservaService
 
     public async Task CriarReserva(DateTime checkIn, DateTime checkOut, string nome, int quartoId)
     {
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            throw new ArgumentException("Nome do Hospede é obrigatorio.");
+        }
+
+        if (quartoId == 0) 
+        {
+            throw new ArgumentException("Quarto inválido.");
+        }
+
         var quarto = await _quartoRepo.ObterPorIdAsync(quartoId);
 
         if (quarto == null)
@@ -42,13 +52,15 @@ public class ReservaService
 
         }
 
-
-        var reservas = await _repo.ObterPorQuartoAsync(quartoId);
+        var reservas = await _repo.ObterPorQuartoAsync(quartoId) ?? new List<Reserva>();
         
 
         var nova = new Reserva(checkIn, checkOut, nome, quartoId);
 
         foreach (var reserva in reservas) {
+
+            if (reserva is null)
+                continue;
 
             if (nova.ConflitaCom(reserva)) 
             {

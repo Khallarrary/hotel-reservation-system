@@ -10,6 +10,12 @@ public class Reserva
 
     public bool ConflitaCom(Reserva outra)
     {
+        if (outra is null)
+            throw new ArgumentNullException(nameof(outra));
+
+        if (QuartoId != outra.QuartoId)
+            return false;
+
         return CheckIn < outra.CheckOut && CheckOut > outra.CheckIn;
     }
     public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId)
@@ -18,29 +24,26 @@ public class Reserva
         {
             throw new ArgumentException("Data de check-out deve ser superior a data de in   ");
         }
-       
-            CheckIn = checkIn;
-            CheckOut = checkOut;
-      
+
+        if(checkIn < DateTime.UtcNow)
+        {
+            throw new ArgumentException("A data de check-in não pode estar no passado.");
+        }   
 
         if (string.IsNullOrWhiteSpace(nomeDoHospede))
         {
             throw new ArgumentException("Reserva deve conter um nome valido");
         }
-        else { 
         
-            NomeDoHospede = nomeDoHospede;
-        }
-
         if (quartoId <= 0)
         {
-
             throw new ArgumentException("Reserva deve conter um quarto valido");
         }
-        else { 
-        
-            QuartoId = quartoId;
-        }
+
+        CheckIn = checkIn;
+        CheckOut = checkOut;
+        NomeDoHospede = nomeDoHospede.Trim();
+        QuartoId = quartoId;
 
 
     }
