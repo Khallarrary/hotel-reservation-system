@@ -8,16 +8,31 @@ public class Reserva
     public DateTime CheckOut { get; private set; }
     public string NomeDoHospede { get; private set; }
 
+
+    /// <summary>
+    /// Verifica se esta reserva entra em conflito com outra reserva do mesmo quarto.
+    /// Duas reservas conflitam quando há sobreposição de datas.
+    /// </summary>
     public bool ConflitaCom(Reserva outra)
     {
         if (outra is null)
             throw new ArgumentNullException(nameof(outra));
 
+        // Reservas de quartos diferentes nunca entram em conflito
         if (QuartoId != outra.QuartoId)
             return false;
 
+        // Regra de sobreposição de intervalo de datas
         return CheckIn < outra.CheckOut && CheckOut > outra.CheckIn;
     }
+
+    /// <summary>
+    /// Cria uma nova reserva validando regras de negócio:
+    /// - Check-out deve ser maior que check-in
+    /// - Check-in não pode estar no passado
+    /// - Nome do hóspede deve ser válido
+    /// - Quarto deve ser válido
+    /// </summary>
     public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId)
     {
         if (checkOut <= checkIn)
@@ -25,7 +40,8 @@ public class Reserva
             throw new ArgumentException("Data de check-out deve ser superior a data de in   ");
         }
 
-        if(checkIn < DateTime.UtcNow)
+        // Evita reservas com datas já expiradas
+        if (checkIn < DateTime.UtcNow)
         {
             throw new ArgumentException("A data de check-in não pode estar no passado.");
         }   
