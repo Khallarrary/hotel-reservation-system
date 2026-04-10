@@ -6,9 +6,9 @@ namespace HotelApp.Application.DTOs
 {
     public class QuartoDto
     {
-        public string Numero { get; set; }
-        public string Tipo { get; set; }
-        public List<ReservaDto> ReservaList
+        public string numero { get; set; }
+        public string tipo { get; set; }
+        public List<ReservaDto>? ReservaList
         {
             get; set;
         }

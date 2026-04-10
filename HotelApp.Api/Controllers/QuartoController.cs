@@ -41,7 +41,7 @@ namespace HotelApp.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] QuartoDto request)
         {
-            await _service.Criar(request.Numero, request.Tipo);
+            await _service.Criar(request.numero, request.tipo);
             return Ok();
         }
 

@@ -22,7 +22,7 @@ public class ReservaService
     }
 
 
-    /// <summary>
+        /// <summary>
     /// Retorna todas as reservas cadastradas.
     /// </summary>
     public async Task<List<ReservaDto>> ListarReservas() 
@@ -49,13 +49,16 @@ public class ReservaService
     /// </summary>
     public async Task CriarReserva(DateTime checkIn, DateTime checkOut, string nome, int quartoId)
     {
+        checkIn = DateTime.SpecifyKind(checkIn, DateTimeKind.Utc);
+        checkOut = DateTime.SpecifyKind(checkOut, DateTimeKind.Utc);
+
         // Validação básica de entrada
         if (string.IsNullOrWhiteSpace(nome))
         {
             throw new ArgumentException("Nome do Hospede é obrigatorio.");
         }
 
-        if (quartoId == 0) 
+        if (quartoId <= 0) 
         {
             throw new ArgumentException("Quarto inválido.");
         }
