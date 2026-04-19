@@ -11,4 +11,11 @@ public class AppDbContext : DbContext
     {
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Quarto>()
+            .HasIndex(q => q.Numero)
+            .IsUnique();
+    }
+
 }

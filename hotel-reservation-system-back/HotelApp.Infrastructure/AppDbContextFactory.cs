@@ -9,7 +9,11 @@ namespace HotelApp.Infrastructure
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=hotelapp;Username=postgres;Password=Slipknot12");
+            var connectionString = Environment.GetEnvironmentVariable("HOTELAPP_CONNECTION")
+                ?? throw new InvalidOperationException(
+                    "Configure a variável de ambiente HOTELAPP_CONNECTION com a connection string do PostgreSQL.");
+
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }

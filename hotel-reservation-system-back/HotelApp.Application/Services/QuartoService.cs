@@ -1,10 +1,11 @@
-﻿using System;
+﻿using HotelApp.Application.DTOs;
+using HotelApp.Application.Exceptions;
+using HotelApp.Application.Interfaces;
+using HotelApp.Domain;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using HotelApp.Domain;
-using HotelApp.Application.DTOs;
-using HotelApp.Application.Interfaces;
 
 namespace HotelApp.Application.Services
 {
@@ -46,13 +47,20 @@ namespace HotelApp.Application.Services
             return resultado;
         }
 
-        public async Task<Quarto>? ObterPorId(int id)
+        public async Task<Quarto?> ObterPorId(int id)
         {
             return await _repo.ObterPorIdAsync(id);
         }
 
         public async Task Criar(string numero, string tipo)
         {
+            var numeroJaExiste = await _repo.ExisteNumeroAsync(numero);
+
+            if (numeroJaExiste)
+            {
+                throw new ConflictException("Já existe um quarto com esse numero");
+            }
+
             var quarto = new Quarto(numero, tipo);
             await _repo.AdicionarAsync(quarto);
         }

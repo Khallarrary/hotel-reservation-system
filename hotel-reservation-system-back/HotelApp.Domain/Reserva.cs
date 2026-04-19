@@ -8,6 +8,10 @@ public class Reserva
     public DateTime CheckOut { get; private set; }
     public string NomeDoHospede { get; private set; }
 
+    private Reserva()
+    {
+        NomeDoHospede = string.Empty;
+    }
 
     /// <summary>
     /// Verifica se esta reserva entra em conflito com outra reserva do mesmo quarto.
@@ -41,7 +45,7 @@ public class Reserva
         }
 
         // Evita reservas com datas já expiradas
-        if (checkIn < DateTime.UtcNow)
+        if (checkIn.Date < DateTime.UtcNow.Date)
         {
             throw new ArgumentException("A data de check-in não pode estar no passado.");
         }   
@@ -55,6 +59,12 @@ public class Reserva
         {
             throw new ArgumentException("Reserva deve conter um quarto valido");
         }
+
+        if ((checkOut.Date - checkIn.Date).TotalDays > 30)
+        {
+            throw new ArgumentException("Reserva não pode ultrapassar 30 dias.");
+        }
+
 
         CheckIn = checkIn;
         CheckOut = checkOut;

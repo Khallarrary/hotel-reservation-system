@@ -45,5 +45,10 @@ namespace HotelApp.Infrastructure
             _context.Quartos.Remove(quarto);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> ExisteNumeroAsync(string numero)
+        {
+            return await _context.Quartos.AnyAsync(q => q.Numero == numero);
+        }
     }
 }

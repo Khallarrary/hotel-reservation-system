@@ -102,4 +102,30 @@ public class ReservaTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Fact]
+    public void Deve_Permitir_CheckIn_Na_Data_De_Hoje()
+    {
+        Action action = () => new Reserva(
+            DateTime.UtcNow.Date,
+            DateTime.UtcNow.Date.AddDays(1),
+            "João",
+            1
+        );
+
+        action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Deve_Lancar_Erro_Quando_Reserva_Ultrapassar_30_Dias()
+    {
+        Action action = () => new Reserva(
+            DateTime.UtcNow.Date.AddDays(1),
+            DateTime.UtcNow.Date.AddDays(32),
+            "João",
+            1
+        );
+
+        action.Should().Throw<ArgumentException>();
+    }
+
 }
