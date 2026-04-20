@@ -65,8 +65,41 @@ namespace HotelApp.Application.Services
             await _repo.AdicionarAsync(quarto);
         }
 
-        public async Task Remover(int id) { 
+        public async Task RemoverPorId(int id) {
+
+            var quarto = await _repo.ObterPorIdAsync(id);
+
+            if (quarto == null)
+                throw new NotFoundException("Quarto não encontrado");
+
+            var reservasQuarto = await _reservaRepo.ObterPorQuartoAsync(id);
+
+            if (reservasQuarto.Any())
+            {
+                throw new ConflictException("Quarto possui reserva. Não pode ser removido.");
+            }
+
             await _repo.RemoverAsync(id);
+        }
+
+        public async Task<Quarto?> ObterPorNumero(string numero)
+        {
+            return await _repo.ObterPorNumeroAsync(numero);
+        }
+
+        public async Task RemoverPorNumero(string numero)
+        {
+            var quarto = await _repo.ObterPorNumeroAsync(numero);
+
+            if (quarto == null)
+            {
+                throw new NotFoundException("Quarto não encontrado");
+            }
+
+         
+            await RemoverPorId(quarto.Id);
+
+
         }
     }
 }

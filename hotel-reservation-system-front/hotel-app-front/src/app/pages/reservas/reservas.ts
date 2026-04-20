@@ -28,12 +28,14 @@ export class ReservasComponent implements OnInit
 
 
   gerarDias() {
-  const inicio = new Date(2026, 3, 10);
+  const inicio = new Date();
+  inicio.setHours(0, 0, 0, 0);
+
   const totalDias = 10;
 
-  this.dias = []
+  this.dias = [];
 
-  for (let i = 0; i < totalDias; i++){
+  for (let i = 0; i < totalDias; i++) {
     const d = new Date(inicio);
     d.setDate(inicio.getDate() + i);
     this.dias.push(d);
@@ -92,21 +94,62 @@ criarReserva() {
 getDuracao(reserva: any): number {
   const checkIn = new Date(reserva.checkIn);
   const checkOut = new Date(reserva.checkOut);
+  const inicioTimeLine = this.dias[0];
+  const fimTimeLine = new Date(inicioTimeLine);
+  fimTimeLine.setDate(inicioTimeLine.getDate() + this.dias.length)
 
-  const diff = checkOut.getTime() - checkIn.getTime();
-  return diff / (1000 * 60 * 60 * 24);
+  let inicioVisual = inicioTimeLine;
+
+  if(checkIn > inicioTimeLine){
+     inicioVisual = checkIn;
+  } 
+
+let fimVisual =fimTimeLine;
+
+  if(checkOut < fimTimeLine){
+     fimVisual = checkOut;
+  } 
+
+  
+
+   
+  const diff = fimVisual.getTime() - inicioVisual.getTime();
+  let duracao = diff / (1000 * 60 * 60 * 24);
+
+  if(checkIn < inicioTimeLine){
+    duracao = duracao + 0.5;
+  }
+
+  return duracao;
 }
 
 getOffset(reserva: any): number {
-  const inicioTimeline = this.dias[0];
-
+  const inicioTimeLine = this.dias[0];
+  
   const checkIn = new Date(reserva.checkIn);
+  let inicioVisual = inicioTimeLine;
 
-  const diff = checkIn.getTime() - inicioTimeline.getTime();
+  if(checkIn > inicioTimeLine){
+     inicioVisual = checkIn;
+  } 
+
+  if(checkIn < inicioTimeLine){
+    return -0.5;
+  }
+
+  const diff = inicioVisual.getTime() - inicioTimeLine.getTime();
   return diff / (1000 * 60 * 60 * 24);
 }
 
 mostrarForm = false;
+
+alterarFormularioQuarto() {
+  this.mostrarForm = !this.mostrarForm;
+
+  if(!this.mostrarForm){
+    this.novoQuarto = { numero: '', tipo: ''};
+  }
+}
 
 novoQuarto = {
   numero: '',
@@ -115,7 +158,10 @@ novoQuarto = {
 
 criarQuarto() {
 
-  console.log('CLICOU', this.novoQuarto);
+  if (!this.novoQuarto.numero.trim() || !this.novoQuarto.tipo.trim()) {
+  alert('Preencha número e tipo do quarto.');
+  return;
+}
 
   this.quartoService.criar(this.novoQuarto).subscribe({
     next: () => {
@@ -124,7 +170,7 @@ criarQuarto() {
       this.mostrarForm = false;
 
       this.novoQuarto = { numero: '', tipo: '' };
-      alert(this.novoQuarto);
+      
     },
     error: (err) => {
       console.log(err);

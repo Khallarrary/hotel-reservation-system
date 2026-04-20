@@ -39,8 +39,9 @@ namespace HotelApp.Infrastructure
         {
             var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoId);
 
-            if (quarto == null)
-                throw new Exception("Quarto não encontrado");
+            if (quarto == null) {
+                return;
+            }
 
             _context.Quartos.Remove(quarto);
             await _context.SaveChangesAsync();
@@ -50,5 +51,13 @@ namespace HotelApp.Infrastructure
         {
             return await _context.Quartos.AnyAsync(q => q.Numero == numero);
         }
+
+        public async Task<Quarto?> ObterPorNumeroAsync(string numero)
+        {
+            return await _context.Quartos
+                .FirstOrDefaultAsync(q => q.Numero == numero);
+        }
+
+   
     }
 }

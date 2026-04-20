@@ -1,56 +1,55 @@
-<h2>Mapa de Reservas</h2>
+<section class="reservas-container">
+  <header class="page-header">
+    <h2>Mapa de Reservas</h2>
+    <button class="btn-primary" (click)="alterarFormularioQuarto()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      {{ mostrarForm ? 'Cancelar' : 'Criar Quarto' }}
+    </button>
+  </header>
 
-<div class="acoes">
-  <button (click)="mostrarForm = !mostrarForm">
-    + Criar Quarto
-  </button>
-</div>
+  <div *ngIf="mostrarForm" class="form-card">
+    <div class="card-header">
+      <h3>Novo Quarto</h3>
+    </div>
+    <form class="form-grid">
+      <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Número do quarto" name="numero">
+      <input type="text" [(ngModel)]="novoQuarto.tipo" placeholder="Tipo (ex: Suite Luxo)" name="tipo">
+      <button type="button" class="btn-secondary" (click)="criarQuarto()">Salvar Quarto</button>
+    </form>
+  </div>
 
-<div *ngIf="mostrarForm" class="form-quarto">
-  <h3>Novo Quarto</h3>
-
-  <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Número">
-  <input type="text" [(ngModel)]="novoQuarto.tipo" placeholder="Tipo">
-
-  <button type="button" (click)="criarQuarto()">Salvar</button>
-</div>
-
-<!-- HEADER -->
-<div class="header">
-  <div class="quarto-label">Quarto</div>
-
-  <div class="dias">
-    <div *ngFor="let dia of dias" class="dia">
-      {{ dia.getDate() }}/{{ dia.getMonth() + 1 }}
+  <!-- HEADER -->
+  <div class="timeline-header">
+    <div class="quarto-label">Quartos</div>
+    <div class="dias-header">
+      <div *ngFor="let dia of dias" class="dia-header">
+        {{ dia | date:'dd/MM' }}
+        <div class="dia-weekday">{{ dia | date:'EEE' }}</div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- LINHAS -->
-<div *ngFor="let quarto of quartos" class="linha">
-
-  <div class="quarto-label">
-    <strong>{{ quarto.numero }}</strong> -
-    <small>{{ quarto.tipo }}</small>
-  </div>
-
- 
-
-  <div class="timeline">
-
-    <!-- grid base -->
-    <div *ngFor="let dia of dias" class="celula"></div>
-
-    <!-- blocos -->
-    <div *ngFor="let reserva of quarto.reservaList || []"
-         class="reserva-bloco"
-         [style.left.%]="getOffset(reserva) * (100 / dias.length)"
-         [style.width.%]="getDuracao(reserva) * (100 / dias.length)">
-
-      {{ reserva.nomeDoHospede }}
-
+  <!-- LINHAS DE QUARTOS -->
+  <div *ngFor="let quarto of quartos" class="quarto-row">
+    <div class="quarto-info">
+      <div class="quarto-number">{{ quarto.numero }}</div>
+      <div class="quarto-type">{{ quarto.tipo }}</div>
     </div>
 
+    <div class="timeline-row">
+      <div *ngFor="let dia of dias" class="timeline-cell"></div>
+      
+      <!-- Blocos de reservas -->
+      <div *ngFor="let reserva of quarto.reservaList || []" 
+           class="reserva-card"
+           [style.left.%]="getOffset(reserva) * (100 / dias.length)"
+           [style.width.%]="getDuracao(reserva) * (100 / dias.length)"
+           title="{{ reserva.nomeDoHospede }} ({{ getDuracao(reserva) | number:'1.0-0' }} dias)">
+        {{ reserva.nomeDoHospede }}
+      </div>
+    </div>
   </div>
-
-</div>
+</section>

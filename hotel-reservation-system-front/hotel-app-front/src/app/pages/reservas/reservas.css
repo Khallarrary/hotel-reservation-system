@@ -1,100 +1,268 @@
-.header {
+.reservas-container {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--navy-800), var(--navy-900));
+  color: var(--white);
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
-  margin-bottom: 6px;
+  gap: 0.5rem;
+  transition: var(--transition);
 }
 
-.quarto-label {
-  width: 80px;
-  min-width: 80px;
-  font-size: 11px;
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: var(--navy-900);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #888;
-  padding-left: 4px;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  width: 100%;
 }
 
-.dias {
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.form-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.card-header h3 {
+  margin: 0 0 1rem 0;
+  color: var(--navy-900);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.form-grid input {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--gray-200);
+}
+
+.timeline-header {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--gray-200);
+}
+
+.timeline-header .quarto-label {
+  min-width: 120px;
+  font-weight: 600;
+  color: var(--navy-900);
+  padding-right: 1.5rem;
+  font-size: 1rem;
+  border-right: 2px solid var(--gray-200);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.dias-header {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  flex: 1;
+  gap: 0.5rem;
+  margin-left: 1.5rem;
 }
 
-.dia {
+.dia-header {
   text-align: center;
-  font-size: 11px;
+  padding: 0.75rem 0.25rem;
+  background: linear-gradient(135deg, var(--cream-100), var(--white));
+  border-radius: 0.5rem;
   font-weight: 500;
-  color: #888;
-  padding-bottom: 6px;
-  border-bottom: 0.5px solid #e0e0e0;
+  font-size: 0.85rem;
+  color: var(--navy-700);
+  border: 1px solid var(--gray-200);
 }
 
-.linha {
+.dia-weekday {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+.quarto-row {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  transition: var(--transition);
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
+  gap: 2.5rem;
 }
 
-.quarto-label {
-  width: 80px;
-  min-width: 80px;
+.quarto-row .quarto-info {
+  min-width: 120px;
+  font-weight: 600;
+  color: var(--navy-900);
+  padding-right: 1.5rem;
+  border-right: 2px solid var(--gray-200);
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.quarto-row:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.quarto-info {
   font-weight: 500;
-  font-size: 13px;
-  color: #111;
-  padding-left: 4px;
 }
 
-.timeline {
+.quarto-number {
+  font-size: 1.1rem;
+  color: var(--navy-900);
+  font-family: 'Playfair Display', serif;
+}
+
+.quarto-type {
+  color: var(--navy-700);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.timeline-row {
   position: relative;
   flex: 1;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  min-height: 30px; /* 👈 IMPORTANTE */
+  gap: 2px;
+
+  height: 60px;
+  background: var(--gray-100);
+  border-radius: 0.5rem;
+  padding: 1px;
+  margin-left: 1.5rem;
 }
 
-.celula {
-  border: 0.5px solid #e8e8e8;
-  border-left: none;
-  height: 36px;
-  transition: background 0.1s;
+.timeline-cell {
+  background: var(--white);
+  border-radius: 0.375rem;
+  transition: var(--transition);
 }
 
-.celula:first-child {
-  border-left: 0.5px solid #e8e8e8;
+.quarto-row:hover .timeline-cell {
+  background: color-mix(in srgb, var(--cream-100) 80%, transparent);
 }
 
-.linha:hover .celula {
-  background: #fafafa;
-}
-
-.reserva-bloco {
+.reserva-card {
   position: absolute;
-  top: 4px;
-  height: 28px;
-  background: #1D9E75;
-  color: #e1f5ee;
-  border-radius: 5px;
-  font-size: 11px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 42px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--navy-800) 0%, var(--navy-900) 100%);
+  color: var(--white);
+  border-radius: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 8px;
+  padding: 0 0.75rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: inset 0 0 0 0.5px #0F6E56;
-  cursor: default;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: var(--transition);
+  cursor: pointer;
 }
 
-.acoes {
-  margin-bottom: 10px;
+.reserva-card:hover {
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: var(--shadow-xl);
 }
 
-.form-quarto {
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  width: 200px;
+/* Responsive */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-header, .quarto-row {
+    grid-template-columns: 100px 1fr;
+  }
+
+  .dias-header {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem;
+  }
+
+  .timeline-row {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .reservas-container {
+    padding: 0 0.5rem;
+    margin: 1rem auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .timeline-row {
+    height: 50px;
+  }
+
+  .reserva-card {
+    height: 36px;
+    font-size: 0.75rem;
+    min-width: 60px;
+  }
 }

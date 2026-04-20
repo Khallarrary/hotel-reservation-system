@@ -46,9 +46,31 @@ namespace HotelApp.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeletePorId(int id)
         {
-            await _service.Remover(id);
+            await _service.RemoverPorId(id);
+            return NoContent();
+        }
+
+        [HttpGet("numero/{numero}")]
+        public async Task<IActionResult> GetByNumero(string numero)
+        {
+
+            var quarto = await _service.ObterPorNumero(numero);
+
+            if (quarto == null)
+            {
+
+                return NotFound();
+            }
+
+            return Ok(quarto);
+        }
+
+        [HttpDelete("numero/{numero}")]
+        public async Task<IActionResult> DeletePorNumero(string numero)
+        {
+            await _service.RemoverPorNumero(numero);
             return NoContent();
         }
     }
