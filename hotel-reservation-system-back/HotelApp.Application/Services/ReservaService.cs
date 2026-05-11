@@ -95,4 +95,17 @@ public class ReservaService
         await _repo.AdicionarAsync(nova);
 
     }
+
+    public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto)
+    {
+
+        var quarto = await _quartoRepo.ObterPorNumeroAsync(numeroDoQuarto);
+
+        if(quarto == null)
+        {
+            throw new NotFoundException("Quarto nao existe");
+        }
+                       
+        await CriarReserva(checkIn, checkOut, nome, quarto.Id);
+    }
 }

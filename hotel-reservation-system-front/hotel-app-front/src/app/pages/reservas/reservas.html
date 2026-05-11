@@ -1,13 +1,22 @@
 <section class="reservas-container">
   <header class="page-header">
     <h2>Mapa de Reservas</h2>
-    <button class="btn-primary" (click)="alterarFormularioQuarto()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      {{ mostrarForm ? 'Cancelar' : 'Criar Quarto' }}
-    </button>
+    <div class="header-actions">
+      <div class="timeline-controls">
+        <button type="button" class="btn-nav" (click)="voltarData()">Anterior</button>
+        <span class="timeline-range">
+          {{ dias[0] | date:'dd/MM' }} - {{ dias[dias.length - 1] | date:'dd/MM' }}
+        </span>
+        <button type="button" class="btn-nav" (click)="avancarData()">Próximos</button>
+      </div>
+      <button class="btn-primary" (click)="alterarFormularioQuarto()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        {{ mostrarForm ? 'Cancelar' : 'Criar Quarto' }}
+      </button>
+    </div>
   </header>
 
   <div *ngIf="mostrarForm" class="form-card">

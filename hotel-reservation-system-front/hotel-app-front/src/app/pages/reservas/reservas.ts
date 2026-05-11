@@ -17,29 +17,54 @@ export class ReservasComponent implements OnInit
 {
   quartos: any[] = [];
   dias: Date[] = []; 
+  inicioTimeLine = new Date();
+  
 
   constructor(private reservaService: ReservaService, private quartoService: QuartoService,
   private cdr: ChangeDetectorRef){}
 
   ngOnInit(): void {
+    this.inicioTimeLine.setHours(0, 0, 0, 0);
     this.gerarDias();
     this.carregarQuartos();
     }
 
 
   gerarDias() {
-  const inicio = new Date();
-  inicio.setHours(0, 0, 0, 0);
-
   const totalDias = 10;
 
   this.dias = [];
 
   for (let i = 0; i < totalDias; i++) {
-    const d = new Date(inicio);
-    d.setDate(inicio.getDate() + i);
+    const d = new Date(this.inicioTimeLine);
+    d.setDate(this.inicioTimeLine.getDate() + i);
     this.dias.push(d);
   }
+}
+
+avancarData(){
+  const novaData = new Date(this.inicioTimeLine);
+  novaData.setDate(this.inicioTimeLine.getDate() + 5);
+
+  this.inicioTimeLine = novaData;
+  
+  this.gerarDias()
+}
+
+voltarData(){
+  const novaData = new Date(this.inicioTimeLine);
+  novaData.setDate(this.inicioTimeLine.getDate() - 5);
+
+  const hoje = new Date()
+  hoje.setHours(0,0,0,0);
+
+  if(novaData < hoje){
+    this.inicioTimeLine = hoje
+  }
+  else{
+    this.inicioTimeLine = novaData;
+  }
+  this.gerarDias()
 }
 
 carregarQuartos(){

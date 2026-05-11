@@ -23,9 +23,9 @@ namespace HotelApp.Api.Controllers
             try
             {
                 await _service.CriarReserva(
-                    request.CheckIn, 
-                    request.CheckOut, 
-                    request.NomeDoHospede, 
+                    request.CheckIn,
+                    request.CheckOut,
+                    request.NomeDoHospede,
                     request.QuartoId
                     );
 
@@ -35,11 +35,36 @@ namespace HotelApp.Api.Controllers
             {
                 return NotFound(ex.Message);
             }
-            catch (ConflictException ex) 
+            catch (ConflictException ex)
             {
                 return Conflict(ex.Message);
             }
-            
+
+        }
+
+        [HttpPost ("numero")]
+        public async Task<IActionResult> CriarReservaPorNumero([FromBody] CriarReservaDto request)
+        {
+            try
+            {
+                await _service.CriarReservaPorNumero(
+                    request.CheckIn,
+                    request.CheckOut,
+                    request.NomeDoHospede,
+                    request.NumeroDoQuarto
+                    );
+
+                return StatusCode(201);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ConflictException ex)
+            {
+                return Conflict(ex.Message);
+            }
+
         }
 
         [HttpGet]
