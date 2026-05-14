@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReservaService, Reserva } from '../../services/reserva';
+import { ReservaService, Reserva, ReservaPorNumero } from '../../services/reserva';
 import { QuartoService } from '../../services/quarto';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
@@ -39,6 +39,23 @@ export class ReservasComponent implements OnInit
     const d = new Date(this.inicioTimeLine);
     d.setDate(this.inicioTimeLine.getDate() + i);
     this.dias.push(d);
+  }
+}
+
+reservaEstaVisivel(reserva: any): boolean{
+  const inicioTimeLine = this.dias[0];
+  const fimTimeLine = new Date(inicioTimeLine);
+  fimTimeLine.setDate(inicioTimeLine.getDate() + this.dias.length)
+  const checkIn = new Date(reserva.checkIn)
+  const checkOut = new Date(reserva.checkOut)
+
+
+  if(inicioTimeLine >= checkOut){
+    return false
+  } else if(fimTimeLine <= checkIn){
+    return false
+  } else {
+    return true
   }
 }
 
@@ -116,6 +133,38 @@ criarReserva() {
   });
 }
 
+novaReservaPorNumero: ReservaPorNumero = {
+  checkIn: '',
+  checkOut: '',
+  nomeDoHospede: '',
+  numeroDoQuarto: ''
+};
+
+criarReservaPorNumero() {
+  this.reservaService.criarPorNumero(this.novaReservaPorNumero).subscribe({
+    next: () => {
+      alert('Reserva criada com sucesso!');
+      this.carregarQuartos();
+
+      // reset do form
+      this.novaReservaPorNumero = {
+        checkIn: '',
+        checkOut: '',
+        nomeDoHospede: '',
+        numeroDoQuarto: ''
+      };
+    },
+    error: (err) => {
+      console.log(err);
+      alert(err.error?.message || 'Erro ao criar reserva');
+    }
+  });
+}
+
+
+
+
+
 getDuracao(reserva: any): number {
   const checkIn = new Date(reserva.checkIn);
   const checkOut = new Date(reserva.checkOut);
@@ -167,12 +216,26 @@ getOffset(reserva: any): number {
 }
 
 mostrarForm = false;
+mostrarFormReserva = false;
 
 alterarFormularioQuarto() {
   this.mostrarForm = !this.mostrarForm;
 
   if(!this.mostrarForm){
     this.novoQuarto = { numero: '', tipo: ''};
+  }
+}
+
+alterarFormularioReserva() {
+  this.mostrarFormReserva = !this.mostrarFormReserva;
+
+  if (!this.mostrarFormReserva) {
+    this.novaReservaPorNumero = {
+      checkIn: '',
+      checkOut: '',
+      nomeDoHospede: '',
+      numeroDoQuarto: ''
+    };
   }
 }
 
@@ -206,5 +269,4 @@ criarQuarto() {
 }
 
 };
-
 

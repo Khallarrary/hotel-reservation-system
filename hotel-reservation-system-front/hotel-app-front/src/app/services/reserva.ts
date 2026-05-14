@@ -9,11 +9,19 @@ export interface Reserva {
   quartoId: number;
 }
 
+export interface ReservaPorNumero{
+  checkIn: string;
+  checkOut: string;
+  nomeDoHospede: string;
+  numeroDoQuarto: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ReservaService {
   private apiUrl = 'https://localhost:7265/api/Reserva';
+  private apiUrlCriarPorNumero = 'https://localhost:7265/api/Reserva/numero';
 
   constructor(private http: HttpClient) {}
 
@@ -23,5 +31,9 @@ export class ReservaService {
 
   criar(reserva: Reserva) {
   return this.http.post(this.apiUrl, reserva);
+}
+
+criarPorNumero(reservaPorNumero: ReservaPorNumero) {
+  return this.http.post(this.apiUrlCriarPorNumero, reservaPorNumero);
 }
 }

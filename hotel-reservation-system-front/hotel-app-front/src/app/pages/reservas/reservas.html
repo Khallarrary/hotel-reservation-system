@@ -9,13 +9,18 @@
         </span>
         <button type="button" class="btn-nav" (click)="avancarData()">Próximos</button>
       </div>
-      <button class="btn-primary" (click)="alterarFormularioQuarto()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        {{ mostrarForm ? 'Cancelar' : 'Criar Quarto' }}
-      </button>
+      <div class="creation-actions">
+        <button class="btn-primary btn-primary-soft" (click)="alterarFormularioReserva()">
+          {{ mostrarFormReserva ? 'Cancelar Reserva' : 'Criar Reserva' }}
+        </button>
+        <button class="btn-primary" (click)="alterarFormularioQuarto()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          {{ mostrarForm ? 'Cancelar Quarto' : 'Criar Quarto' }}
+        </button>
+      </div>
     </div>
   </header>
 
@@ -27,6 +32,33 @@
       <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Número do quarto" name="numero">
       <input type="text" [(ngModel)]="novoQuarto.tipo" placeholder="Tipo (ex: Suite Luxo)" name="tipo">
       <button type="button" class="btn-secondary" (click)="criarQuarto()">Salvar Quarto</button>
+    </form>
+  </div>
+
+  <div *ngIf="mostrarFormReserva" class="form-card">
+    <div class="card-header">
+      <h3>Nova Reserva</h3>
+    </div>
+    <form class="form-grid form-grid-reserva">
+      <input
+        type="text"
+        [(ngModel)]="novaReservaPorNumero.nomeDoHospede"
+        placeholder="Nome do hóspede"
+        name="nomeDoHospede">
+      <input
+        type="text"
+        [(ngModel)]="novaReservaPorNumero.numeroDoQuarto"
+        placeholder="Número do quarto"
+        name="numeroDoQuarto">
+      <input
+        type="date"
+        [(ngModel)]="novaReservaPorNumero.checkIn"
+        name="checkIn">
+      <input
+        type="date"
+        [(ngModel)]="novaReservaPorNumero.checkOut"
+        name="checkOut">
+      <button type="button" class="btn-secondary" (click)="criarReservaPorNumero()">Salvar Reserva</button>
     </form>
   </div>
 
@@ -52,13 +84,15 @@
       <div *ngFor="let dia of dias" class="timeline-cell"></div>
       
       <!-- Blocos de reservas -->
-      <div *ngFor="let reserva of quarto.reservaList || []" 
+       <ng-container *ngFor="let reserva of quarto.reservaList || []">
+        <div *ngIf="reservaEstaVisivel(reserva)"
            class="reserva-card"
            [style.left.%]="getOffset(reserva) * (100 / dias.length)"
            [style.width.%]="getDuracao(reserva) * (100 / dias.length)"
            title="{{ reserva.nomeDoHospede }} ({{ getDuracao(reserva) | number:'1.0-0' }} dias)">
         {{ reserva.nomeDoHospede }}
       </div>
+    </ng-container>
     </div>
   </div>
 </section>
