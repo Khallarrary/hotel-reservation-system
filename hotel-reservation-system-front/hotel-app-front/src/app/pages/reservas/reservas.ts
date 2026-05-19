@@ -140,10 +140,61 @@ novaReservaPorNumero: ReservaPorNumero = {
   numeroDoQuarto: ''
 };
 
+mensagemSucesso: string = "";
+mensagemErro: string = "";
+
+limparMensagens() {
+  this.mensagemErro = '';
+  this.mensagemSucesso = '';
+}
+
+mostrarSucesso(texto: string) {
+  this.mensagemSucesso = texto;
+  this.mensagemErro = '';
+
+  setTimeout(() => {
+    this.mensagemSucesso = '';
+  }, 3000);
+}
+
+mostrarErro(texto: string) {
+  this.mensagemErro = texto;
+  this.mensagemSucesso = '';
+
+  setTimeout(() => {
+    this.mensagemErro = '';
+  }, 3000);
+}
+
 criarReservaPorNumero() {
+
+
+  this.limparMensagens()
+
+  if(!this.novaReservaPorNumero.nomeDoHospede.trim()){
+    this.mostrarErro("Nome é obrigatório")
+    return
+  }
+
+  if(!this.novaReservaPorNumero.checkIn.trim()){
+    this.mostrarErro("Dia do check-in é obrigatório")
+    return
+  }
+
+  if(!this.novaReservaPorNumero.checkOut.trim()){
+    this.mostrarErro("Dia do check-out é obrigatório")
+    return
+  }
+
+  if(!this.novaReservaPorNumero.numeroDoQuarto.trim()){
+    this.mostrarErro("Numero é obrigatório")
+    return
+  }
+
   this.reservaService.criarPorNumero(this.novaReservaPorNumero).subscribe({
     next: () => {
-      alert('Reserva criada com sucesso!');
+      this.mostrarSucesso("Reserva criada com sucesso")
+
       this.carregarQuartos();
 
       // reset do form
@@ -156,13 +207,10 @@ criarReservaPorNumero() {
     },
     error: (err) => {
       console.log(err);
-      alert(err.error?.message || 'Erro ao criar reserva');
+      this.mostrarErro(err.error?.message || "Erro ao criar reserva");
     }
   });
 }
-
-
-
 
 
 getDuracao(reserva: any): number {

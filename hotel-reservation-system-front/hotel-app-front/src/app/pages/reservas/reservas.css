@@ -109,6 +109,11 @@
   box-shadow: var(--shadow-lg);
 }
 
+.form-card-reserva {
+  position: relative;
+  overflow: visible;
+}
+
 .card-header h3 {
   margin: 0 0 1rem 0;
   color: var(--navy-900);
@@ -128,6 +133,45 @@
 
 .form-grid-reserva {
   grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+}
+
+.toast {
+  position: absolute;
+  top: -18px;
+  right: 20px;
+  max-width: 360px;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid transparent;
+  z-index: 3;
+  animation: toast-in 180ms ease-out;
+}
+
+.toast-sucesso {
+  background: linear-gradient(135deg, #dff8ea, #f7fffb);
+  color: #145c45;
+  border-color: #a6dec1;
+}
+
+.toast-erro {
+  background: linear-gradient(135deg, #ffe3e3, #fff8f8);
+  color: #8f1f1f;
+  border-color: #f0b1b1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .timeline-header {
@@ -304,6 +348,12 @@
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .toast {
+    position: static;
+    max-width: none;
+    margin-bottom: 1rem;
   }
 
   .timeline-header, .quarto-row {

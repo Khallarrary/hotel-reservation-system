@@ -35,10 +35,19 @@
     </form>
   </div>
 
-  <div *ngIf="mostrarFormReserva" class="form-card">
+  <div *ngIf="mostrarFormReserva" class="form-card form-card-reserva">
     <div class="card-header">
       <h3>Nova Reserva</h3>
     </div>
+
+    <div *ngIf="mensagemSucesso" class="toast toast-sucesso">
+      {{ mensagemSucesso }}
+    </div>
+
+    <div *ngIf="mensagemErro" class="toast toast-erro">
+      {{ mensagemErro }}
+    </div>
+    
     <form class="form-grid form-grid-reserva">
       <input
         type="text"
