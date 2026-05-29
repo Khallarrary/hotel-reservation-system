@@ -31,16 +31,13 @@ public class ReservaService
 
         return reserva.Select(reserva => new ReservaDto
         {
-            
+            Id = reserva.Id,
             CheckIn = reserva.CheckIn,
             CheckOut = reserva.CheckOut,
             NomeDoHospede = reserva.NomeDoHospede,
-            QuartoId = reserva.QuartoId
-            
-             
+            QuartoId = reserva.QuartoId             
         }).ToList();
     }
-
 
     /// <summary>
     /// Cria uma nova reserva validando:
@@ -108,4 +105,6 @@ public class ReservaService
                        
         await CriarReserva(checkIn, checkOut, nome, quarto.Id);
     }
+
+
 }

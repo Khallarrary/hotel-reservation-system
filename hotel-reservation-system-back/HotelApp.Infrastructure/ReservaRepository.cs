@@ -33,5 +33,16 @@ namespace HotelApp.Infrastructure
         {
             return await _context.Reservas.ToListAsync();
         }
+
+        public async Task<Reserva?> ObterQaurtoPorId(int quartoId)
+        {
+            return await _context.Reservas.FindAsync(quartoId);
+        }
+        public async Task DeletarReservaAsync(Reserva reserva)
+        {
+            _context.Reservas.Remove(reserva);
+            await _context.SaveChangesAsync();
+
+        }
     }
 }

@@ -106,6 +106,7 @@ getReservaNoDia(quarto: any, dia: Date) {
 }
 
 novaReserva: Reserva = {
+  id: 0,
   checkIn: '',
   checkOut: '',
   nomeDoHospede: '',
@@ -120,6 +121,7 @@ criarReserva() {
 
       // reset do form
       this.novaReserva = {
+        id: 0, 
         checkIn: '',
         checkOut: '',
         nomeDoHospede: '',
@@ -314,6 +316,12 @@ criarQuarto() {
       alert('Erro ao criar quarto');
     }
   });
+}
+
+reservaSelecionada: Reserva | null = null;
+
+exibirDetalhesReserva(reserva: Reserva){
+  this.reservaSelecionada = reserva;
 }
 
 };

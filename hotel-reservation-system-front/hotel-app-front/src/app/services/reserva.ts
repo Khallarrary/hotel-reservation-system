@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export interface Reserva {
+  id: number;
   checkIn: string;
   checkOut: string;
   nomeDoHospede: string;

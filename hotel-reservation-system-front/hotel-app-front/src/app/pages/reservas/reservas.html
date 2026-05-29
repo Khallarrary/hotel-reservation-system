@@ -7,7 +7,7 @@
         <span class="timeline-range">
           {{ dias[0] | date:'dd/MM' }} - {{ dias[dias.length - 1] | date:'dd/MM' }}
         </span>
-        <button type="button" class="btn-nav" (click)="avancarData()">Próximos</button>
+        <button type="button" class="btn-nav" (click)="avancarData()">Proximos</button>
       </div>
       <div class="creation-actions">
         <button class="btn-primary btn-primary-soft" (click)="alterarFormularioReserva()">
@@ -24,12 +24,59 @@
     </div>
   </header>
 
+  <div *ngIf="reservaSelecionada" class="modal-backdrop" (click)="reservaSelecionada = null">
+    <div class="modal-reserva" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Reserva #{{ reservaSelecionada.id }}</span>
+          <h3>Detalhes da Reserva</h3>
+        </div>
+        <button type="button" class="modal-close" (click)="reservaSelecionada = null">
+          x
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-field modal-field-full">
+          <span>Hospede</span>
+          <strong>{{ reservaSelecionada.nomeDoHospede }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>Check-in</span>
+          <strong>{{ reservaSelecionada.checkIn | date:'dd/MM/yyyy' }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>Check-out</span>
+          <strong>{{ reservaSelecionada.checkOut | date:'dd/MM/yyyy' }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>Quarto ID</span>
+          <strong>{{ reservaSelecionada.quartoId }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>ID da reserva</span>
+          <strong>{{ reservaSelecionada.id }}</strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-modal-primary">Check-in</button>
+        <button type="button" class="btn-modal btn-modal-danger">Cancelar</button>
+        <button type="button" class="btn-modal btn-modal-muted">Caixa</button>
+      </div>
+    </div>
+  </div>
+
   <div *ngIf="mostrarForm" class="form-card">
     <div class="card-header">
       <h3>Novo Quarto</h3>
     </div>
     <form class="form-grid">
-      <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Número do quarto" name="numero">
+      <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Numero do quarto" name="numero">
       <input type="text" [(ngModel)]="novoQuarto.tipo" placeholder="Tipo (ex: Suite Luxo)" name="tipo">
       <button type="button" class="btn-secondary" (click)="criarQuarto()">Salvar Quarto</button>
     </form>
@@ -47,17 +94,17 @@
     <div *ngIf="mensagemErro" class="toast toast-erro">
       {{ mensagemErro }}
     </div>
-    
+
     <form class="form-grid form-grid-reserva">
       <input
         type="text"
         [(ngModel)]="novaReservaPorNumero.nomeDoHospede"
-        placeholder="Nome do hóspede"
+        placeholder="Nome do hospede"
         name="nomeDoHospede">
       <input
         type="text"
         [(ngModel)]="novaReservaPorNumero.numeroDoQuarto"
-        placeholder="Número do quarto"
+        placeholder="Numero do quarto"
         name="numeroDoQuarto">
       <input
         type="date"
@@ -91,17 +138,18 @@
 
     <div class="timeline-row">
       <div *ngFor="let dia of dias" class="timeline-cell"></div>
-      
+
       <!-- Blocos de reservas -->
-       <ng-container *ngFor="let reserva of quarto.reservaList || []">
+      <ng-container *ngFor="let reserva of quarto.reservaList || []">
         <div *ngIf="reservaEstaVisivel(reserva)"
-           class="reserva-card"
-           [style.left.%]="getOffset(reserva) * (100 / dias.length)"
-           [style.width.%]="getDuracao(reserva) * (100 / dias.length)"
-           title="{{ reserva.nomeDoHospede }} ({{ getDuracao(reserva) | number:'1.0-0' }} dias)">
-        {{ reserva.nomeDoHospede }}
-      </div>
-    </ng-container>
+          class="reserva-card"
+          [style.left.%]="getOffset(reserva) * (100 / dias.length)"
+          [style.width.%]="getDuracao(reserva) * (100 / dias.length)"
+          title="{{ reserva.nomeDoHospede }} ({{ getDuracao(reserva) | number:'1.0-0' }} dias)"
+          (click)="exibirDetalhesReserva(reserva)">
+          {{ reserva.nomeDoHospede }}
+        </div>
+      </ng-container>
     </div>
   </div>
 </section>
