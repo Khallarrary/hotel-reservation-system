@@ -20,21 +20,27 @@ export interface ReservaPorNumero{
 @Injectable({
   providedIn: 'root'
 })
+
 export class ReservaService {
   private apiUrl = 'https://localhost:7265/api/Reserva';
   private apiUrlCriarPorNumero = 'https://localhost:7265/api/Reserva/numero';
 
   constructor(private http: HttpClient) {}
 
-  listar(): Observable<Reserva[]> {
+listar(): Observable<Reserva[]> {
     return this.http.get<Reserva[]>(this.apiUrl);
-  }
+}
 
-  criar(reserva: Reserva) {
+criar(reserva: Reserva) {
   return this.http.post(this.apiUrl, reserva);
 }
 
 criarPorNumero(reservaPorNumero: ReservaPorNumero) {
   return this.http.post(this.apiUrlCriarPorNumero, reservaPorNumero);
 }
+
+deletarReserva(id: number) {
+  return this.http.delete(`${this.apiUrl}/${id}`);
+}
+  
 }

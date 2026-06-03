@@ -34,7 +34,7 @@ namespace HotelApp.Infrastructure
             return await _context.Reservas.ToListAsync();
         }
 
-        public async Task<Reserva?> ObterQaurtoPorId(int quartoId)
+        public async Task<Reserva?> ObterQaurtoPorIdAsync(int quartoId)
         {
             return await _context.Reservas.FindAsync(quartoId);
         }
@@ -43,6 +43,11 @@ namespace HotelApp.Infrastructure
             _context.Reservas.Remove(reserva);
             await _context.SaveChangesAsync();
 
+        }
+
+        public async Task<Reserva?> ObterReservaPorIdAsync(int id)
+        {
+            return await _context.Reservas.FindAsync(id);
         }
     }
 }

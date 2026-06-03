@@ -36,6 +36,7 @@ namespace HotelApp.Application.Services
                     tipo = quarto.Tipo,
                     ReservaList = reservas.Select(r => new ReservaDto
                     {
+                        Id = r.Id,
                         CheckIn = r.CheckIn,
                         CheckOut = r.CheckOut,
                         NomeDoHospede = r.NomeDoHospede,

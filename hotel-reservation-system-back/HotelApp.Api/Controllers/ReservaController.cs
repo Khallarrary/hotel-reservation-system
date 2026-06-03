@@ -75,5 +75,19 @@ namespace HotelApp.Api.Controllers
 
             return Ok(reservas);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeletarReserva(int id)
+        {
+            try
+            {
+                await _service.DeletarReserva(id);
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }

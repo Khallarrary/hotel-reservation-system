@@ -65,7 +65,12 @@
 
       <div class="modal-actions">
         <button type="button" class="btn-modal btn-modal-primary">Check-in</button>
-        <button type="button" class="btn-modal btn-modal-danger">Cancelar</button>
+        <button 
+        type="button" 
+        class="btn-modal btn-modal-danger" 
+        (click)="deletarReservaSelecionada()">
+        Cancelar
+        </button>
         <button type="button" class="btn-modal btn-modal-muted">Caixa</button>
       </div>
     </div>

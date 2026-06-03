@@ -306,14 +306,13 @@ criarQuarto() {
       alert('Quarto criado!');
       this.carregarQuartos();
       this.mostrarForm = false;
-
       this.novoQuarto = { numero: '', tipo: '' };
       
     },
     error: (err) => {
       console.log(err);
       console.log(err.error);
-      alert('Erro ao criar quarto');
+      this.mostrarErro(err.erros?.message || 'Erro ao criar quarto');
     }
   });
 }
@@ -322,7 +321,27 @@ reservaSelecionada: Reserva | null = null;
 
 exibirDetalhesReserva(reserva: Reserva){
   this.reservaSelecionada = reserva;
+  console.log(reserva);
 }
+
+deletarReservaSelecionada(){
+  if(this.reservaSelecionada != null){
+    this.reservaService.deletarReserva(this.reservaSelecionada.id).subscribe({
+      next: () => {
+        this.reservaSelecionada = null;
+        this.carregarQuartos();
+        this.mostrarSucesso("Reserva cancelada com sucesso");
+      }, 
+      error: (err) => {
+        console.log(err);
+        console.log(err.error);
+        this.mostrarErro(err.erros?.message || 'Erro ao deletar reserva');
+      }
+    })
+  }
+}
+
+
 
 };
 

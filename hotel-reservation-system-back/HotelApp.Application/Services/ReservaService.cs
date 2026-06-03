@@ -106,5 +106,18 @@ public class ReservaService
         await CriarReserva(checkIn, checkOut, nome, quarto.Id);
     }
 
+    public async Task DeletarReserva (int id)
+    {
+        var reserva = await _repo.ObterReservaPorIdAsync(id);
+
+        if (reserva == null)
+        {
+            throw new NotFoundException("Reserva nao encontrada");
+        }
+
+        await _repo.DeletarReservaAsync(reserva);
+    }
+
 
 }
+ 
