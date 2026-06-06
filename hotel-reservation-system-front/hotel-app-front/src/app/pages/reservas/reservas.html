@@ -24,57 +24,12 @@
     </div>
   </header>
 
-  <div *ngIf="reservaSelecionada" class="modal-backdrop" (click)="reservaSelecionada = null">
-    <div class="modal-reserva" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div>
-          <span class="modal-eyebrow">Reserva #{{ reservaSelecionada.id }}</span>
-          <h3>Detalhes da Reserva</h3>
-        </div>
-        <button type="button" class="modal-close" (click)="reservaSelecionada = null">
-          x
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <div class="modal-field modal-field-full">
-          <span>Hospede</span>
-          <strong>{{ reservaSelecionada.nomeDoHospede }}</strong>
-        </div>
-
-        <div class="modal-field">
-          <span>Check-in</span>
-          <strong>{{ reservaSelecionada.checkIn | date:'dd/MM/yyyy' }}</strong>
-        </div>
-
-        <div class="modal-field">
-          <span>Check-out</span>
-          <strong>{{ reservaSelecionada.checkOut | date:'dd/MM/yyyy' }}</strong>
-        </div>
-
-        <div class="modal-field">
-          <span>Quarto ID</span>
-          <strong>{{ reservaSelecionada.quartoId }}</strong>
-        </div>
-
-        <div class="modal-field">
-          <span>ID da reserva</span>
-          <strong>{{ reservaSelecionada.id }}</strong>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-modal btn-modal-primary">Check-in</button>
-        <button 
-        type="button" 
-        class="btn-modal btn-modal-danger" 
-        (click)="deletarReservaSelecionada()">
-        Cancelar
-        </button>
-        <button type="button" class="btn-modal btn-modal-muted">Caixa</button>
-      </div>
-    </div>
-  </div>
+  <reserva-detalhes-modal
+    *ngIf="reservaSelecionada"
+    [reserva]="reservaSelecionada"
+    (fechar)="fecharDetalhesReserva()"
+    (cancelar)="deletarReservaSelecionada()">
+</reserva-detalhes-modal>
 
   <div *ngIf="mostrarForm" class="form-card">
     <div class="card-header">

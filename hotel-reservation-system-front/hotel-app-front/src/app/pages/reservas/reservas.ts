@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReservaService, Reserva, ReservaPorNumero } from '../../services/reserva';
 import { QuartoService } from '../../services/quarto';
+import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-reservas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReservaDetalhes],
   templateUrl: './reservas.html',
   styleUrl: './reservas.css'
 })
@@ -339,6 +340,10 @@ deletarReservaSelecionada(){
       }
     })
   }
+}
+
+fecharDetalhesReserva() {
+  this.reservaSelecionada = null;
 }
 
 

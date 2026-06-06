@@ -1,0 +1,51 @@
+<div *ngIf="reserva" class="modal-backdrop" (click)="reserva = null">
+    <div class="modal-reserva" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Reserva #{{ reserva.id }}</span>
+          <h3>Detalhes da Reserva</h3>
+        </div>
+        <button type="button" class="modal-close" (click)="reserva = null">
+          x
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-field modal-field-full">
+          <span>Hospede</span>
+          <strong>{{ reserva.nomeDoHospede }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>Check-in</span>
+          <strong>{{ reserva.checkIn | date:'dd/MM/yyyy' }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>Check-out</span>
+          <strong>{{ reserva.checkOut | date:'dd/MM/yyyy' }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>Quarto ID</span>
+          <strong>{{ reserva.quartoId }}</strong>
+        </div>
+
+        <div class="modal-field">
+          <span>ID da reserva</span>
+          <strong>{{ reserva.id }}</strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-modal btn-modal-primary">Check-in</button>
+        <button 
+        type="button" 
+        class="btn-modal btn-modal-danger" 
+        (click)="aoCancelar()">
+        Cancelar
+        </button>
+        <button type="button" class="btn-modal btn-modal-muted">Caixa</button>
+      </div>
+    </div>
+  </div>
