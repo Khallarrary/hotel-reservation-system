@@ -49,5 +49,11 @@ namespace HotelApp.Infrastructure
         {
             return await _context.Reservas.FindAsync(id);
         }
+
+        public async Task AtualizarReservaAsync(Reserva reserva)
+        {
+            _context.Reservas.Update(reserva);
+            await _context.SaveChangesAsync();
+        }
     }
 }

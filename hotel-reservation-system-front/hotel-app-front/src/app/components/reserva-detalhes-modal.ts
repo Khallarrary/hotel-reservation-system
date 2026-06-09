@@ -17,6 +17,8 @@ export class ReservaDetalhes {
     @Input() reserva: Reserva | null = null
     @Output() fechar = new EventEmitter<void>();
     @Output() cancelar = new EventEmitter<void>();
+    @Output() checkin = new EventEmitter<void>();
+    mensagemCheckIn = '';
     
 
     aoFechar(): void{
@@ -26,5 +28,76 @@ export class ReservaDetalhes {
 
     aoCancelar(): void{
         this.cancelar.emit();
+    }
+
+    aoCheckIn(): void{
+        this.checkin.emit()
+    }
+
+    tentarCheckIn(): void {
+        if (this.podeRealizarCheckIn()) {
+            this.mensagemCheckIn = '';
+            this.aoCheckIn();
+            return;
+        }
+
+        this.mensagemCheckIn = this.obterMensagemCheckInBloqueado();
+
+        setTimeout(() => {
+            this.mensagemCheckIn = '';
+        }, 3000);
+    }
+
+
+    private obterDataApi(data: string): string {
+        return data.substring(0, 10);
+    }
+
+    formatarDataApi(data: string): string {
+        const [ano, mes, dia] = this.obterDataApi(data).split('-');
+
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    obterMensagemCheckInBloqueado(): string {
+   if (this.reserva == null) {
+            return 'Selecione uma reserva para realizar check-in.';
+        }
+
+        if (this.reserva.status !== 'Pendente') {
+            return 'Check-in disponivel apenas para reservas pendentes.';
+        }
+
+        if (this.obterDataLocalHoje() < this.obterDataApi(this.reserva.checkIn)) {
+            return 'Check-in disponivel apenas a partir da data da reserva.';
+        }
+
+        return 'Nao foi possivel realizar o check-in desta reserva.';
+    }
+
+    podeRealizarCheckIn(): boolean{
+
+        if(this.reserva == null){
+            return false
+        }
+
+        if(this.reserva.status !== "Pendente"){
+            return false
+        }
+        
+        if(this.obterDataLocalHoje() < this.obterDataApi(this.reserva.checkIn)){
+            return false
+        }
+
+        return true
+    }
+      
+    private obterDataLocalHoje(): string {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+
+        return `${ano}-${mes}-${dia}`;
     }
 }

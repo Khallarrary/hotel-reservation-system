@@ -40,7 +40,8 @@ namespace HotelApp.Application.Services
                         CheckIn = r.CheckIn,
                         CheckOut = r.CheckOut,
                         NomeDoHospede = r.NomeDoHospede,
-                        QuartoId = r.QuartoId
+                        QuartoId = r.QuartoId,
+                        Status = r.Status.ToString(),
                     }).ToList()
                 });
             }

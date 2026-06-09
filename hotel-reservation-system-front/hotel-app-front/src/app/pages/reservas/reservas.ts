@@ -111,7 +111,8 @@ novaReserva: Reserva = {
   checkIn: '',
   checkOut: '',
   nomeDoHospede: '',
-  quartoId: 0
+  quartoId: 0,
+  status: ''
 };
 
 criarReserva() {
@@ -126,7 +127,8 @@ criarReserva() {
         checkIn: '',
         checkOut: '',
         nomeDoHospede: '',
-        quartoId: 0
+        quartoId: 0,
+        status: ''
       };
     },
     error: (err) => {
@@ -344,6 +346,27 @@ deletarReservaSelecionada(){
 
 fecharDetalhesReserva() {
   this.reservaSelecionada = null;
+}
+
+realizarCheckIn(){
+  if(this.reservaSelecionada != null){
+    this.reservaService.realizarCheckIn(this.reservaSelecionada.id).subscribe({
+      next: () => {
+        const reserva = this.reservaSelecionada;
+        if(reserva == null){
+          return
+        }
+        reserva.status = "CheckIn";
+        this.carregarQuartos();
+        this.mostrarSucesso("Reserva em check-in!")
+    },
+      error: (err) => {
+        console.log(err);
+        console.log(err.error);
+        this.mostrarErro(err.error || 'Erro ao realizar check-in da reserva');
+      }
+    })
+  }
 }
 
 

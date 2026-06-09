@@ -7,10 +7,11 @@ public class Reserva
     public DateTime CheckIn { get; private set; }
     public DateTime CheckOut { get; private set; }
     public string NomeDoHospede { get; private set; }
-
+    public ReservaStatus Status { get; private set; }
     private Reserva()
     {
         NomeDoHospede = string.Empty;
+        Status = ReservaStatus.Pendente;
     }
 
     /// <summary>
@@ -72,5 +73,26 @@ public class Reserva
         QuartoId = quartoId;
 
 
+    }
+
+    public void RealizarCheckIn()
+    {
+        if(Status != ReservaStatus.Pendente)
+        {
+            throw new ArgumentException("Reserva deve estar com status Pendente para dar check-in");
+        }
+
+        if (CheckIn.Date > DateTime.UtcNow.Date) {
+            throw new ArgumentException("Não é possivel realizar check-in em reservas futuras. Troque a data da reserva");
+
+        }
+
+        if (CheckOut.Date <= DateTime.UtcNow.Date)
+        {
+            throw new ArgumentException("Não é possivel realizar check-in em reservas passadas. Troque a data da reserva");
+        }
+
+       Status = ReservaStatus.CheckIn;
+       
     }
 }

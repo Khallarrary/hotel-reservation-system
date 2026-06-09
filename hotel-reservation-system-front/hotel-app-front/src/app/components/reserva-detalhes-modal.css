@@ -42,7 +42,42 @@
   color: var(--gold-400);
 }
 
+.status-badge {
+  margin-left: auto;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.status-pendente {
+  background: #fff7d6;
+  color: #7a4c00;
+  border-color: #f0c84b;
+}
+
+.status-checkin {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.status-checkout {
+  background: #e2e8f0;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.status-cancelada {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
 .modal-close {
+  flex: 0 0 auto;
   width: 36px;
   height: 36px;
   border-radius: 999px;
@@ -64,7 +99,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 1.25rem;
 }
 
 .modal-field {
@@ -76,6 +111,7 @@
 
 .modal-field-full {
   grid-column: 1 / -1;
+  background: linear-gradient(135deg, var(--white), var(--gray-100));
 }
 
 .modal-field span {
@@ -96,10 +132,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.75rem;
-  padding: 0 1.5rem 1.5rem;
+  padding: 0 1.5rem 1rem;
 }
 
 .btn-modal {
+  width: 100%;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-weight: 700;
@@ -126,6 +163,36 @@
   background: var(--white);
   color: var(--navy-900);
   border: 1px solid var(--gray-200);
+}
+
+.btn-disabled-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.btn-disabled-wrapper .btn-modal:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(0.25);
+  pointer-events: none;
+}
+
+.btn-disabled-wrapper .btn-modal:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.modal-warning {
+  margin: 0 1.5rem 1.5rem;
+  padding: 0.75rem 0.9rem;
+  background: #fff7d6;
+  color: #7a4c00;
+  border: 1px solid #f0c84b;
+  border-radius: 0.5rem;
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 @keyframes modal-in {

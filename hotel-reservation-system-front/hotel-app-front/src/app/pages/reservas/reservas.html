@@ -28,7 +28,8 @@
     *ngIf="reservaSelecionada"
     [reserva]="reservaSelecionada"
     (fechar)="fecharDetalhesReserva()"
-    (cancelar)="deletarReservaSelecionada()">
+    (cancelar)="deletarReservaSelecionada()"
+    (checkin)="realizarCheckIn()">
 </reserva-detalhes-modal>
 
   <div *ngIf="mostrarForm" class="form-card">
@@ -103,6 +104,11 @@
       <ng-container *ngFor="let reserva of quarto.reservaList || []">
         <div *ngIf="reservaEstaVisivel(reserva)"
           class="reserva-card"
+          [ngClass]="{
+            'reserva-card-pendente': reserva.status === 'Pendente',
+            'reserva-card-checkin': reserva.status === 'CheckIn',
+            'reserva-card-checkout': reserva.status === 'CheckOut'
+          }"
           [style.left.%]="getOffset(reserva) * (100 / dias.length)"
           [style.width.%]="getDuracao(reserva) * (100 / dias.length)"
           title="{{ reserva.nomeDoHospede }} ({{ getDuracao(reserva) | number:'1.0-0' }} dias)"

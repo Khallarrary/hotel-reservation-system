@@ -8,6 +8,7 @@ export interface Reserva {
   checkOut: string;
   nomeDoHospede: string;
   quartoId: number;
+  status: string;
 }
 
 export interface ReservaPorNumero{
@@ -41,6 +42,10 @@ criarPorNumero(reservaPorNumero: ReservaPorNumero) {
 
 deletarReserva(id: number) {
   return this.http.delete(`${this.apiUrl}/${id}`);
+}
+
+realizarCheckIn(id: number){
+  return this.http.patch(`${this.apiUrl}/${id}/check-in`, null)
 }
   
 }

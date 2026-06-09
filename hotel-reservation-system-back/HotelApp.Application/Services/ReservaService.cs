@@ -35,7 +35,8 @@ public class ReservaService
             CheckIn = reserva.CheckIn,
             CheckOut = reserva.CheckOut,
             NomeDoHospede = reserva.NomeDoHospede,
-            QuartoId = reserva.QuartoId             
+            QuartoId = reserva.QuartoId,
+            Status = reserva.Status.ToString(),
         }).ToList();
     }
 
@@ -118,6 +119,18 @@ public class ReservaService
         await _repo.DeletarReservaAsync(reserva);
     }
 
+    public async Task RealizarCheckIn(int id) 
+    {
+        var reserva = await _repo.ObterReservaPorIdAsync(id);
 
+        if(reserva == null)
+        {
+            throw new NotFoundException("Reserva nao encontrada");
+        }
+
+        reserva.RealizarCheckIn();
+
+        await _repo.AtualizarReservaAsync(reserva);
+    }
 }
  

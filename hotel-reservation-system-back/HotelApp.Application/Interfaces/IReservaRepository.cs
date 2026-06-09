@@ -14,5 +14,6 @@ namespace HotelApp.Application.Interfaces
         Task DeletarReservaAsync(Reserva reserva);
         Task<Reserva?> ObterQaurtoPorIdAsync(int quartoId);
         Task<Reserva?> ObterReservaPorIdAsync(int id);
+        Task AtualizarReservaAsync(Reserva reserva);
     }
 }
