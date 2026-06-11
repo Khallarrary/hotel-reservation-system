@@ -1,0 +1,53 @@
+<section class="reservas-lista-container">
+  <header class="page-header">
+    <div>
+      <h2>Lista de Reservas</h2>
+      <p>{{ reservas.length }} reservas encontradas</p>
+    </div>
+  </header>
+
+  <div class="lista-panel">
+    <p *ngIf="reservas.length === 0" class="empty-state">
+      Nenhuma reserva encontrada.
+    </p>
+
+    <div *ngIf="reservas.length > 0" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Hospede</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Quarto</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let reserva of reservas">
+            <td class="reserva-id">#{{ reserva.id }}</td>
+            <td>
+              <strong>{{ reserva.nomeDoHospede }}</strong>
+            </td>
+            <td>{{ reserva.checkIn }}</td>
+            <td>{{ reserva.checkOut }}</td>
+            <td>{{ reserva.quartoId }}</td>
+            <td>
+              <span
+                class="status-badge"
+                [ngClass]="{
+                  'status-pendente': reserva.status === 'Pendente',
+                  'status-checkin': reserva.status === 'CheckIn',
+                  'status-checkout': reserva.status === 'CheckOut',
+                  'status-cancelada': reserva.status === 'Cancelada'
+                }">
+                {{ reserva.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
