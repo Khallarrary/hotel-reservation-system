@@ -6,6 +6,23 @@
     </div>
   </header>
 
+  <reserva-detalhes-modal
+    *ngIf="reservaSelecionada"
+    [reserva]="reservaSelecionada"
+    (fechar)="fecharDetalhesReserva()"
+    (cancelar)="deletarReservaSelecionada()"
+    (checkin)="realizarCheckIn()"
+    (checkout)="realizarCheckOut()">
+  </reserva-detalhes-modal>
+
+   <div *ngIf="mensagemSucesso" class="toast toast-sucesso">
+      {{ mensagemSucesso }}
+    </div>
+
+    <div *ngIf="mensagemErro" class="toast toast-erro">
+      {{ mensagemErro }}
+    </div>
+
   <div class="lista-panel">
     <p *ngIf="reservas.length === 0" class="empty-state">
       Nenhuma reserva encontrada.
@@ -25,13 +42,14 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let reserva of reservas">
+          <tr *ngFor="let reserva of reservas" (click)="exibirDetalhesReserva(reserva)">
+            
             <td class="reserva-id">#{{ reserva.id }}</td>
             <td>
               <strong>{{ reserva.nomeDoHospede }}</strong>
             </td>
-            <td>{{ reserva.checkIn }}</td>
-            <td>{{ reserva.checkOut }}</td>
+            <td>{{ formatarDataApi(reserva.checkIn) }}</td>
+            <td>{{ formatarDataApi(reserva.checkOut) }}</td>
             <td>{{ reserva.quartoId }}</td>
             <td>
               <span

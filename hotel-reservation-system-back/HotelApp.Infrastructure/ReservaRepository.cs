@@ -16,14 +16,14 @@ namespace HotelApp.Infrastructure
             _context = context;
         }
 
-        public async Task<List<Reserva>> ObterPorQuartoAsync(int quartoId) {
+        public async Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId) {
 
             return await _context.Reservas
                 .Where(r => r.QuartoId == quartoId)
                 .ToListAsync();
         }
 
-        public async Task AdicionarAsync(Reserva reserva)
+        public async Task AdicionarReservaAsync(Reserva reserva)
         {
             await _context.Reservas.AddAsync(reserva);
             await _context.SaveChangesAsync();
@@ -34,10 +34,6 @@ namespace HotelApp.Infrastructure
             return await _context.Reservas.ToListAsync();
         }
 
-        public async Task<Reserva?> ObterQaurtoPorIdAsync(int quartoId)
-        {
-            return await _context.Reservas.FindAsync(quartoId);
-        }
         public async Task DeletarReservaAsync(Reserva reserva)
         {
             _context.Reservas.Remove(reserva);

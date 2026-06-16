@@ -46,7 +46,7 @@ public class Reserva
         }
 
         // Evita reservas com datas já expiradas
-        if (checkIn.Date < DateTime.UtcNow.Date)
+        if (checkIn.Date < DateTime.Today)
         {
             throw new ArgumentException("A data de check-in não pode estar no passado.");
         }   
@@ -82,17 +82,34 @@ public class Reserva
             throw new ArgumentException("Reserva deve estar com status Pendente para dar check-in");
         }
 
-        if (CheckIn.Date > DateTime.UtcNow.Date) {
+        if (CheckIn.Date > DateTime.Today) {
             throw new ArgumentException("Não é possivel realizar check-in em reservas futuras. Troque a data da reserva");
 
         }
 
-        if (CheckOut.Date <= DateTime.UtcNow.Date)
+        if (CheckOut.Date <= DateTime.Today)
         {
             throw new ArgumentException("Não é possivel realizar check-in em reservas passadas. Troque a data da reserva");
         }
 
        Status = ReservaStatus.CheckIn;
        
+    }
+
+    public void RealizarCheckOut()
+    {
+        if (Status != ReservaStatus.CheckIn)
+        {
+            throw new ArgumentException("Reserva deve estar com status check-in para dar check-out");
+        }
+
+        if (CheckOut.Date < DateTime.Today)
+        {
+            throw new ArgumentException("Não é possivel realizar check-out antecipado. Troque a data da reserva");
+
+        }
+
+        Status = ReservaStatus.CheckOut;
+
     }
 }

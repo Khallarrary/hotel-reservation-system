@@ -29,7 +29,8 @@
     [reserva]="reservaSelecionada"
     (fechar)="fecharDetalhesReserva()"
     (cancelar)="deletarReservaSelecionada()"
-    (checkin)="realizarCheckIn()">
+    (checkin)="realizarCheckIn()"
+    (checkout)="realizarCheckOut()">
 </reserva-detalhes-modal>
 
   <div *ngIf="mostrarForm" class="form-card">

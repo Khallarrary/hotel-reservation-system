@@ -47,5 +47,9 @@ deletarReserva(id: number) {
 realizarCheckIn(id: number){
   return this.http.patch(`${this.apiUrl}/${id}/check-in`, null)
 }
+
+realizarCheckOut(id: number){
+  return this.http.patch(`${this.apiUrl}/${id}/check-out`, null)
+}
   
 }

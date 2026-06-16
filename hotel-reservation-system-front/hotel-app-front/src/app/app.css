@@ -1,129 +1,109 @@
 :host {
-  --navy-900: #0f172a;
-  --navy-800: #1e293b;
-  --gray-900: #0f172a;
-  --gray-700: #334155;
-  --gray-400: #94a3b8;
-  --gold-gradient: linear-gradient(135deg, var(--gold-500), var(--gold-400));
-
-  font-family: 'Inter', sans-serif;
   display: block;
-  height: 100dvh;
-  background: linear-gradient(135deg, var(--cream-50) 0%, var(--white) 100%);
+  min-height: 100vh;
 }
 
-main {
-  width: 100%;
-  min-height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
+.app-shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
 }
 
-.content {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  max-width: 900px;
-  gap: 3rem;
+.app-shell-inner {
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.left-side h1 {
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--navy-900);
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, var(--navy-800), var(--navy-900));
+  color: var(--gold-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Playfair Display', serif;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  background: linear-gradient(135deg, var(--navy-900), var(--navy-700));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 1rem 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+}
+
+.brand strong {
+  display: block;
+  line-height: 1.1;
+  font-size: 1rem;
+}
+
+.brand span:last-child {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--navy-700);
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
-.left-side p {
-  font-size: 1.125rem;
-  color: var(--gray-700);
-  max-width: 20rem;
-}
-
-.angular-logo {
-  max-width: 250px;
-  filter: drop-shadow(var(--shadow-md));
-  transition: var(--transition);
-}
-
-.angular-logo:hover {
-  transform: scale(1.05);
-}
-
-.divider {
-  width: 2px;
-  height: 200px;
-  background: var(--gold-gradient);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.pill-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 300px;
-}
-
-.pill {
-  display: flex;
+.app-tabs {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 50px;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+}
+
+.app-tabs a {
+  color: var(--navy-700);
   text-decoration: none;
-  font-weight: 500;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  font-weight: 800;
   font-size: 0.9rem;
   transition: var(--transition);
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
 }
 
-.pill:hover {
-  transform: translateX(8px);
-  box-shadow: var(--shadow-lg);
+.app-tabs a:hover {
+  color: var(--navy-900);
   background: var(--white);
 }
 
-.social-links {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.social-links a {
-  padding: 0.75rem;
-  border-radius: 50%;
-  transition: var(--transition);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
+.app-tabs a.active {
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: var(--navy-900);
   box-shadow: var(--shadow-sm);
 }
 
-.social-links a:hover {
-  background: var(--gold-gradient);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
 @media (max-width: 768px) {
-  .content {
+  .app-shell-inner {
+    align-items: stretch;
     flex-direction: column;
-    text-align: center;
-    gap: 2rem;
   }
 
-  .divider {
+  .app-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: 100%;
-    height: 2px;
-    max-width: 300px;
+  }
+
+  .app-tabs a {
+    text-align: center;
+    padding: 0.7rem 0.5rem;
   }
 }

@@ -18,7 +18,9 @@ export class ReservaDetalhes {
     @Output() fechar = new EventEmitter<void>();
     @Output() cancelar = new EventEmitter<void>();
     @Output() checkin = new EventEmitter<void>();
-    mensagemCheckIn = '';
+    @Output() checkout = new EventEmitter<void>();
+    mensagemAcaoPrincipal = '';
+    
     
 
     aoFechar(): void{
@@ -34,18 +36,73 @@ export class ReservaDetalhes {
         this.checkin.emit()
     }
 
-    tentarCheckIn(): void {
-        if (this.podeRealizarCheckIn()) {
-            this.mensagemCheckIn = '';
+    aoCheckOut(): void{
+        this.checkout.emit()
+    }
+
+    tentarAcaoPrincipal(): void {
+        if (this.podeExecutarAcaoPrincipal()) {
+            this.mensagemAcaoPrincipal = '';
+            this.executarAcaoPrincipal();
+            return;
+        }
+
+        this.mensagemAcaoPrincipal = this.obterMensagemAcaoPrincipalBloqueada();
+
+        setTimeout(() => {
+            this.mensagemAcaoPrincipal = '';
+        }, 3000);
+    }
+
+    obterTextoAcaoPrincipal(): string {
+        if (this.reserva?.status === 'CheckIn') {
+            return 'Check-out';
+        }
+
+        if (this.reserva?.status === 'CheckOut') {
+            return 'Finalizada';
+        }
+
+        if (this.reserva?.status === 'Cancelada') {
+            return 'Cancelada';
+        }
+
+        return 'Check-in';
+    }
+
+    podeExecutarAcaoPrincipal(): boolean {
+        if (this.reserva?.status === 'Pendente') {
+            return this.podeRealizarCheckIn();
+        }
+
+        if (this.reserva?.status === 'CheckIn') {
+            return this.podeRealizarCheckOut();
+        }
+
+        return false;
+    }
+
+    executarAcaoPrincipal(): void {
+        if (this.reserva?.status === 'Pendente') {
             this.aoCheckIn();
             return;
         }
 
-        this.mensagemCheckIn = this.obterMensagemCheckInBloqueado();
+        if (this.reserva?.status === 'CheckIn') {
+            this.aoCheckOut();
+        }
+    }
 
-        setTimeout(() => {
-            this.mensagemCheckIn = '';
-        }, 3000);
+    obterMensagemAcaoPrincipalBloqueada(): string {
+        if (this.reserva?.status === 'Pendente') {
+            return this.obterMensagemCheckInBloqueado();
+        }
+
+        if (this.reserva?.status === 'CheckIn') {
+            return this.obterMensagemCheckOutBloqueado();
+        }
+
+        return 'Esta reserva nao possui uma acao principal disponivel.';
     }
 
 
@@ -75,6 +132,22 @@ export class ReservaDetalhes {
         return 'Nao foi possivel realizar o check-in desta reserva.';
     }
 
+    obterMensagemCheckOutBloqueado(): string {
+   if (this.reserva == null) {
+            return 'Selecione uma reserva para realizar check-out.';
+        }
+
+        if (this.reserva.status !== 'CheckIn') {
+            return 'Check-out disponivel apenas para reservas em check-in.';
+        }
+
+        if (this.obterDataLocalHoje() < this.obterDataApi(this.reserva.checkOut)) {
+            return 'Check-out disponivel apenas a partir da data final da reserva.';
+        }
+
+        return 'Nao foi possivel realizar o check-out desta reserva.';
+    }
+
     podeRealizarCheckIn(): boolean{
 
         if(this.reserva == null){
@@ -86,6 +159,23 @@ export class ReservaDetalhes {
         }
         
         if(this.obterDataLocalHoje() < this.obterDataApi(this.reserva.checkIn)){
+            return false
+        }
+
+        return true
+    }
+
+    podeRealizarCheckOut(): boolean{
+
+        if(this.reserva == null){
+            return false
+        }
+
+        if(this.reserva.status !== "CheckIn"){
+            return false
+        }
+        
+        if(this.obterDataLocalHoje() < this.obterDataApi(this.reserva.checkOut)){
             return false
         }
 

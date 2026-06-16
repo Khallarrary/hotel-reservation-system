@@ -107,5 +107,23 @@ namespace HotelApp.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPatch("{id}/check-out")]
+        public async Task<IActionResult> RealizarCheckOut(int id)
+        {
+            try
+            {
+                await _service.RealizarCheckOut(id);
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

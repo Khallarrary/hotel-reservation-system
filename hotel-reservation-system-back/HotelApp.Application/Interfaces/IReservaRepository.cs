@@ -8,11 +8,10 @@ namespace HotelApp.Application.Interfaces
 {
     public interface IReservaRepository
     {
-        Task<List<Reserva>> ObterPorQuartoAsync(int quartoId);
-        Task AdicionarAsync(Reserva reserva);
+        Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId);
+        Task AdicionarReservaAsync(Reserva reserva);
         Task<List<Reserva>> ListarReservasAsync();
         Task DeletarReservaAsync(Reserva reserva);
-        Task<Reserva?> ObterQaurtoPorIdAsync(int quartoId);
         Task<Reserva?> ObterReservaPorIdAsync(int id);
         Task AtualizarReservaAsync(Reserva reserva);
     }

@@ -71,7 +71,7 @@ public class ReservaService
         }
 
         // Busca reservas existentes do quarto
-        var reservas = await _repo.ObterPorQuartoAsync(quartoId) ?? new List<Reserva>();
+        var reservas = await _repo.ObterReservasPorQuartoAsync(quartoId) ?? new List<Reserva>();
 
         // Cria nova reserva (validação adicional ocorre no domínio)
         var nova = new Reserva(checkIn, checkOut, nome, quartoId);
@@ -90,7 +90,7 @@ public class ReservaService
         
         }
 
-        await _repo.AdicionarAsync(nova);
+        await _repo.AdicionarReservaAsync(nova);
 
     }
 
@@ -129,6 +129,20 @@ public class ReservaService
         }
 
         reserva.RealizarCheckIn();
+
+        await _repo.AtualizarReservaAsync(reserva);
+    }
+
+    public async Task RealizarCheckOut(int id)
+    {
+        var reserva = await _repo.ObterReservaPorIdAsync(id);
+
+        if (reserva == null)
+        {
+            throw new NotFoundException("Reserva nao encontrada");
+        }
+
+        reserva.RealizarCheckOut();
 
         await _repo.AtualizarReservaAsync(reserva);
     }

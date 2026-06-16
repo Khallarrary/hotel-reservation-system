@@ -369,7 +369,27 @@ realizarCheckIn(){
   }
 }
 
+realizarCheckOut(){
+  if(this.reservaSelecionada != null){
+    this.reservaService.realizarCheckOut(this.reservaSelecionada.id).subscribe({
+      next: () => {
+        const reserva = this.reservaSelecionada;
+        if(reserva == null){
+          return
+        }
+        reserva.status = "CheckOut";
+        this.carregarQuartos();
+        this.mostrarSucesso("Reserva em check-out!")
+    },
+      error: (err) => {
+        console.log(err);
+        console.log(err.error);
+        this.mostrarErro(err.error || 'Erro ao realizar check-out da reserva');
+      }
+    })
+  }
+}
+
 
 
 };
-
