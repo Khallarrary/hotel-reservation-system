@@ -1,6 +1,7 @@
 using HotelApp.Application.Exceptions;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
+using HotelApp.Domain;
 using HotelApp.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 /// </summary>
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<ReservaService>();
+
+builder.Services.AddScoped<IContaReservaRepository,
+ContaReservaRepository>();
+
+builder.Services.AddScoped<ILancamentoContaRepository,
+LancamentoContaRepository>();
 
 builder.Services.AddScoped<IQuartoRepository, QuartoRepository>();
 builder.Services.AddScoped<QuartoService>();

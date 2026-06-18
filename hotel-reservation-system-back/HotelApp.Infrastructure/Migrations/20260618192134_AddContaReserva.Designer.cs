@@ -3,6 +3,7 @@ using System;
 using HotelApp.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HotelApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260618192134_AddContaReserva")]
+    partial class AddContaReserva
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,38 +48,6 @@ namespace HotelApp.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ContaReserva");
-                });
-
-            modelBuilder.Entity("HotelApp.Domain.LancamentoConta", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ContaReservaId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataLancamento")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("FormaPagamento")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Tipo")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LancamentoConta");
                 });
 
             modelBuilder.Entity("HotelApp.Domain.Quarto", b =>

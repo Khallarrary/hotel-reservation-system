@@ -14,11 +14,13 @@ public class ReservaService
 {
     private readonly IReservaRepository _repo;
     private readonly IQuartoRepository _quartoRepo;
+    private readonly IContaReservaRepository _contaRepo;
 
-    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo)
+    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo)
     {
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
+        _contaRepo = contaRepo ?? throw new ArgumentNullException(nameof(contaRepo));
     }
 
 
@@ -91,6 +93,9 @@ public class ReservaService
         }
 
         await _repo.AdicionarReservaAsync(nova);
+
+        var conta = new ContaReserva(nova.Id);
+        await _contaRepo.AdicionarAsync(conta);
 
     }
 

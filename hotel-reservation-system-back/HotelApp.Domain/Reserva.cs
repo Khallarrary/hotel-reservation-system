@@ -103,7 +103,7 @@ public class Reserva
             throw new ArgumentException("Reserva deve estar com status check-in para dar check-out");
         }
 
-        if (CheckOut.Date < DateTime.Today)
+        if (DateTime.Today < CheckOut.Date)
         {
             throw new ArgumentException("Não é possivel realizar check-out antecipado. Troque a data da reserva");
 
