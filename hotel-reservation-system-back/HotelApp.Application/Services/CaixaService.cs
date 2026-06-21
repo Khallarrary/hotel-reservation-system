@@ -66,5 +66,36 @@ namespace HotelApp.Application.Services
                 DataLancamento = l.DataLancamento
             }).ToList();
         }
+
+        public async Task<CaixaResumoDto> ResumoCaixa(int reservaId) 
+        {
+            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
+
+            if (conta == null)
+            {
+                throw new NotFoundException("Conta nao encontrada.");
+            }
+
+            var lancamentos = await ListarLancamentosPorReserva(reservaId);
+
+            var totalDebitos = lancamentos
+                .Where(l => l.Tipo == "Debito")
+                .Sum(l => l.Valor);
+
+            var totalCreditos = lancamentos
+                .Where(l => l.Tipo == "Credito")
+                .Sum(l => l.Valor);
+
+            return new CaixaResumoDto
+            {
+                ReservaId = reservaId,
+                ContaReservaId = conta.Id,
+                StatusConta = conta.Status.ToString(),
+                TotalDebitos = totalDebitos,
+                TotalCreditos = totalCreditos,
+                Saldo = totalDebitos - totalCreditos,
+                Lancamentos = lancamentos
+            };
+        }
     }
 }

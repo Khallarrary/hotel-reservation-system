@@ -48,5 +48,19 @@ namespace HotelApp.Api.Controllers
                 return NotFound(ex.Message);
             }
         }
+
+        [HttpGet("reserva/{reservaId}/caixa")]
+        public async Task<IActionResult> ResumoCaixa(int reservaId)
+        {
+            try
+            {
+                var caixa = await _service.ResumoCaixa(reservaId);
+                return Ok(caixa);
+            } 
+            catch(NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }
