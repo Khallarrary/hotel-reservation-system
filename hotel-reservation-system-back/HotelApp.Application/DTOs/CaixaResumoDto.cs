@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HotelApp.Application.DTOs
 {
-    internal class CaixaResumoDto
+    public class CaixaResumoDto
     {
         public int ReservaId { get; set; }
         public int ContaReservaId { get; set; }
