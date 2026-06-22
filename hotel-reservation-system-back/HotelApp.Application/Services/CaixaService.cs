@@ -44,6 +44,29 @@ namespace HotelApp.Application.Services
 
             await _lancamentoRepo.AdicionarAsync(lancamento);
         }
+        public async Task LancarDebito(int reservaId, decimal valor, string descricao)
+        {
+            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
+
+            if (conta == null)
+            {
+                throw new ArgumentException("Conta nao encontrada");
+            }
+
+            if (conta.Status == ContaStatus.Encerrada)
+            {
+                throw new ArgumentException("Não é possível lançar débitos em uma conta encerrada.");
+            }
+
+            var lancamento = new LancamentoConta(
+            conta.Id,
+            LancamentoTipo.Debito,
+            descricao,
+            valor
+            );
+
+            await _lancamentoRepo.AdicionarAsync(lancamento);
+        }
 
         public async Task<List<LancamentoContaDto>> ListarLancamentosPorReserva(int reservaId)
         {

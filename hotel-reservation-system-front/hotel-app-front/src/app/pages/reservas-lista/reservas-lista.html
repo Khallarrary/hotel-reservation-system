@@ -12,7 +12,9 @@
     (fechar)="fecharDetalhesReserva()"
     (cancelar)="deletarReservaSelecionada()"
     (checkin)="realizarCheckIn()"
-    (checkout)="realizarCheckOut()">
+    (checkout)="realizarCheckOut()"
+    (caixa)="abrirCaixa()">
+    
   </reserva-detalhes-modal>
 
    <div *ngIf="mensagemSucesso" class="toast toast-sucesso">

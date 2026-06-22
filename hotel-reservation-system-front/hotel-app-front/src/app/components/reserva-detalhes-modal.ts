@@ -19,6 +19,7 @@ export class ReservaDetalhes {
     @Output() cancelar = new EventEmitter<void>();
     @Output() checkin = new EventEmitter<void>();
     @Output() checkout = new EventEmitter<void>();
+    @Output() caixa = new EventEmitter<void>();
     mensagemAcaoPrincipal = '';
     
     
@@ -28,6 +29,10 @@ export class ReservaDetalhes {
 
     }
 
+    aoCaixa(): void{
+        this.caixa.emit();
+    }
+    
     aoCancelar(): void{
         this.cancelar.emit();
     }

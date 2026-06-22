@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Reserva, ReservaService } from '../../services/reserva';
 import { ChangeDetectorRef } from '@angular/core';
 import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-reservas-lista',
@@ -16,7 +17,7 @@ import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
 
 export class ReservasLista implements OnInit {
   reservas: Reserva[] = []
-  constructor(private reservaService: ReservaService, private cdr: ChangeDetectorRef) {}
+  constructor(private reservaService: ReservaService, private cdr: ChangeDetectorRef, private router: Router) {}
 
   reservaSelecionada: Reserva | null = null;
 
@@ -139,6 +140,13 @@ realizarCheckOut(){
         this.mostrarErro(err.error || 'Erro ao realizar check-out da reserva');
       }
     })
+  }
+}
+
+abrirCaixa(): void {
+  if(this.reservaSelecionada != null){
+    const reserva = this.reservaSelecionada;
+    this.router.navigate(['/reservas', reserva.id, 'caixa'])
   }
 }
 

@@ -37,7 +37,7 @@ export interface LancarCredito {
 
 export class CaixaService
 {
-  private apiUrl = 'https://localhost:7265/api/reserva';
+  private apiUrl = 'https://localhost:7265/reserva';
 
   constructor(private http: HttpClient) {}
 

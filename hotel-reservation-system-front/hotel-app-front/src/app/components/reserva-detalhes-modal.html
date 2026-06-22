@@ -54,12 +54,17 @@
           </button>
         </div>
         <button 
-        type="button" 
-        class="btn-modal btn-modal-danger" 
-        (click)="aoCancelar()">
-        Cancelar
+          type="button" 
+          class="btn-modal btn-modal-danger" 
+          (click)="aoCancelar()">
+          Cancelar
         </button>
-        <button type="button" class="btn-modal btn-modal-muted">Caixa</button>
+        <button 
+          type="button" 
+          class="btn-modal btn-modal-muted" 
+          (click)="aoCaixa()">
+          Caixa
+      </button>
       </div>
 
       <div *ngIf="mensagemAcaoPrincipal" class="modal-warning">

@@ -1,1 +1,86 @@
-<p>reserva-caixa works!</p>
+<section class="caixa-container">
+  <p *ngIf="caixa == null" class="loading-state">
+    Carregando caixa...
+  </p>
+
+  <div *ngIf="caixa !== null">
+    <header class="page-header">
+      <div>
+        <span class="page-eyebrow">Caixa</span>
+        <h2>Reserva #{{ caixa.reservaId }}</h2>
+      </div>
+
+      <span class="status-badge">
+        {{ caixa.statusConta }}
+      </span>
+    </header>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span>Total de debitos</span>
+        <strong>{{ caixa.totalDebitos | currency:'BRL':'symbol':'1.2-2' }}</strong>
+      </div>
+      
+
+      <div class="summary-card">
+        <span>Total de creditos</span>
+        <strong>{{ caixa.totalCreditos | currency:'BRL':'symbol':'1.2-2' }}</strong>
+      </div>
+
+      <div
+        class="summary-card summary-card-balance"
+        [ngClass]="{
+          'balance-positive': caixa.saldo > 0,
+          'balance-zero': caixa.saldo === 0,
+          'balance-negative': caixa.saldo < 0
+        }">
+        <span>Saldo</span>
+        <strong>{{ caixa.saldo | currency:'BRL':'symbol':'1.2-2' }}</strong>
+      </div>
+    </div>
+
+    <section class="lancamentos-panel">
+      <div class="panel-header">
+        <h3>Lancamentos</h3>
+        <span>{{ caixa.lancamentos.length }} lancamentos</span>
+      </div>
+
+      <p *ngIf="caixa.lancamentos.length === 0" class="empty-state">
+        Nenhum lancamento encontrado.
+      </p>
+
+      <div *ngIf="caixa.lancamentos.length > 0" class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Descricao</th>
+              <th>Valor</th>
+              <th>Forma de pagamento</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let lancamento of caixa.lancamentos">
+              <td>
+                <span
+                  class="tipo-badge"
+                  [ngClass]="{
+                    'tipo-credito': lancamento.tipo === 'Credito',
+                    'tipo-debito': lancamento.tipo === 'Debito'
+                  }">
+                  {{ lancamento.tipo }}
+                </span>
+              </td>
+              <td>{{ lancamento.descricao }}</td>
+              <td class="valor-cell">{{ lancamento.valor | currency:'BRL':'symbol':'1.2-2' }}</td>
+              <td>{{ lancamento.formaPagamento || '-' }}</td>
+              <td>{{ lancamento.dataLancamento | date:'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</section>

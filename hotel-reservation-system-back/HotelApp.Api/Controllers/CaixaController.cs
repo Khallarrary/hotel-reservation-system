@@ -35,6 +35,26 @@ namespace HotelApp.Api.Controllers
             
         }
 
+        [HttpPost("reserva/{reservaId}/debito")]
+        public async Task<IActionResult> LancarDebito(int reservaId, [FromBody] LancarDebitoDto request)
+        {
+            try
+            {
+                await _service.LancarDebito(reservaId, request.Valor, request.Descricao);
+
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+
+        }
         [HttpGet("reserva/{reservaId}/lancamentos")]
         public async Task<IActionResult> ListarLancamento(int reservaId)
         {

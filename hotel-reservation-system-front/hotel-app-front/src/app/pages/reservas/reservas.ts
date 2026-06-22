@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ReservaService, Reserva, ReservaPorNumero } from '../../services/reserva';
 import { QuartoService } from '../../services/quarto';
 import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
@@ -22,7 +23,7 @@ export class ReservasComponent implements OnInit
   
 
   constructor(private reservaService: ReservaService, private quartoService: QuartoService,
-  private cdr: ChangeDetectorRef){}
+  private cdr: ChangeDetectorRef, private router: Router){}
 
   ngOnInit(): void {
     this.inicioTimeLine.setHours(0, 0, 0, 0);
@@ -387,6 +388,13 @@ realizarCheckOut(){
         this.mostrarErro(err.error || 'Erro ao realizar check-out da reserva');
       }
     })
+  }
+}
+
+abrirCaixa(): void {
+  if(this.reservaSelecionada != null){
+    const reserva = this.reservaSelecionada;
+    this.router.navigate(['/reservas', reserva.id, 'caixa'])
   }
 }
 
