@@ -10,17 +10,69 @@
         <h2>Reserva #{{ caixa.reservaId }}</h2>
       </div>
 
-      <span class="status-badge">
-        {{ caixa.statusConta }}
-      </span>
+      <div class="header-actions">
+        <button type="button" class="btn-back" (click)="voltar()">
+          Voltar
+        </button>
+
+        <span class="status-badge">
+          {{ caixa.statusConta }}
+        </span>
+      </div>
     </header>
+
+    <form
+      class="lancamento-form"
+      [ngClass]="{ 'lancamento-form-debito': novoMovimento.tipo === 'Debito' }">
+      <div class="form-header">
+        <div>
+          <span>Novo lancamento</span>
+          <h3>Registrar movimento</h3>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Tipo</label>
+        <select [(ngModel)]="novoMovimento.tipo" name="tipo">
+          <option value="Credito">Credito</option>
+          <option value="Debito">Debito</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field-description">
+        <label>Descricao</label>
+        <input type="text" [(ngModel)]="novoMovimento.descricao" name="descricao">
+      </div>
+
+      <div class="form-field">
+        <label>Valor</label>
+        <input type="number" [(ngModel)]="novoMovimento.valor" name="valor">
+      </div>
+
+      <div *ngIf="novoMovimento.tipo === 'Credito'" class="form-field">
+        <label>Forma de pagamento</label>
+        <select [(ngModel)]="novoMovimento.formaPagamento" name="formaPagamento">
+          <option [ngValue]="0">Dinheiro</option>
+          <option [ngValue]="1">Pix</option>
+          <option [ngValue]="2">Deposito</option>
+          <option [ngValue]="3">Visa</option>
+          <option [ngValue]="4">Master</option>
+          <option [ngValue]="5">Amex</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-submit" (click)="salvarMovimento()">
+          Salvar lancamento
+        </button>
+      </div>
+    </form>
 
     <div class="summary-grid">
       <div class="summary-card">
         <span>Total de debitos</span>
         <strong>{{ caixa.totalDebitos | currency:'BRL':'symbol':'1.2-2' }}</strong>
       </div>
-      
 
       <div class="summary-card">
         <span>Total de creditos</span>

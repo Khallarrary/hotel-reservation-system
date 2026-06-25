@@ -30,6 +30,12 @@ export interface LancarCredito {
   formaPagamento: number;
 }
 
+export interface LancarDebito {
+  valor: number;
+  descricao: string;
+  
+}
+
 
 @Injectable({
   providedIn: 'root',
@@ -48,5 +54,9 @@ export class CaixaService
 
   lancarCredito(reservaId: number, credito: LancarCredito) {
     return this.http.post(`${this.apiUrl}/${reservaId}/credito`, credito);
+  }
+
+  lancarDebito(reservaId: number, debito: LancarDebito) {
+    return this.http.post(`${this.apiUrl}/${reservaId}/debito`, debito);
   }
 }
