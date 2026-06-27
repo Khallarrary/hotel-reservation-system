@@ -16,7 +16,7 @@ namespace HotelApp.Domain
 
         public ContaReserva(int reservaId)
         {
-            if (reservaId < 0)
+            if (reservaId <= 0)
             {
                 throw new ArgumentException("Conta deve ser vinculada a uma reserva válida.");
             }

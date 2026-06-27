@@ -120,5 +120,28 @@ namespace HotelApp.Application.Services
                 Lancamentos = lancamentos
             };
         }
+
+        public async Task EncerrarConta(int reservaId)
+        {
+            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
+
+            if (conta == null)
+            {
+                throw new NotFoundException("Conta nao encontrada.");
+            }
+
+            var resumo = await ResumoCaixa(reservaId);
+
+            var saldo = resumo.Saldo;
+
+            if(saldo != 0)
+            {
+                throw new ArgumentException("Conta com saldo diferente de zero não pode ser encerrada");
+            }
+
+            conta.Encerrar();
+
+            await _contaRepo.AtualizarAsync(conta);
+        }
     }
 }

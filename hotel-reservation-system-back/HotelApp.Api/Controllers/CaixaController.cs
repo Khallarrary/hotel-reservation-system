@@ -2,6 +2,7 @@
 using HotelApp.Application.DTOs;
 using HotelApp.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace HotelApp.Api.Controllers
 {
@@ -27,12 +28,12 @@ namespace HotelApp.Api.Controllers
             {
                 return NotFound(ex.Message);
             }
-            catch(ArgumentException ex)
+            catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
 
-            
+
         }
 
         [HttpPost("reserva/{reservaId}/debito")]
@@ -76,8 +77,26 @@ namespace HotelApp.Api.Controllers
             {
                 var caixa = await _service.ResumoCaixa(reservaId);
                 return Ok(caixa);
-            } 
-            catch(NotFoundException ex)
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPatch("reserva/{reservaId}/caixa/encerrar")]
+        public async Task<IActionResult> EncerrarConta(int reservaId)
+        {
+            try
+            {
+                await _service.EncerrarConta(reservaId);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
