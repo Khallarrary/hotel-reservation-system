@@ -15,11 +15,30 @@
           Voltar
         </button>
 
-        <span class="status-badge">
+        <span
+          class="status-badge"
+          [ngClass]="{ 'status-badge-closed': caixa.statusConta === 'Encerrada' }">
           {{ caixa.statusConta }}
         </span>
+
+        <button type="button" 
+        [disabled]="caixa.statusConta === 'Encerrada' || caixa.saldo !== 0"
+        class="btn-encerrar" (click)="encerrarConta()">
+          Encerrar conta
+        </button>
       </div>
     </header>
+
+    <div *ngIf="mensagemSucesso || mensagemErro" class="alert-stack">
+      <div *ngIf="mensagemSucesso" class="alert alert-success">
+        {{ mensagemSucesso }}
+      </div>
+
+      <div *ngIf="mensagemErro" class="alert alert-error">
+        {{ mensagemErro }}
+      </div>
+    </div>
+
 
     <form
       class="lancamento-form"
@@ -62,7 +81,11 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="btn-submit" (click)="salvarMovimento()">
+        <button
+          type="button"
+          class="btn-submit"
+          [disabled]="caixa.statusConta === 'Encerrada'"
+          (click)="salvarMovimento()">
           Salvar lancamento
         </button>
       </div>

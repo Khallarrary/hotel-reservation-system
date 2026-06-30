@@ -59,4 +59,8 @@ export class CaixaService
   lancarDebito(reservaId: number, debito: LancarDebito) {
     return this.http.post(`${this.apiUrl}/${reservaId}/debito`, debito);
   }
+
+  encerrarConta(reservaId: number){
+    return this.http.patch(`${this.apiUrl}/${reservaId}/caixa/encerrar`, null);
+  }
 }

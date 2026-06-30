@@ -19,10 +19,10 @@
 
 .page-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .page-header h2 {
@@ -33,6 +33,9 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 560px;
 }
 
 .btn-back {
@@ -74,6 +77,78 @@
   border: 1px solid #86efac;
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+.status-badge-closed {
+  background: #eef2ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+}
+
+.btn-encerrar {
+  min-height: 42px;
+  padding: 0.7rem 1.05rem;
+  border: 1px solid #f3b7b7;
+  border-radius: 999px;
+  background: #fff1f1;
+  color: #9f1d1d;
+  font-size: 0.9rem;
+  font-weight: 900;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-encerrar:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-encerrar:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  filter: grayscale(0.2);
+  transform: none;
+  box-shadow: none;
+}
+
+.alert-stack {
+  display: grid;
+  gap: 0.7rem;
+  margin: -0.25rem 0 1.25rem;
+}
+
+.alert {
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+  animation: alertIn 160ms ease-out;
+}
+
+.alert-success {
+  background: #ecfdf5;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.alert-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@keyframes alertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lancamento-form {
@@ -175,6 +250,14 @@
 .btn-submit:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.btn-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.15);
+  transform: none;
+  box-shadow: none;
 }
 
 .summary-grid {
@@ -341,7 +424,11 @@ tbody tr:hover {
 
   .header-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+  }
+
+  .btn-encerrar {
+    flex: 1 1 100%;
   }
 
   .summary-grid {
