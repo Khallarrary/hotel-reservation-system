@@ -15,6 +15,7 @@ public class ReservaService
     private readonly IReservaRepository _repo;
     private readonly IQuartoRepository _quartoRepo;
     private readonly IContaReservaRepository _contaRepo;
+    private readonly IReservasPaginadas _reservasPaginadasRepo;
 
     public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo)
     {
@@ -150,6 +151,51 @@ public class ReservaService
         reserva.RealizarCheckOut();
 
         await _repo.AtualizarReservaAsync(reserva);
+    }
+
+    public async Task<ReservasPaginadasDto> ListarReservasPaginadas(int pagina, int tamanhoPagina)
+    {
+        if(pagina <= 0)
+        {
+            pagina = 1;
+        }
+
+        if(tamanhoPagina <= 0)
+        {
+            tamanhoPagina = 10;
+        }
+
+        if(tamanhoPagina > 50)
+        {
+            tamanhoPagina = 50;
+        }
+
+
+        var totalItens = await _repo.ContarReservasAsync();
+        
+        var totalDePaginas = (int)Math.Ceiling((decimal)totalItens / tamanhoPagina);
+
+        var reservasPagina = await _repo.ListarReservasPaginadasAsync(pagina, tamanhoPagina);
+
+        var itens = reservasPagina.Select(reserva => new ReservaDto
+        {
+            Id = reserva.Id,
+            CheckIn = reserva.CheckIn,
+            CheckOut = reserva.CheckOut,
+            NomeDoHospede = reserva.NomeDoHospede,
+            QuartoId = reserva.QuartoId,
+            Status = reserva.Status.ToString(),
+        }).ToList();
+
+        return new ReservasPaginadasDto
+        {
+            Itens = itens,
+            Pagina = pagina,
+            TamanhoPagina = tamanhoPagina,
+            TotalItens = totalItens,
+            TotalPaginas = totalDePaginas
+
+        };
     }
 }
  

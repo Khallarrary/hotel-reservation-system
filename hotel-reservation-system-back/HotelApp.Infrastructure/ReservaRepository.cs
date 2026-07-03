@@ -51,5 +51,21 @@ namespace HotelApp.Infrastructure
             _context.Reservas.Update(reserva);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> ContarReservasAsync()
+        {
+            return await _context.Reservas.CountAsync();
+        }
+
+        public async Task<List<Reserva>> ListarReservasPaginadasAsync(int pagina, int tamanhoPagina)
+        {
+            var reservas = await _context.Reservas
+                .OrderBy(r => r.Id)
+                .Skip((pagina - 1) * tamanhoPagina)
+                .Take(tamanhoPagina)
+                .ToListAsync();
+
+            return reservas;
+        }
     }
 }
