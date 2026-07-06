@@ -15,7 +15,7 @@ public class ReservaService
     private readonly IReservaRepository _repo;
     private readonly IQuartoRepository _quartoRepo;
     private readonly IContaReservaRepository _contaRepo;
-    private readonly IReservasPaginadas _reservasPaginadasRepo;
+    
 
     public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo)
     {

@@ -125,5 +125,13 @@ namespace HotelApp.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("paginadas")]
+        public async Task<ActionResult<ReservasPaginadasDto>> GetReservasPaginadas([FromQuery]int pagina, [FromQuery] int tamanhoPagina)
+        {
+            var reservasPaginadas = await _service.ListarReservasPaginadas(pagina, tamanhoPagina);
+
+            return Ok(reservasPaginadas);
+        }
     }
 }
