@@ -17,6 +17,10 @@ import { Router } from '@angular/router';
 
 export class ReservasLista implements OnInit {
   reservas: Reserva[] = []
+  paginaAtual: number = 1;
+  tamanhoPagina: number = 10;
+  totalItens: number = 0;
+  totalPaginas: number = 0;
   constructor(private reservaService: ReservaService, private cdr: ChangeDetectorRef, private router: Router) {}
 
   reservaSelecionada: Reserva | null = null;
@@ -27,19 +31,38 @@ export class ReservasLista implements OnInit {
 
   }
 
-
   carregarReservas(): void{
   console.log('CARREGANDO...');
-  this.reservaService.listar().subscribe({
-    next: (data) => {
-      console.log('RESERVAS:', data);
-      this.reservas = data;
+  this.reservaService.listarPaginada(this.paginaAtual, this.tamanhoPagina).subscribe({
+    next: (resposta) => {
+      console.log(resposta)
+      this.reservas = resposta.itens;
+      this.paginaAtual = resposta.pagina;
+      this.tamanhoPagina = resposta.tamanhoPagina;
+      this.totalItens = resposta.totalItens;
+      this.totalPaginas = resposta.totalPaginas;
       this.cdr.detectChanges();
       }, 
       error: (err) => {
         console.log(err)
       }
   });
+  }
+
+  proximaPagina(): void{
+    if(this.paginaAtual >= this.totalPaginas){
+      return;
+    }
+      this.paginaAtual += 1;
+      this.carregarReservas();
+  }
+
+  anteriorPagina(): void{
+    if(this.paginaAtual <= 1){
+      return;
+    }
+      this.paginaAtual -= 1;
+      this.carregarReservas();
   }
 
   private obterDataApi(data: string): string {

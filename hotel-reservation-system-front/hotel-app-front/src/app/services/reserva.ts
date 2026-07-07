@@ -11,6 +11,14 @@ export interface Reserva {
   status: string;
 }
 
+export interface ReservaPaginada {
+  itens: Reserva[];
+  pagina: number;
+  tamanhoPagina: number;
+  totalItens: number;
+  totalPaginas: number;
+}
+
 export interface ReservaPorNumero{
   checkIn: string;
   checkOut: string;
@@ -50,6 +58,15 @@ realizarCheckIn(id: number){
 
 realizarCheckOut(id: number){
   return this.http.patch(`${this.apiUrl}/${id}/check-out`, null)
+}
+
+listarPaginada(pagina: number, tamanhoPagina: number): Observable<ReservaPaginada>{
+  return this.http.get<ReservaPaginada>(`${this.apiUrl}/paginadas`, {
+    params: {
+      pagina: pagina,
+      tamanhoPagina: tamanhoPagina
+    }
+  })
 }
   
 }
