@@ -2,7 +2,7 @@
 
 Sistema de reservas de hotel desenvolvido como projeto de estudos, com backend em .NET e frontend em Angular.
 
-O objetivo do projeto é praticar a construção de uma aplicação completa, passando por modelagem de domínio, regras de negócio, API REST, banco de dados, integração com frontend e evolução de experiência do usuário.
+O objetivo do projeto e praticar a construcao de uma aplicacao fullstack com regras de negocio reais, integrando API REST, banco de dados, frontend, fluxo operacional de reservas e controle financeiro basico da hospedagem.
 
 ---
 
@@ -10,7 +10,7 @@ O objetivo do projeto é praticar a construção de uma aplicação completa, pa
 
 Em desenvolvimento.
 
-O sistema já possui um fluxo funcional de reservas, incluindo criação, visualização em mapa, listagem, modal de detalhes, cancelamento, check-in e check-out.
+O sistema ja possui um fluxo funcional de reservas, mapa/timeline, listagem paginada, modal de detalhes, status da reserva, check-in, check-out, cancelamento e modulo de caixa da reserva.
 
 ---
 
@@ -20,48 +20,84 @@ O sistema já possui um fluxo funcional de reservas, incluindo criação, visual
 
 - Cadastro de quartos
 - Listagem de quartos
-- Validação de número e tipo
-- Bloqueio de remoção de quarto com reservas vinculadas
+- Busca por id e numero
+- Validacao de numero e tipo
+- Bloqueio de remocao de quarto com reservas vinculadas
 
 ### Reservas
 
-- Criação de reserva pelo número do quarto
-- Validação de conflito de datas no mesmo quarto
-- Validação de datas inválidas ou reservas muito longas
-- Exibição de reservas em mapa/timeline
+- Criacao de reserva pelo numero do quarto
+- Validacao de conflito de datas no mesmo quarto
+- Validacao de datas invalidas
+- Validacao de limite de permanencia
+- Exibicao de reservas em mapa/timeline
 - Listagem de reservas em tabela
+- Listagem paginada no backend
 - Modal com detalhes da reserva
 - Cancelamento de reserva
 - Fluxo de check-in
 - Fluxo de check-out
+- Acesso ao caixa da reserva pelo modal
 - Status da reserva:
   - Pendente
   - CheckIn
   - CheckOut
   - Cancelada
 
+### Caixa da reserva
+
+- Criacao automatica de conta ao criar uma reserva
+- Resumo do caixa por reserva
+- Lancamento de creditos
+- Lancamento de debitos
+- Formas de pagamento para credito:
+  - Dinheiro
+  - Pix
+  - Deposito
+  - Visa
+  - Master
+  - Amex
+- Calculo de total de debitos
+- Calculo de total de creditos
+- Calculo de saldo
+- Listagem de lancamentos
+- Encerramento de conta
+- Bloqueio de encerramento quando o saldo e diferente de zero
+- Bloqueio de novos lancamentos em conta encerrada
+
 ### Frontend
 
-- Navegação entre mapa e lista de reservas
-- Toasts de sucesso e erro
-- Cores diferentes no mapa conforme o status da reserva
-- Botão principal do modal muda conforme o status da reserva
-- Formatação de datas sem deslocamento por timezone
+- Navegacao entre mapa e lista de reservas
+- Mapa de reservas em formato de timeline
+- Cards de reserva com cores por status
+- Formulario de criacao de reserva
+- Modal de detalhes da reserva
+- Acoes de check-in, check-out, cancelamento e caixa
+- Tela de lista de reservas
+- Paginacao visual consumindo endpoint paginado
+- Tela de caixa da reserva
+- Formulario para lancar credito e debito
+- Toasts e mensagens de sucesso/erro
+- Formatacao de datas sem deslocamento por timezone
 
 ---
 
 ## Destaque do projeto
 
-O principal diferencial é o mapa de reservas em formato de timeline, inspirado em sistemas de hotelaria.
+O principal diferencial do projeto e o mapa de reservas em formato de timeline, inspirado em sistemas reais de hotelaria.
 
 As reservas aparecem como blocos posicionados dinamicamente com base em:
 
 - data de check-in
 - data de check-out
-- duração da estadia
-- janela visível da timeline
+- duracao da estadia
+- janela visivel da timeline
+- quarto vinculado
+- status da reserva
 
-Esse fluxo permite visualizar rapidamente quais quartos estão ocupados em cada período.
+Esse fluxo permite visualizar rapidamente a ocupacao dos quartos por periodo.
+
+Outro ponto importante e o modulo de caixa da reserva, que aproxima o projeto de um fluxo operacional real: a reserva possui uma conta, recebe lancamentos financeiros e pode ser encerrada apenas quando o saldo esta zerado.
 
 ---
 
@@ -74,6 +110,7 @@ Esse fluxo permite visualizar rapidamente quais quartos estão ocupados em cada 
 - C#
 - Entity Framework Core
 - PostgreSQL
+- Swagger / Swashbuckle
 - Arquitetura em camadas:
   - Domain
   - Application
@@ -108,6 +145,7 @@ DELETE /api/Quarto/numero/{numero}
 
 ```http
 GET /api/Reserva
+GET /api/Reserva/paginadas?pagina=1&tamanhoPagina=10
 POST /api/Reserva
 POST /api/Reserva/numero
 DELETE /api/Reserva/{id}
@@ -115,20 +153,41 @@ PATCH /api/Reserva/{id}/check-in
 PATCH /api/Reserva/{id}/check-out
 ```
 
+### Caixa
+
+```http
+GET /reserva/{reservaId}/caixa
+GET /reserva/{reservaId}/lancamentos
+POST /reserva/{reservaId}/credito
+POST /reserva/{reservaId}/debito
+PATCH /reserva/{reservaId}/caixa/encerrar
+```
+
 ---
 
-## Regras de negócio
+## Regras de negocio
 
-- Não é permitido criar reserva com check-out menor ou igual ao check-in
-- Não é permitido criar reserva com check-in no passado
-- Não é permitido criar reserva com mais de 30 dias
-- Não é permitido conflito de reservas no mesmo quarto
-- Check-in só pode ser realizado em reservas pendentes
-- Check-in não pode ser realizado antes da data da reserva
-- Check-in não pode ser realizado em reservas já expiradas
-- Check-out só pode ser realizado em reservas com status CheckIn
-- Check-out não pode ser realizado antes da data final da reserva
-- Quarto não pode ser removido se possuir reservas vinculadas
+### Reservas
+
+- Nao e permitido criar reserva com check-out menor ou igual ao check-in
+- Nao e permitido criar reserva com check-in no passado
+- Nao e permitido criar reserva acima do limite de permanencia definido
+- Nao e permitido conflito de reservas no mesmo quarto
+- Check-in so pode ser realizado em reservas pendentes
+- Check-in nao pode ser realizado antes da data da reserva
+- Check-in nao pode ser realizado em reservas expiradas
+- Check-out so pode ser realizado em reservas com status CheckIn
+- Check-out nao pode ser realizado antes da data final da reserva
+- Quarto nao pode ser removido se possuir reservas vinculadas
+
+### Caixa
+
+- Toda reserva criada deve possuir uma conta vinculada
+- Creditos precisam ter forma de pagamento
+- Debitos nao possuem forma de pagamento
+- Nao e permitido lancar credito em conta encerrada
+- Nao e permitido lancar debito em conta encerrada
+- Conta so pode ser encerrada com saldo igual a zero
 
 ---
 
@@ -142,7 +201,7 @@ Entre na pasta do backend:
 cd hotel-reservation-system-back
 ```
 
-Configure a variável de ambiente com a connection string do PostgreSQL:
+Configure a variavel de ambiente com a connection string do PostgreSQL:
 
 ```powershell
 $env:HOTELAPP_CONNECTION="Host=localhost;Port=5432;Database=hotelapp;Username=postgres;Password=sua_senha"
@@ -174,7 +233,7 @@ Entre na pasta do frontend:
 cd hotel-reservation-system-front/hotel-app-front
 ```
 
-Instale as dependências:
+Instale as dependencias:
 
 ```bash
 npm install
@@ -209,30 +268,38 @@ dotnet test
 
 Durante o desenvolvimento foram praticados:
 
-- separação de responsabilidades entre backend e frontend
-- criação de entidades com regras de negócio
+- separacao de responsabilidades entre backend e frontend
+- modelagem de entidades de dominio
+- criacao de regras de negocio no dominio
 - uso de DTOs
-- padrão Repository e Service
+- padrao Repository e Service
 - migrations com Entity Framework
-- integração Angular com API REST
-- comunicação entre componentes com Input e Output
+- integracao Angular com API REST
+- comunicacao entre componentes com Input e Output
 - tratamento de datas e timezone
 - controle de estado visual no frontend
-- testes unitários de regras de domínio
+- paginacao real no backend com Skip e Take
+- consumo de resposta paginada no Angular
+- criacao de fluxos financeiros simples
+- testes unitarios de regras de dominio e servicos
+- investigacao e correcao de conflito de pacotes Swagger/OpenAPI
 
 ---
 
-## Próximos passos
+## Proximos passos
 
-- Criar fluxo de caixa da reserva
-- Adicionar paginação e filtros na listagem de reservas
-- Criar usuários e níveis de autenticação
-- Melhorar responsividade
-- Separar melhor responsabilidades em componentes menores no frontend
-- Melhorar tratamento global de erros no backend
+- Adicionar busca com filtros na listagem de reservas
+- Criar usuarios e niveis de autenticacao
+- Criar tarifario por categoria de quarto
+- Criar rotina de diarias
+- Criar edicao de reserva
+- Criar cadastro de hospede e vincular a reserva
+- Avaliar cache para dados de cadastro, como quartos e futuro tarifario
+- Melhorar warnings de nullable nos DTOs
+- Preparar deploy/demo do projeto
 
 ---
 
-## Licença
+## Licenca
 
-Projeto desenvolvido para fins de estudo e portfólio.
+Projeto desenvolvido para fins de estudo e portfolio.
