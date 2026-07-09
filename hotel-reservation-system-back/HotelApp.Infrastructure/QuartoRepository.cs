@@ -39,7 +39,8 @@ namespace HotelApp.Infrastructure
         {
             var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoId);
 
-            if (quarto == null) {
+            if (quarto == null)
+            {
                 return;
             }
 
@@ -58,6 +59,12 @@ namespace HotelApp.Infrastructure
                 .FirstOrDefaultAsync(q => q.Numero == numero);
         }
 
-   
+        public async Task<List<Quarto>> ObterPorIdsAsync(List<int> ids)
+        {
+            return await _context.Quartos
+                .Where(q => ids.Contains(q.Id))
+                .ToListAsync();
+        }
+
     }
 }

@@ -4,6 +4,7 @@ using System.Text;
 using HotelApp.Domain;
 using Microsoft.EntityFrameworkCore;
 using HotelApp.Application.Interfaces;
+using HotelApp.Application.DTOs;
 
 namespace HotelApp.Infrastructure
 {
@@ -16,7 +17,8 @@ namespace HotelApp.Infrastructure
             _context = context;
         }
 
-        public async Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId) {
+        public async Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId)
+        {
 
             return await _context.Reservas
                 .Where(r => r.QuartoId == quartoId)
@@ -52,20 +54,59 @@ namespace HotelApp.Infrastructure
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int> ContarReservasAsync()
+        public async Task<int> ContarReservasAsync(ReservaConsultaDto consulta)
         {
-            return await _context.Reservas.CountAsync();
+            var query = MontarQuery(consulta);
+
+            return await query.CountAsync();
         }
 
-        public async Task<List<Reserva>> ListarReservasPaginadasAsync(int pagina, int tamanhoPagina)
+        public async Task<List<Reserva>> ListarReservasPaginadasAsync(ReservaConsultaDto consulta)
         {
-            var reservas = await _context.Reservas
+            var query = MontarQuery(consulta);
+
+            return await query
                 .OrderBy(r => r.Id)
-                .Skip((pagina - 1) * tamanhoPagina)
-                .Take(tamanhoPagina)
+                .Skip((consulta.Pagina - 1) * consulta.TamanhoPagina)
+                .Take(consulta.TamanhoPagina)
                 .ToListAsync();
-
-            return reservas;
         }
+
+        private IQueryable<Reserva> MontarQuery(ReservaConsultaDto consulta)
+        {
+            var query = _context.Reservas.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(consulta.NomeHospede))
+            {
+                query = query.Where(r => r.NomeDoHospede.Contains(consulta.NomeHospede));
+            }
+
+            if (consulta.ReservaId.HasValue)
+            {
+                query = query.Where(r => r.Id == consulta.ReservaId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(consulta.Status))
+            {
+                if (Enum.TryParse<ReservaStatus>(consulta.Status, true, out var status))
+                {
+                    query = query.Where(r => r.Status == status);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(consulta.NumeroQuarto))
+            {
+                query =
+                    from reserva in query
+                    join quarto in _context.Quartos
+                        on reserva.QuartoId equals quarto.Id
+                    where quarto.Numero == consulta.NumeroQuarto
+                    select reserva;
+            }
+
+            return query;
+        }
+
     }
+   
 }

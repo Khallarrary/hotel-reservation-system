@@ -12,5 +12,6 @@ namespace HotelApp.Application.DTOs
         public int TamanhoPagina { get; set; }
         public int TotalItens { get; set; }
         public int TotalPaginas { get; set; }
+
     }
 }

@@ -13,7 +13,8 @@ namespace HotelApp.Application.Interfaces
         Task AdicionarAsync(Quarto quarto);
         Task<bool> ExisteNumeroAsync(string numero);
         Task<Quarto?> ObterPorNumeroAsync(string numero);
-       
+        Task<List<Quarto>> ObterPorIdsAsync(List<int> ids);
+
 
     }
 }

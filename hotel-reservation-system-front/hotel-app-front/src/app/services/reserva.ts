@@ -8,6 +8,7 @@ export interface Reserva {
   checkOut: string;
   nomeDoHospede: string;
   quartoId: number;
+  numeroQuarto: string;
   status: string;
 }
 
@@ -17,6 +18,13 @@ export interface ReservaPaginada {
   tamanhoPagina: number;
   totalItens: number;
   totalPaginas: number;
+}
+
+export interface ReservaConsulta {
+  nomeHospede?: string;
+  status?: string;
+  numeroQuarto?: string;
+  reservaId?: number | null;
 }
 
 export interface ReservaPorNumero{
@@ -60,13 +68,30 @@ realizarCheckOut(id: number){
   return this.http.patch(`${this.apiUrl}/${id}/check-out`, null)
 }
 
-listarPaginada(pagina: number, tamanhoPagina: number): Observable<ReservaPaginada>{
-  return this.http.get<ReservaPaginada>(`${this.apiUrl}/paginadas`, {
-    params: {
+listarPaginada(pagina: number, tamanhoPagina: number, filtros?: ReservaConsulta): Observable<ReservaPaginada>{
+  
+    const params: any = {
       pagina: pagina,
       tamanhoPagina: tamanhoPagina
+    };
+
+    if(filtros?.nomeHospede){
+      params.nomeHospede = filtros.nomeHospede;
     }
-  })
+
+    if(filtros?.status){
+      params.status = filtros.status;
+    }
+
+    if(filtros?.numeroQuarto){
+      params.numeroQuarto = filtros.numeroQuarto;
+    }
+
+    if(filtros?.reservaId){
+      params.reservaId = filtros.reservaId;
+    }
+
+  return this.http.get<ReservaPaginada>(`${this.apiUrl}/paginadas`, { params });
 }
   
 }

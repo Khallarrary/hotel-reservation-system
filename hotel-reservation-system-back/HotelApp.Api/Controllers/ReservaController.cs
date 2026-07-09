@@ -127,9 +127,9 @@ namespace HotelApp.Api.Controllers
         }
 
         [HttpGet("paginadas")]
-        public async Task<ActionResult<ReservasPaginadasDto>> GetReservasPaginadas([FromQuery]int pagina, [FromQuery] int tamanhoPagina)
+        public async Task<ActionResult<ReservasPaginadasDto>> GetReservasPaginadas([FromQuery]ReservaConsultaDto consulta)
         {
-            var reservasPaginadas = await _service.ListarReservasPaginadas(pagina, tamanhoPagina);
+            var reservasPaginadas = await _service.ListarReservasPaginadas(consulta);
 
             return Ok(reservasPaginadas);
         }

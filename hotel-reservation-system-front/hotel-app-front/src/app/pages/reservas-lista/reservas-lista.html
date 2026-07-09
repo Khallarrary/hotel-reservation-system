@@ -2,9 +2,68 @@
   <header class="page-header">
     <div>
       <h2>Lista de Reservas</h2>
-      
     </div>
   </header>
+
+  <section class="filtros-panel">
+    <div class="filtros-header">
+      <span>Busca</span>
+      <h3>Filtrar reservas</h3>
+    </div>
+
+    <div class="filtros-grid">
+      <div class="filtro-field filtro-field-wide">
+        <label>Hospede</label>
+        <input
+          type="text"
+          name="nomeHospede"
+          placeholder="Nome do hospede"
+          [(ngModel)]="filtros.nomeHospede"
+          (keyup.enter)="buscar()">
+      </div>
+
+      <div class="filtro-field">
+        <label>Status</label>
+        <select name="status" [(ngModel)]="filtros.status">
+          <option value="">Todos</option>
+          <option value="Pendente">Pendente</option>
+          <option value="CheckIn">Check-in</option>
+          <option value="CheckOut">Check-out</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+      </div>
+
+      <div class="filtro-field">
+        <label>Quarto</label>
+        <input
+          type="text"
+          name="numeroQuarto"
+          placeholder="Numero"
+          [(ngModel)]="filtros.numeroQuarto"
+          (keyup.enter)="buscar()">
+      </div>
+
+      <div class="filtro-field">
+        <label>Reserva</label>
+        <input
+          type="number"
+          name="reservaId"
+          placeholder="ID"
+          [(ngModel)]="filtros.reservaId"
+          (keyup.enter)="buscar()">
+      </div>
+
+      <div class="filtros-actions">
+        <button type="button" class="btn-filter-primary" (click)="buscar()">
+          Buscar
+        </button>
+
+        <button type="button" class="btn-filter-muted" (click)="limpar()">
+          Limpar
+        </button>
+      </div>
+    </div>
+  </section>
 
   <reserva-detalhes-modal
     *ngIf="reservaSelecionada"
@@ -50,7 +109,7 @@
             </td>
             <td>{{ formatarDataApi(reserva.checkIn) }}</td>
             <td>{{ formatarDataApi(reserva.checkOut) }}</td>
-            <td>{{ reserva.quartoId }}</td>
+            <td>{{ reserva.numeroQuarto }}</td>
             <td>
               <span
                 class="status-badge"

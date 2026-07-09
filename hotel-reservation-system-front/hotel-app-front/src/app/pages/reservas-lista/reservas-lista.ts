@@ -4,10 +4,11 @@ import { Reserva, ReservaService } from '../../services/reserva';
 import { ChangeDetectorRef } from '@angular/core';
 import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-reservas-lista',
-  imports: [CommonModule, ReservaDetalhes],
+  imports: [CommonModule, FormsModule, ReservaDetalhes],
   templateUrl: './reservas-lista.html',
   styleUrl: './reservas-lista.css',
   standalone: true
@@ -25,6 +26,13 @@ export class ReservasLista implements OnInit {
 
   reservaSelecionada: Reserva | null = null;
 
+  filtros = {
+  nomeHospede: '',
+  status: '',
+  numeroQuarto: '',
+  reservaId: null
+  }
+
   ngOnInit(): void {
      console.log('ENTROU NA LISTAGEM');
     this.carregarReservas()
@@ -33,7 +41,7 @@ export class ReservasLista implements OnInit {
 
   carregarReservas(): void{
   console.log('CARREGANDO...');
-  this.reservaService.listarPaginada(this.paginaAtual, this.tamanhoPagina).subscribe({
+  this.reservaService.listarPaginada(this.paginaAtual, this.tamanhoPagina, this.filtros).subscribe({
     next: (resposta) => {
       console.log(resposta)
       this.reservas = resposta.itens;
@@ -47,6 +55,22 @@ export class ReservasLista implements OnInit {
         console.log(err)
       }
   });
+  }
+
+  buscar(): void{
+    this.paginaAtual = 1;
+    this.carregarReservas();
+  }
+
+  limpar(): void{
+    this.filtros = {
+      nomeHospede: '',
+      status: '',
+      numeroQuarto: '',
+      reservaId: null
+      }
+    this.paginaAtual = 1;
+    this.carregarReservas();
   }
 
   proximaPagina(): void{
@@ -123,6 +147,8 @@ mostrarErro(texto: string) {
     this.mensagemErro = '';
   }, 3000);
 }
+
+
 
 realizarCheckIn(){
   if(this.reservaSelecionada != null){

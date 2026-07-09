@@ -11,6 +11,7 @@ namespace HotelApp.Application.DTOs
         public DateTime CheckOut { get; set; }
         public string NomeDoHospede { get; set; }
         public int QuartoId { get; set; }
+        public string NumeroQuarto { get; set; } = string.Empty;
         public string Status { get; set; }
     }
 }

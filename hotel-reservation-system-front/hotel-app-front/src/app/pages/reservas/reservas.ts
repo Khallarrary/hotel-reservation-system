@@ -113,6 +113,7 @@ novaReserva: Reserva = {
   checkOut: '',
   nomeDoHospede: '',
   quartoId: 0,
+  numeroQuarto: '',
   status: ''
 };
 
@@ -129,6 +130,7 @@ criarReserva() {
         checkOut: '',
         nomeDoHospede: '',
         quartoId: 0,
+        numeroQuarto: '',
         status: ''
       };
     },

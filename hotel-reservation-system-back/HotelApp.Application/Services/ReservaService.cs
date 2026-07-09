@@ -153,29 +153,35 @@ public class ReservaService
         await _repo.AtualizarReservaAsync(reserva);
     }
 
-    public async Task<ReservasPaginadasDto> ListarReservasPaginadas(int pagina, int tamanhoPagina)
+    public async Task<ReservasPaginadasDto> ListarReservasPaginadas(ReservaConsultaDto consulta)
     {
-        if(pagina <= 0)
+        if(consulta.Pagina <= 0)
         {
-            pagina = 1;
+            consulta.Pagina = 1;
         }
 
-        if(tamanhoPagina <= 0)
+        if(consulta.TamanhoPagina <= 0)
         {
-            tamanhoPagina = 10;
+            consulta.TamanhoPagina = 10;
         }
 
-        if(tamanhoPagina > 50)
+        if(consulta.TamanhoPagina > 50)
         {
-            tamanhoPagina = 50;
+            consulta.TamanhoPagina = 50;
         }
 
-
-        var totalItens = await _repo.ContarReservasAsync();
         
-        var totalDePaginas = (int)Math.Ceiling((decimal)totalItens / tamanhoPagina);
+        var totalItens = await _repo.ContarReservasAsync(consulta);
+        
+        var totalDePaginas = (int)Math.Ceiling((decimal)totalItens / consulta.TamanhoPagina);
 
-        var reservasPagina = await _repo.ListarReservasPaginadasAsync(pagina, tamanhoPagina);
+        var reservasPagina = await _repo.ListarReservasPaginadasAsync(consulta);
+
+        var quartoIds = reservasPagina.Select(r => r.QuartoId).Distinct().ToList();
+
+        var quartos = await _quartoRepo.ObterPorIdsAsync(quartoIds);
+
+        var quartosPorId = quartos.ToDictionary(q => q.Id, q => q.Numero);
 
         var itens = reservasPagina.Select(reserva => new ReservaDto
         {
@@ -184,14 +190,15 @@ public class ReservaService
             CheckOut = reserva.CheckOut,
             NomeDoHospede = reserva.NomeDoHospede,
             QuartoId = reserva.QuartoId,
+            NumeroQuarto = quartosPorId.ContainsKey(reserva.QuartoId) ? quartosPorId[reserva.QuartoId] : "",
             Status = reserva.Status.ToString(),
         }).ToList();
 
         return new ReservasPaginadasDto
         {
             Itens = itens,
-            Pagina = pagina,
-            TamanhoPagina = tamanhoPagina,
+            Pagina = consulta.Pagina,
+            TamanhoPagina = consulta.TamanhoPagina,
             TotalItens = totalItens,
             TotalPaginas = totalDePaginas
 
