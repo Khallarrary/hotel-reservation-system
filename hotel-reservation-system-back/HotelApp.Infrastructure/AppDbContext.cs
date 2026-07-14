@@ -7,6 +7,7 @@ public class AppDbContext : DbContext
     public DbSet<Quarto> Quartos { get; set; }
     public DbSet<ContaReserva> ContaReserva { get; set; }
     public DbSet<LancamentoConta> LancamentoConta { get; set; }
+    public DbSet<Usuario> Usuario { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -17,6 +18,10 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<Quarto>()
             .HasIndex(q => q.Numero)
+            .IsUnique();
+
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.Email)
             .IsUnique();
     }
 

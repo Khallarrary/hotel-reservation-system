@@ -32,6 +32,10 @@ builder.Services.AddScoped<CaixaService>();
 builder.Services.AddScoped<IQuartoRepository, QuartoRepository>();
 builder.Services.AddScoped<QuartoService>();
 
+builder.Services.AddScoped<IUsuarioRepository, 
+UsuarioRepository>();
+
+
 /// <summary>
 /// Adiciona suporte a controllers (API)
 /// </summary>
