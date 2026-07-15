@@ -34,6 +34,8 @@ builder.Services.AddScoped<QuartoService>();
 
 builder.Services.AddScoped<IUsuarioRepository, 
 UsuarioRepository>();
+builder.Services.AddScoped<ISenhaHasher, SenhaHasher>();
+builder.Services.AddScoped<UsuarioService>();
 
 
 /// <summary>

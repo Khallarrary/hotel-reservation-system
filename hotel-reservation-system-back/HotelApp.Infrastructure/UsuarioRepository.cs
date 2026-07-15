@@ -7,7 +7,7 @@ using System.Text;
 
 namespace HotelApp.Infrastructure
 {
-    public class UsuarioRepository : IUsuarioRepository
+    public class UsuarioRepository : IUsuarioRepository 
     {
         private readonly AppDbContext _context;
 
