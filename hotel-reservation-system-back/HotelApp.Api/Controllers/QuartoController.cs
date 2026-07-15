@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using HotelApp.Application.DTOs;
+﻿using HotelApp.Application.DTOs;
 using HotelApp.Application.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace HotelApp.Api.Controllers
@@ -38,6 +39,7 @@ namespace HotelApp.Api.Controllers
             
         }
 
+        [Authorize(Roles = "Gestor")]
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] QuartoDto request)
         {

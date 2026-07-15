@@ -1,4 +1,5 @@
-﻿using HotelApp.Application.Interfaces;
+﻿using HotelApp.Application.DTOs;
+using HotelApp.Application.Interfaces;
 using HotelApp.Domain;
 using System;
 using System.Collections.Generic;
@@ -12,11 +13,13 @@ namespace HotelApp.Application.Services
 
         private readonly IUsuarioRepository _repo;
         private readonly ISenhaHasher _senhaHasher;
+        private readonly ITokenService _tokenService;
 
-        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha)
+        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token)
         {
             _repo = repo;
             _senhaHasher = senha;
+            _tokenService = token;
         }
 
         public async Task CriarUsuario(string nome, string email, string senha, string perfil)
@@ -57,6 +60,46 @@ namespace HotelApp.Application.Services
 
 
             await _repo.AdicionarAsync(novo);
+        }
+
+        public async Task<LoginRespostaDto> Login(string email, string senha) 
+        {
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Email é obrigatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(senha))
+            {
+                throw new ArgumentException("Senha é obrigatorio.");
+            }
+
+            var usuario = await _repo.ObterPorEmailAsync(email);
+
+            if (usuario == null)
+            {
+                throw new ArgumentException("Email não encontrado.");
+                
+            }
+
+            if (!usuario.Ativo) 
+            {
+                throw new ArgumentException("Usuario desativado.");
+                
+            }
+
+            var verificaSenha = _senhaHasher.Verificar(usuario.SenhaHash, senha);
+
+            if (!verificaSenha)
+            {
+                throw new ArgumentException("Senha incorreta.");
+            }
+            
+            var token = _tokenService.GerarToken(usuario);
+
+            return new LoginRespostaDto { Token = token, Email = usuario.Email, Nome = usuario.Nome, Perfil = usuario.Perfil.ToString() };
+
         }
     }
 }

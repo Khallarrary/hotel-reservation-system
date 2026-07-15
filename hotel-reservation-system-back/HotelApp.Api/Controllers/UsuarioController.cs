@@ -1,6 +1,9 @@
 ﻿using HotelApp.Application.DTOs;
 using HotelApp.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace HotelApp.Api.Controllers
 {
@@ -32,6 +35,22 @@ namespace HotelApp.Api.Controllers
                 return BadRequest(ex.Message);
             }
             
+        }
+
+       
+        [HttpPost("login")]
+        public async Task<IActionResult> LoginAsync([FromBody] LoginUsuarioDto request)
+        {
+            try
+            {
+                var resposta = await _service.Login(request.Email, request.Senha);
+                
+                return Ok(resposta);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

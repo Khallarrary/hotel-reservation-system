@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using HotelApp.Application.DTOs;
-using HotelApp.Application.Services;
+﻿using HotelApp.Application.DTOs;
 using HotelApp.Application.Exceptions;
+using HotelApp.Application.Services;
 using HotelApp.Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HotelApp.Api.Controllers
 {
@@ -17,6 +18,7 @@ namespace HotelApp.Api.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CriarReserva([FromBody] ReservaDto request)
         {
@@ -42,6 +44,7 @@ namespace HotelApp.Api.Controllers
 
         }
 
+        [Authorize]
         [HttpPost ("numero")]
         public async Task<IActionResult> CriarReservaPorNumero([FromBody] CriarReservaDto request)
         {
@@ -67,6 +70,7 @@ namespace HotelApp.Api.Controllers
 
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<ReservaDto>> Get()
         {
@@ -76,6 +80,7 @@ namespace HotelApp.Api.Controllers
             return Ok(reservas);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletarReserva(int id)
         {
@@ -90,6 +95,7 @@ namespace HotelApp.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpPatch("{id}/check-in")]
         public async Task<IActionResult> RealizarCheckIn(int id)
         {
@@ -108,6 +114,7 @@ namespace HotelApp.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpPatch("{id}/check-out")]
         public async Task<IActionResult> RealizarCheckOut(int id)
         {
