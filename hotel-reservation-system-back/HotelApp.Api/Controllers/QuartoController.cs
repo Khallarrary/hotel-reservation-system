@@ -18,6 +18,7 @@ namespace HotelApp.Api.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -25,6 +26,7 @@ namespace HotelApp.Api.Controllers
             return Ok(quartos);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> getById(int id) {
 
@@ -54,6 +56,7 @@ namespace HotelApp.Api.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpGet("numero/{numero}")]
         public async Task<IActionResult> GetByNumero(string numero)
         {
@@ -69,6 +72,7 @@ namespace HotelApp.Api.Controllers
             return Ok(quarto);
         }
 
+        [Authorize]
         [HttpDelete("numero/{numero}")]
         public async Task<IActionResult> DeletePorNumero(string numero)
         {

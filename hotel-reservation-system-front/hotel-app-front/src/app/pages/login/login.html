@@ -1,0 +1,49 @@
+<main class="login-page">
+  <section class="login-shell">
+    <div class="brand-panel">
+      <div class="brand-logo">H</div>
+      <p class="brand-eyebrow">Hotel Reservation</p>
+      <h1>Sistema de reservas</h1>
+      <p class="brand-text">
+        Acesse o painel para gerenciar reservas, caixa e operacao da hospedagem.
+      </p>
+    </div>
+
+    <form class="login-card" (ngSubmit)="entrar()">
+      <div class="login-header">
+        <span>Entrar</span>
+        <h2>Bem-vindo</h2>
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          placeholder="seu@email.com"
+          [(ngModel)]="email">
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input
+          id="senha"
+          name="senha"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Digite sua senha"
+          [(ngModel)]="senha">
+      </div>
+
+      <p *ngIf="mensagemErro" class="login-error">
+        {{ mensagemErro }}
+      </p>
+
+      <button type="submit" class="login-button">
+        Acessar sistema
+      </button>
+    </form>
+  </section>
+</main>

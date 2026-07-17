@@ -133,6 +133,7 @@ namespace HotelApp.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("paginadas")]
         public async Task<ActionResult<ReservasPaginadasDto>> GetReservasPaginadas([FromQuery]ReservaConsultaDto consulta)
         {

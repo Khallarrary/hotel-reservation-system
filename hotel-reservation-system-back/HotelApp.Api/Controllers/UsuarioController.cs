@@ -20,6 +20,8 @@ namespace HotelApp.Api.Controllers
             _service = service;
         }
 
+
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CriarUsuarioAsync([FromBody] CriarUsuarioDto request)
         {

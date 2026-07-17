@@ -1,6 +1,7 @@
-﻿using HotelApp.Application.Exceptions;
-using HotelApp.Application.DTOs;
+﻿using HotelApp.Application.DTOs;
+using HotelApp.Application.Exceptions;
 using HotelApp.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 
@@ -15,6 +16,7 @@ namespace HotelApp.Api.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpPost("reserva/{reservaId}/credito")]
         public async Task<IActionResult> LancarCredito(int reservaId, [FromBody] LancarCreditoDto request)
         {
@@ -36,6 +38,7 @@ namespace HotelApp.Api.Controllers
 
         }
 
+        [Authorize]
         [HttpPost("reserva/{reservaId}/debito")]
         public async Task<IActionResult> LancarDebito(int reservaId, [FromBody] LancarDebitoDto request)
         {
@@ -56,6 +59,8 @@ namespace HotelApp.Api.Controllers
 
 
         }
+
+        [Authorize]
         [HttpGet("reserva/{reservaId}/lancamentos")]
         public async Task<IActionResult> ListarLancamento(int reservaId)
         {
@@ -70,6 +75,7 @@ namespace HotelApp.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("reserva/{reservaId}/caixa")]
         public async Task<IActionResult> ResumoCaixa(int reservaId)
         {
@@ -84,6 +90,7 @@ namespace HotelApp.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpPatch("reserva/{reservaId}/caixa/encerrar")]
         public async Task<IActionResult> EncerrarConta(int reservaId)
         {

@@ -8,9 +8,9 @@
       </div>
     </div>
 
-    <nav class="app-tabs" aria-label="Navegacao principal">
+    <nav *ngIf="!estaNaTelaDeLogin()" class="app-tabs" aria-label="Navegacao principal">
       <a
-        routerLink="/"
+        routerLink="/reservas"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }">
         Mapa de Reservas
