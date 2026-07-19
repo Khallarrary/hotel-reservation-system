@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuartoService {
 
-  private apiUrl = 'https://localhost:7265/api/Quarto';
+  private apiUrl = `${environment.apiUrl}/api/Quarto`;
+  
 
   constructor(private http: HttpClient) {}
 

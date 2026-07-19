@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Reserva {
   id: number;
@@ -39,8 +40,8 @@ export interface ReservaPorNumero{
 })
 
 export class ReservaService {
-  private apiUrl = 'https://localhost:7265/api/Reserva';
-  private apiUrlCriarPorNumero = 'https://localhost:7265/api/Reserva/numero';
+  private apiUrl = `${environment.apiUrl}/api/Reserva`;
+  private apiUrlCriarPorNumero = `${environment.apiUrl}/api/Reserva/numero`;
 
   constructor(private http: HttpClient) {}
 

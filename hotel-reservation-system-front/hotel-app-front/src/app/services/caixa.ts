@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
+import { environment } from '../../environments/environment';
 
 
 
@@ -43,7 +43,7 @@ export interface LancarDebito {
 
 export class CaixaService
 {
-  private apiUrl = 'https://localhost:7265/reserva';
+  private apiUrl = `${environment.apiUrl}/reserva`;
 
   constructor(private http: HttpClient) {}
 
