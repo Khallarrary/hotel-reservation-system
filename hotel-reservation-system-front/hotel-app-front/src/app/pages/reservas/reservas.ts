@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReservaService, Reserva, ReservaPorNumero } from '../../services/reserva';
 import { QuartoService } from '../../services/quarto';
 import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
+import { Auth } from '../../services/auth';
 
 @Component({
   selector: 'app-reservas',
@@ -23,12 +24,28 @@ export class ReservasComponent implements OnInit
   
 
   constructor(private reservaService: ReservaService, private quartoService: QuartoService,
-  private cdr: ChangeDetectorRef, private router: Router){}
+  private cdr: ChangeDetectorRef, private router: Router, private route: ActivatedRoute,
+  private authService: Auth){}
 
   ngOnInit(): void {
     this.inicioTimeLine.setHours(0, 0, 0, 0);
     this.gerarDias();
     this.carregarQuartos();
+
+    this.route.queryParamMap.subscribe(params => {
+      if (params.get('acao') === 'novo-quarto') {
+        if (this.authService.ehGestor()) {
+          this.mostrarForm = true;
+        }
+
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { acao: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+      }
+    });
     }
 
 

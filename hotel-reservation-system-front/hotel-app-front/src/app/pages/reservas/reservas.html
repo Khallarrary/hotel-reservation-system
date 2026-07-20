@@ -13,13 +13,6 @@
         <button class="btn-primary btn-primary-soft" (click)="alterarFormularioReserva()">
           {{ mostrarFormReserva ? 'Cancelar Reserva' : 'Criar Reserva' }}
         </button>
-        <button class="btn-primary" (click)="alterarFormularioQuarto()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          {{ mostrarForm ? 'Cancelar Quarto' : 'Criar Quarto' }}
-        </button>
       </div>
     </div>
   </header>
@@ -37,6 +30,7 @@
   <div *ngIf="mostrarForm" class="form-card">
     <div class="card-header">
       <h3>Novo Quarto</h3>
+      <button type="button" class="form-close" aria-label="Fechar cadastro de quarto" title="Fechar" (click)="alterarFormularioQuarto()">&times;</button>
     </div>
     <form class="form-grid">
       <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Numero do quarto" name="numero">

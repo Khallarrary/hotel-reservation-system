@@ -8,19 +8,57 @@
       </div>
     </div>
 
-    <nav *ngIf="!estaNaTelaDeLogin()" class="app-tabs" aria-label="Navegacao principal">
-      <a
-        routerLink="/reservas"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }">
-        Mapa de Reservas
-      </a>
-      <a
-        routerLink="/reservas-lista"
-        routerLinkActive="active">
-        Lista de Reservas
-      </a>
-    </nav>
+    <div *ngIf="!estaNaTelaDeLogin()" class="app-shell-actions">
+      <nav class="app-tabs" aria-label="Navegacao principal">
+        <a
+          routerLink="/reservas"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }">
+          Mapa de Reservas
+        </a>
+        <a
+          routerLink="/reservas-lista"
+          routerLinkActive="active">
+          Busca de Reservas
+        </a>
+      </nav>
+
+      <div class="app-menu" (click)="$event.stopPropagation()">
+        <button
+          type="button"
+          class="menu-trigger"
+          aria-label="Abrir menu do sistema"
+          title="Menu"
+          [attr.aria-expanded]="menuAberto"
+          (click)="alternarMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div *ngIf="menuAberto" class="menu-dropdown">
+          <div class="menu-user">
+            <span class="menu-avatar">{{ obterNomeUsuario().charAt(0).toUpperCase() }}</span>
+            <div>
+              <strong>{{ obterNomeUsuario() }}</strong>
+              <span>{{ obterPerfilUsuario() }}</span>
+            </div>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <button *ngIf="ehGestor()" type="button" class="menu-item" (click)="abrirCadastroQuarto()">
+            <span class="menu-item-icon">+</span>
+            Criar quarto
+          </button>
+
+          <button type="button" class="menu-item menu-item-danger" (click)="sair()">
+            <span class="menu-item-icon">&#8594;</span>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 

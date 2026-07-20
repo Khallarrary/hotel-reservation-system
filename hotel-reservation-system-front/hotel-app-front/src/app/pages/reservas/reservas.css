@@ -114,9 +114,36 @@
   overflow: visible;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .card-header h3 {
-  margin: 0 0 1rem 0;
+  margin: 0;
   color: var(--navy-900);
+}
+
+.form-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--navy-700);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.form-close:hover {
+  border-color: var(--gold-400);
+  color: var(--navy-900);
+  background: var(--gray-100);
 }
 
 .form-grid {
