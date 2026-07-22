@@ -6,6 +6,6 @@ namespace HotelApp.Domain
 {
     public enum PerfilUsuario
     {
-        Operador, Gestor
+        Operador, Gestor, Master
     }
 }

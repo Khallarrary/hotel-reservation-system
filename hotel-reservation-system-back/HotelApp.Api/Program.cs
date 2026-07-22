@@ -35,6 +35,9 @@ builder.Services.AddScoped<CaixaService>();
 builder.Services.AddScoped<IQuartoRepository, QuartoRepository>();
 builder.Services.AddScoped<QuartoService>();
 
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+
+
 builder.Services.AddScoped<IUsuarioRepository, 
 UsuarioRepository>();
 builder.Services.AddScoped<ISenhaHasher, SenhaHasher>();

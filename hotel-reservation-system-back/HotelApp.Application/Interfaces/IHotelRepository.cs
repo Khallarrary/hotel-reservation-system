@@ -5,7 +5,7 @@ using HotelApp.Domain;
 
 namespace HotelApp.Application.Interfaces
 {
-    internal interface IHotelRepository
+    public interface IHotelRepository
     {
         Task AdicionarAsync(Hotel hotel);
         Task<Hotel?> ObterPorIdAsync(int id);
