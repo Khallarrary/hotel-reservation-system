@@ -36,6 +36,7 @@ builder.Services.AddScoped<IQuartoRepository, QuartoRepository>();
 builder.Services.AddScoped<QuartoService>();
 
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<HotelService>();
 
 
 builder.Services.AddScoped<IUsuarioRepository, 

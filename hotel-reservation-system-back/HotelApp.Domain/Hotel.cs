@@ -36,7 +36,7 @@ namespace HotelApp.Domain
             
 
             Nome = nome;
-            Documento = documento;
+            Documento = normalizado;
             FusoHorario = fusoHorario;
             Ativo = true;
         }
