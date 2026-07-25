@@ -12,10 +12,21 @@ namespace HotelApp.Domain
         public string SenhaHash { get; private set; }
         public bool Ativo { get; private set; }
         public PerfilUsuario Perfil { get; private set; }
+        public int? HotelId { get; private set; }
 
         private Usuario() { }
-        public Usuario(string nome, string email, string senhaHash, PerfilUsuario perfil)
+        public Usuario(string nome, string email, string senhaHash, PerfilUsuario perfil, int? hotelId)
         {
+            if(perfil == PerfilUsuario.Master && hotelId != null)
+            {
+                throw new ArgumentException("Usuário Master não pode estar vinculado a um hotel.");
+            }
+
+            if ((perfil == PerfilUsuario.Gestor || perfil == PerfilUsuario.Operador) && (hotelId == null || hotelId < 1))
+            {
+                throw new ArgumentException("Usuários Gestor ou Operador devem estar vinculados a um hotel");
+            }
+
             if (string.IsNullOrWhiteSpace(nome))
             {
                 throw new ArgumentException("Usuario deve conter um nome valido");
@@ -36,6 +47,7 @@ namespace HotelApp.Domain
             SenhaHash = senhaHash;
             Perfil = perfil;
             Ativo = true;
+            HotelId = hotelId;
         }
 
        

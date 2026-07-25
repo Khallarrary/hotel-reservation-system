@@ -28,7 +28,7 @@ namespace HotelApp.Api.Controllers
             try
             {
                 await _service.CriarUsuario
-                     (request.Nome, request.Email, request.Senha, request.Perfil);
+                     (request.Nome, request.Email, request.Senha, request.Perfil, request.HotelId);
 
                 return StatusCode(201);
             }

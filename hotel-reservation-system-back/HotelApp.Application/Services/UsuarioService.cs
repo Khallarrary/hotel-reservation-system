@@ -1,4 +1,5 @@
 ﻿using HotelApp.Application.DTOs;
+using HotelApp.Application.Exceptions;
 using HotelApp.Application.Interfaces;
 using HotelApp.Domain;
 using System;
@@ -14,15 +15,17 @@ namespace HotelApp.Application.Services
         private readonly IUsuarioRepository _repo;
         private readonly ISenhaHasher _senhaHasher;
         private readonly ITokenService _tokenService;
+        private readonly IHotelRepository _hotelRepository;
 
-        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token)
+        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token, IHotelRepository hotelRepository)
         {
             _repo = repo;
             _senhaHasher = senha;
             _tokenService = token;
+            _hotelRepository = hotelRepository;
         }
 
-        public async Task CriarUsuario(string nome, string email, string senha, string perfil)
+        public async Task CriarUsuario(string nome, string email, string senha, string perfil, int hotelId)
         {
 
             if (string.IsNullOrWhiteSpace(nome)) 
@@ -39,7 +42,7 @@ namespace HotelApp.Application.Services
 
             if (verificaEmail != null)
             {
-                throw new ArgumentException("Email já existente.");
+                throw new ConflictException("Email já existente.");
             }
 
             if (string.IsNullOrWhiteSpace(senha))
@@ -47,16 +50,45 @@ namespace HotelApp.Application.Services
                 throw new ArgumentException("Senha do usuario é obrigatorio.");
             }
 
-            var senhaHash = _senhaHasher.GerarSenhaHash(senha);
+            var perfilValido = Enum.TryParse<PerfilUsuario>(perfil, true, out var perfilConvertido);
 
-            var perfilValido= Enum.TryParse<PerfilUsuario>(perfil, true, out var perfilConvertido);
+            var perfilPermitido = perfilConvertido == PerfilUsuario.Operador || perfilConvertido == PerfilUsuario.Gestor;
+
+            if (!perfilPermitido)
+            {
+                throw new ArgumentException("Perfil de usuario invalido.");
+            }
 
             if (!perfilValido)
             {
                 throw new ArgumentException("Perfil de usuario invalido.");
             }
 
-            var novo = new Usuario(nome, email, senhaHash, perfilConvertido);
+            if(perfilConvertido == PerfilUsuario.Master)
+            {
+                throw new ArgumentException("O perfil Master não pode ser criado por este endpoint.");
+            }
+
+            if(hotelId <= 0)
+            {
+                throw new ArgumentException("Hotel Id invalido.");
+            }
+
+            var verificaHotelId = await _hotelRepository.ObterPorIdAsync(hotelId);
+
+            if(verificaHotelId == null)
+            {
+                throw new NotFoundException("Hotel id invalido.");
+            }
+
+            if (!verificaHotelId.Ativo)
+            {
+                throw new ArgumentException("Hotel Id inativo.");
+            }
+
+            var senhaHash = _senhaHasher.GerarSenhaHash(senha);
+
+            var novo = new Usuario(nome, email, senhaHash, perfilConvertido, verificaHotelId.Id);
 
 
             await _repo.AdicionarAsync(novo);
