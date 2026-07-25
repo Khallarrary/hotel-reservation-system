@@ -28,6 +28,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Hotel>()
             .HasIndex(h => h.Documento)
             .IsUnique();
+
+        modelBuilder.Entity<Usuario>()
+            .HasOne<Hotel>()
+            .WithMany() 
+            .HasForeignKey(u => u.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
 }
