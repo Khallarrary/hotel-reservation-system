@@ -1,3 +1,4 @@
+using HotelApp.Api.Contextos;
 using HotelApp.Application.Exceptions;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
@@ -43,6 +44,9 @@ builder.Services.AddScoped<IUsuarioRepository,
 UsuarioRepository>();
 builder.Services.AddScoped<ISenhaHasher, SenhaHasher>();
 builder.Services.AddScoped<UsuarioService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IHotelContexto, HotelContexto>();
 
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
@@ -127,6 +131,7 @@ app.UseExceptionHandler(errorApp =>
             NotFoundException => StatusCodes.Status404NotFound,
             ConflictException => StatusCodes.Status409Conflict,
             ArgumentException => StatusCodes.Status400BadRequest,
+            ForbiddenException => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError
         };
 

@@ -1,9 +1,7 @@
 ﻿using HotelApp.Application.Interfaces;
 using HotelApp.Domain;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace HotelApp.Infrastructure
 {
@@ -16,17 +14,17 @@ namespace HotelApp.Infrastructure
             _context = context;
         }
 
-        public async Task<Quarto?> ObterPorIdAsync(int quartoId)
+        public async Task<Quarto?> ObterPorIdAsync(int quartoId, int hotelId)
         {
 
             return await _context.Quartos
-                .FirstOrDefaultAsync(q => q.Id == quartoId);
+                .FirstOrDefaultAsync(q => q.Id == quartoId && q.HotelId == hotelId);
 
         }
 
-        public async Task<List<Quarto>> ObterTodosAsync()
+        public async Task<List<Quarto>> ObterTodosAsync(int hotelId)
         {
-            return await _context.Quartos.ToListAsync();
+            return await _context.Quartos.Where(q => q.HotelId == hotelId).ToListAsync();
         }
 
         public async Task AdicionarAsync(Quarto quarto)
@@ -35,9 +33,9 @@ namespace HotelApp.Infrastructure
             await _context.SaveChangesAsync();
         }
 
-        public async Task RemoverAsync(int quartoId)
+        public async Task RemoverAsync(int quartoId, int hotelId)
         {
-            var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoId);
+            var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoId && q.HotelId == hotelId);
 
             if (quarto == null)
             {
@@ -48,21 +46,21 @@ namespace HotelApp.Infrastructure
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> ExisteNumeroAsync(string numero)
+        public async Task<bool> ExisteNumeroAsync(string numero, int hotelId)
         {
-            return await _context.Quartos.AnyAsync(q => q.Numero == numero);
+            return await _context.Quartos.AnyAsync(q => q.Numero == numero && q.HotelId == hotelId);
         }
 
-        public async Task<Quarto?> ObterPorNumeroAsync(string numero)
+        public async Task<Quarto?> ObterPorNumeroAsync(string numero, int hotelId)
         {
             return await _context.Quartos
-                .FirstOrDefaultAsync(q => q.Numero == numero);
+                .FirstOrDefaultAsync(q => q.Numero == numero && q.HotelId == hotelId);
         }
 
-        public async Task<List<Quarto>> ObterPorIdsAsync(List<int> ids)
+        public async Task<List<Quarto>> ObterPorIdsAsync(List<int> ids, int hotelId)
         {
             return await _context.Quartos
-                .Where(q => ids.Contains(q.Id))
+                .Where(q => ids.Contains(q.Id) && q.HotelId == hotelId)
                 .ToListAsync();
         }
 

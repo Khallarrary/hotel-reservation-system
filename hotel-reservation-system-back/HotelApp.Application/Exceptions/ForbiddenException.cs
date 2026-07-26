@@ -4,9 +4,8 @@ using System.Text;
 
 namespace HotelApp.Application.Exceptions
 {
-    public class NotFoundException : Exception
+    public class ForbiddenException : Exception
     {
-        public NotFoundException(string message) : base(message) { }
-        
+        public ForbiddenException(string message) : base(message) { }
     }
 }

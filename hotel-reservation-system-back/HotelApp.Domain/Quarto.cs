@@ -9,10 +9,13 @@ namespace HotelApp.Domain
         public int Id { get; private set; }
         public string Numero { get; private set; }
         public string Tipo { get; private set; }
+        public int HotelId { get; private set; }
 
-        public Quarto(string numero, string tipo) 
+
+        private Quarto() { }
+        public Quarto(string numero, string tipo, int hotelId) 
         { 
-            
+           
 
             if (string.IsNullOrWhiteSpace(numero))
             {
@@ -26,8 +29,13 @@ namespace HotelApp.Domain
                 throw new ArgumentException("O quarto deve conter um tipo");
             }
 
+            if(hotelId < 1) 
+            {
+                throw new ArgumentException("O quarto deve conter um hotel");
+            }
+
             Tipo = tipo;
-        
+            HotelId = hotelId;
         }
     }
 }

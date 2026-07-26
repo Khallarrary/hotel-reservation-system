@@ -4,6 +4,7 @@ using HotelApp.Application.Interfaces;
 using HotelApp.Application.Exceptions;
 using HotelApp.Domain;
 using System.Runtime.InteropServices.Marshalling;
+using System.Globalization;
 
 
 /// <summary>
@@ -15,13 +16,15 @@ public class ReservaService
     private readonly IReservaRepository _repo;
     private readonly IQuartoRepository _quartoRepo;
     private readonly IContaReservaRepository _contaRepo;
+    private readonly IHotelContexto _hotelContexto;
     
 
-    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo)
+    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto)
     {
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
         _contaRepo = contaRepo ?? throw new ArgumentNullException(nameof(contaRepo));
+        _hotelContexto = hotelContexto;
     }
 
 
@@ -53,6 +56,13 @@ public class ReservaService
         checkIn = DateTime.SpecifyKind(checkIn, DateTimeKind.Utc);
         checkOut = DateTime.SpecifyKind(checkOut, DateTimeKind.Utc);
 
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
         // Validação básica de entrada
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -65,7 +75,9 @@ public class ReservaService
         }
 
         // Verifica se o quarto existe
-        var quarto = await _quartoRepo.ObterPorIdAsync(quartoId);
+        var quarto = await _quartoRepo.ObterPorIdAsync(quartoId, hotelId.Value);
+
+     
 
         if (quarto == null)
         {
@@ -103,7 +115,15 @@ public class ReservaService
     public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto)
     {
 
-        var quarto = await _quartoRepo.ObterPorNumeroAsync(numeroDoQuarto);
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+
+        var quarto = await _quartoRepo.ObterPorNumeroAsync(numeroDoQuarto, hotelId.Value);
 
         if(quarto == null)
         {
@@ -155,7 +175,16 @@ public class ReservaService
 
     public async Task<ReservasPaginadasDto> ListarReservasPaginadas(ReservaConsultaDto consulta)
     {
-        if(consulta.Pagina <= 0)
+
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+
+        if (consulta.Pagina <= 0)
         {
             consulta.Pagina = 1;
         }
@@ -179,7 +208,7 @@ public class ReservaService
 
         var quartoIds = reservasPagina.Select(r => r.QuartoId).Distinct().ToList();
 
-        var quartos = await _quartoRepo.ObterPorIdsAsync(quartoIds);
+        var quartos = await _quartoRepo.ObterPorIdsAsync(quartoIds, hotelId.Value);
 
         var quartosPorId = quartos.ToDictionary(q => q.Id, q => q.Numero);
 

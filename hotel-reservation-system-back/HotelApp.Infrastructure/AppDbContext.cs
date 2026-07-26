@@ -18,7 +18,7 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Quarto>()
-            .HasIndex(q => q.Numero)
+            .HasIndex(q => new { q.HotelId, q.Numero})
             .IsUnique();
 
         modelBuilder.Entity<Usuario>()
@@ -34,6 +34,13 @@ public class AppDbContext : DbContext
             .WithMany() 
             .HasForeignKey(u => u.HotelId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Quarto>()
+            .HasOne<Hotel>()
+            .WithMany()
+            .HasForeignKey(q => q.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
     }
 
 }

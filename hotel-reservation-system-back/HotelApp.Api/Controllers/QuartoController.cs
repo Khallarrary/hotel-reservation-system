@@ -49,6 +49,7 @@ namespace HotelApp.Api.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Gestor")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePorId(int id)
         {

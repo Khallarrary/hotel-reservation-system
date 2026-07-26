@@ -32,8 +32,13 @@ namespace HotelApp.Infrastructure
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Nome),
                 new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario.Perfil.ToString())
+                new Claim(ClaimTypes.Role, usuario.Perfil.ToString())                
             };
+
+            if(usuario.HotelId.HasValue)
+            {
+                claims.Add(new Claim("hotelId", usuario.HotelId.Value.ToString()));
+            }
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!));
 
