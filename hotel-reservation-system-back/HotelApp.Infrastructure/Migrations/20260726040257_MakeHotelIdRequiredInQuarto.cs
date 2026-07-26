@@ -15,7 +15,6 @@ namespace HotelApp.Infrastructure.Migrations
                 table: "Quartos",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0,
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldNullable: true);
