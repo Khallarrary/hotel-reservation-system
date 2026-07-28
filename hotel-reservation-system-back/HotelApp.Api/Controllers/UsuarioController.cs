@@ -21,7 +21,7 @@ namespace HotelApp.Api.Controllers
         }
 
 
-        [Authorize(Roles = "Master,Gestor")]
+        [Authorize(Roles = "Gestor")]
         [HttpPost]
         public async Task<IActionResult> CriarUsuarioAsync([FromBody] CriarUsuarioDto request)
         {
