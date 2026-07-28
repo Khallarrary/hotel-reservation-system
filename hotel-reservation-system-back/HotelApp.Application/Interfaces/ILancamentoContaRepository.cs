@@ -9,6 +9,6 @@ namespace HotelApp.Application.Interfaces
     {
         Task AdicionarAsync(LancamentoConta lancamento);
         Task<List<LancamentoConta>> ListarPorContaReservaIdAsync(int contaReservaId);
-        Task<List<LancamentoConta>> ListarPorReservaIdAsync(int reservaId);
+        
     }
 }

@@ -31,19 +31,6 @@ namespace HotelApp.Infrastructure
                 .ToListAsync();
         }
 
-        public async Task<List<LancamentoConta>> ListarPorReservaIdAsync(int reservaId)
-        {
-            return await _context.LancamentoConta
-                .Join(
-                    _context.ContaReserva,
-                    lancamento => lancamento.ContaReservaId,
-                    conta => conta.Id,
-                    (lancamento, conta) => new { lancamento, conta }
-                )
-                .Where(x => x.conta.ReservaId == reservaId)
-                .OrderBy(x => x.lancamento.DataLancamento)
-                .Select(x => x.lancamento)
-                .ToListAsync();
-        }
+        
     }
 }

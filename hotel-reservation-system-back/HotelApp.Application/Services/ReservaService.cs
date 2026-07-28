@@ -33,7 +33,14 @@ public class ReservaService
     /// </summary>
     public async Task<List<ReservaDto>> ListarReservas() 
     {
-        var reserva = await _repo.ListarReservasAsync() ?? new List<Reserva>();
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var reserva = await _repo.ListarReservasAsync(hotelId.Value) ?? new List<Reserva>();
 
         return reserva.Select(reserva => new ReservaDto
         {
@@ -86,10 +93,10 @@ public class ReservaService
         }
 
         // Busca reservas existentes do quarto
-        var reservas = await _repo.ObterReservasPorQuartoAsync(quartoId) ?? new List<Reserva>();
+        var reservas = await _repo.ObterReservasPorQuartoAsync(quartoId, hotelId.Value) ?? new List<Reserva>();
 
         // Cria nova reserva (validação adicional ocorre no domínio)
-        var nova = new Reserva(checkIn, checkOut, nome, quartoId);
+        var nova = new Reserva(checkIn, checkOut, nome, quartoId, hotelId.Value);
 
 
         // Verifica conflito com reservas existentes
@@ -135,7 +142,14 @@ public class ReservaService
 
     public async Task DeletarReserva (int id)
     {
-        var reserva = await _repo.ObterReservaPorIdAsync(id);
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
 
         if (reserva == null)
         {
@@ -147,7 +161,14 @@ public class ReservaService
 
     public async Task RealizarCheckIn(int id) 
     {
-        var reserva = await _repo.ObterReservaPorIdAsync(id);
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
 
         if(reserva == null)
         {
@@ -161,7 +182,14 @@ public class ReservaService
 
     public async Task RealizarCheckOut(int id)
     {
-        var reserva = await _repo.ObterReservaPorIdAsync(id);
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
 
         if (reserva == null)
         {
@@ -200,11 +228,11 @@ public class ReservaService
         }
 
         
-        var totalItens = await _repo.ContarReservasAsync(consulta);
+        var totalItens = await _repo.ContarReservasAsync(consulta, hotelId.Value);
         
         var totalDePaginas = (int)Math.Ceiling((decimal)totalItens / consulta.TamanhoPagina);
 
-        var reservasPagina = await _repo.ListarReservasPaginadasAsync(consulta);
+        var reservasPagina = await _repo.ListarReservasPaginadasAsync(consulta, hotelId.Value);
 
         var quartoIds = reservasPagina.Select(r => r.QuartoId).Distinct().ToList();
 

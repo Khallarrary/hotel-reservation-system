@@ -12,6 +12,7 @@ public class ReservaTests
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
             "João",
+            1,
             1
         );
 
@@ -19,6 +20,7 @@ public class ReservaTests
             new DateTime(2030, 4, 12),
             new DateTime(2030, 4, 18),
             "Maria",
+            1,
             1
         );
 
@@ -37,6 +39,7 @@ public class ReservaTests
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
             "João",
+            1,
             1
         );
 
@@ -44,6 +47,7 @@ public class ReservaTests
             new DateTime(2030, 4, 16),
             new DateTime(2030, 4, 20),
             "Maria",
+            1,
             1
         );
 
@@ -61,6 +65,7 @@ public class ReservaTests
             new DateTime(2030, 4, 15),
             new DateTime(2030, 4, 10),
             "João",
+            1,
             1
         );
 
@@ -74,6 +79,7 @@ public class ReservaTests
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
             "João",
+            1,
             1
         );
 
@@ -81,7 +87,8 @@ public class ReservaTests
             new DateTime(2030, 4, 12),
             new DateTime(2030, 4, 18),
             "Maria",
-            2
+            2,
+            1
         );
 
         var resultado = reserva2.ConflitaCom(reserva1);
@@ -96,6 +103,7 @@ public class ReservaTests
             new DateTime(2030, 4, 15),
             new DateTime(2030, 4, 10),
             "João",
+            1,
             1
         );
 
@@ -109,6 +117,7 @@ public class ReservaTests
             DateTime.UtcNow.Date,
             DateTime.UtcNow.Date.AddDays(1),
             "João",
+            1,
             1
         );
 
@@ -122,6 +131,7 @@ public class ReservaTests
             DateTime.UtcNow.Date.AddDays(1),
             DateTime.UtcNow.Date.AddDays(32),
             "João",
+            1,
             1
         );
 

@@ -12,22 +12,42 @@ namespace HotelApp.Application.Services
     {
         private readonly ILancamentoContaRepository _lancamentoRepo;
         private readonly IContaReservaRepository _contaRepo;
+        private readonly IHotelContexto _hotelContexto;
+        private readonly IReservaRepository _reservaRepo;
 
 
-        public CaixaService(ILancamentoContaRepository repo, IContaReservaRepository contaRepo)
+        public CaixaService(ILancamentoContaRepository repo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, IReservaRepository reservaRepo    )
         {
             _lancamentoRepo = repo;
             _contaRepo = contaRepo;
+            _hotelContexto = hotelContexto;
+            _reservaRepo = reservaRepo;
+        }
+
+        private async Task<ContaReserva> ObterContaSegura(int reservaId)
+        {
+            var hotelId = _hotelContexto.ObterHotelId();
+
+            if (!hotelId.HasValue)
+                throw new ForbiddenException("Hotel não encontrado");
+
+            var reserva = await _reservaRepo.ObterReservaPorIdAsync(reservaId, hotelId.Value);
+
+            if (reserva == null)
+                throw new NotFoundException("Reserva não encontrada");
+
+            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
+
+            if (conta == null)
+                throw new NotFoundException("Conta não encontrada");
+
+            return conta;
+
         }
 
         public async Task LancarCredito(int reservaId, decimal valor, FormaPagamento formaPagamento, string descricao)
         {
-            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
-
-            if (conta == null)
-            {
-                throw new ArgumentException("Conta nao encontrada");
-            }
+            var conta = await ObterContaSegura(reservaId);
 
             if (conta.Status == ContaStatus.Encerrada)
             {
@@ -46,13 +66,8 @@ namespace HotelApp.Application.Services
         }
         public async Task LancarDebito(int reservaId, decimal valor, string descricao)
         {
-            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
-
-            if (conta == null)
-            {
-                throw new ArgumentException("Conta nao encontrada");
-            }
-
+            var conta = await ObterContaSegura(reservaId);
+                       
             if (conta.Status == ContaStatus.Encerrada)
             {
                 throw new ArgumentException("Não é possível lançar débitos em uma conta encerrada.");
@@ -70,14 +85,9 @@ namespace HotelApp.Application.Services
 
         public async Task<List<LancamentoContaDto>> ListarLancamentosPorReserva(int reservaId)
         {
-            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
+            var conta = await ObterContaSegura(reservaId);
 
-            if(conta == null)
-            {
-                throw new NotFoundException("Conta nao encontrada.");
-            }
-
-            var lancamentos = await _lancamentoRepo.ListarPorReservaIdAsync(reservaId);
+            var lancamentos = await _lancamentoRepo.ListarPorContaReservaIdAsync(conta.Id);
 
             return lancamentos.Select(l => new LancamentoContaDto
             {
@@ -92,12 +102,7 @@ namespace HotelApp.Application.Services
 
         public async Task<CaixaResumoDto> ResumoCaixa(int reservaId) 
         {
-            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
-
-            if (conta == null)
-            {
-                throw new NotFoundException("Conta nao encontrada.");
-            }
+            var conta = await ObterContaSegura(reservaId);
 
             var lancamentos = await ListarLancamentosPorReserva(reservaId);
 
@@ -123,12 +128,7 @@ namespace HotelApp.Application.Services
 
         public async Task EncerrarConta(int reservaId)
         {
-            var conta = await _contaRepo.ObterPorReservaIdAsync(reservaId);
-
-            if (conta == null)
-            {
-                throw new NotFoundException("Conta nao encontrada.");
-            }
+            var conta = await ObterContaSegura(reservaId);
 
             var resumo = await ResumoCaixa(reservaId);
 

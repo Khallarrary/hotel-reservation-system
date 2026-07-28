@@ -11,7 +11,7 @@ public class CaixaServiceTests
     {
         var contaRepo = new ContaReservaRepositoryFake(null);
         var lancamentoRepo = new LancamentoContaRepositoryFake();
-        var service = new CaixaService(lancamentoRepo, contaRepo);
+        var service = CriarService(lancamentoRepo, contaRepo);
 
         Func<Task> action = () => service.EncerrarConta(1);
 
@@ -28,7 +28,7 @@ public class CaixaServiceTests
             new LancamentoConta(1, LancamentoTipo.Debito, "Diaria", 200),
             new LancamentoConta(1, LancamentoTipo.Credito, "Pagamento", 100, FormaPagamento.Pix)
         });
-        var service = new CaixaService(lancamentoRepo, contaRepo);
+        var service = CriarService(lancamentoRepo, contaRepo);
 
         Func<Task> action = () => service.EncerrarConta(1);
 
@@ -47,7 +47,7 @@ public class CaixaServiceTests
             new LancamentoConta(1, LancamentoTipo.Debito, "Diaria", 200),
             new LancamentoConta(1, LancamentoTipo.Credito, "Pagamento", 200, FormaPagamento.Pix)
         });
-        var service = new CaixaService(lancamentoRepo, contaRepo);
+        var service = CriarService(lancamentoRepo, contaRepo);
 
         await service.EncerrarConta(1);
 
@@ -56,11 +56,55 @@ public class CaixaServiceTests
         contaRepo.Atualizou.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Deve_Bloquear_Acesso_Quando_Reserva_For_De_Outro_Hotel()
+    {
+        var contaRepo = new ContaReservaRepositoryFake(new ContaReserva(1));
+        var lancamentoRepo = new LancamentoContaRepositoryFake();
+        var reserva = CriarReserva(hotelId: 1);
+        var service = CriarService(
+            lancamentoRepo,
+            contaRepo,
+            hotelIdAutenticado: 2,
+            reserva);
+
+        Func<Task> action = () => service.ResumoCaixa(1);
+
+        await action.Should().ThrowAsync<NotFoundException>();
+        contaRepo.ConsultouPorReserva.Should().BeFalse();
+    }
+
+    private static CaixaService CriarService(
+        ILancamentoContaRepository lancamentoRepo,
+        IContaReservaRepository contaRepo,
+        int hotelIdAutenticado = 1,
+        Reserva? reserva = null)
+    {
+        reserva ??= CriarReserva(hotelIdAutenticado);
+
+        return new CaixaService(
+            lancamentoRepo,
+            contaRepo,
+            new HotelContextoFake(hotelIdAutenticado),
+            new ReservaRepositoryFake(reserva));
+    }
+
+    private static Reserva CriarReserva(int hotelId)
+    {
+        return new Reserva(
+            DateTime.Today.AddDays(1),
+            DateTime.Today.AddDays(2),
+            "Hospede Teste",
+            quartoId: 1,
+            hotelId);
+    }
+
     private class ContaReservaRepositoryFake : IContaReservaRepository
     {
         private readonly ContaReserva? _conta;
 
         public bool Atualizou { get; private set; }
+        public bool ConsultouPorReserva { get; private set; }
 
         public ContaReservaRepositoryFake(ContaReserva? conta)
         {
@@ -74,6 +118,7 @@ public class CaixaServiceTests
 
         public Task<ContaReserva?> ObterPorReservaIdAsync(int reservaId)
         {
+            ConsultouPorReserva = true;
             return Task.FromResult(_conta);
         }
 
@@ -86,6 +131,76 @@ public class CaixaServiceTests
         {
             Atualizou = true;
             return Task.CompletedTask;
+        }
+    }
+
+    private class HotelContextoFake : IHotelContexto
+    {
+        private readonly int? _hotelId;
+
+        public HotelContextoFake(int? hotelId)
+        {
+            _hotelId = hotelId;
+        }
+
+        public int? ObterHotelId()
+        {
+            return _hotelId;
+        }
+    }
+
+    private class ReservaRepositoryFake : IReservaRepository
+    {
+        private readonly Reserva? _reserva;
+
+        public ReservaRepositoryFake(Reserva? reserva)
+        {
+            _reserva = reserva;
+        }
+
+        public Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId)
+        {
+            var reserva = _reserva?.HotelId == hotelId ? _reserva : null;
+            return Task.FromResult(reserva);
+        }
+
+        public Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId, int hotelId)
+        {
+            return Task.FromResult(new List<Reserva>());
+        }
+
+        public Task AdicionarReservaAsync(Reserva reserva)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<List<Reserva>> ListarReservasAsync(int hotelId)
+        {
+            return Task.FromResult(new List<Reserva>());
+        }
+
+        public Task DeletarReservaAsync(Reserva reserva)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task AtualizarReservaAsync(Reserva reserva)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<int> ContarReservasAsync(
+            HotelApp.Application.DTOs.ReservaConsultaDto consulta,
+            int hotelId)
+        {
+            return Task.FromResult(0);
+        }
+
+        public Task<List<Reserva>> ListarReservasPaginadasAsync(
+            HotelApp.Application.DTOs.ReservaConsultaDto consulta,
+            int hotelId)
+        {
+            return Task.FromResult(new List<Reserva>());
         }
     }
 
@@ -116,9 +231,5 @@ public class CaixaServiceTests
                 .ToList());
         }
 
-        public Task<List<LancamentoConta>> ListarPorReservaIdAsync(int reservaId)
-        {
-            return Task.FromResult(_lancamentos);
-        }
     }
 }

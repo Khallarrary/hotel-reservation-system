@@ -17,11 +17,11 @@ namespace HotelApp.Infrastructure
             _context = context;
         }
 
-        public async Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId)
+        public async Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId , int hotelId)
         {
 
             return await _context.Reservas
-                .Where(r => r.QuartoId == quartoId)
+                .Where(r => r.QuartoId == quartoId && r.HotelId == hotelId)
                 .ToListAsync();
         }
 
@@ -31,9 +31,9 @@ namespace HotelApp.Infrastructure
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Reserva>> ListarReservasAsync()
+        public async Task<List<Reserva>> ListarReservasAsync(int hotelId)
         {
-            return await _context.Reservas.ToListAsync();
+            return await _context.Reservas.Where(r => r.HotelId == hotelId).ToListAsync();
         }
 
         public async Task DeletarReservaAsync(Reserva reserva)
@@ -43,9 +43,9 @@ namespace HotelApp.Infrastructure
 
         }
 
-        public async Task<Reserva?> ObterReservaPorIdAsync(int id)
+        public async Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId)
         {
-            return await _context.Reservas.FindAsync(id);
+            return await _context.Reservas.FirstOrDefaultAsync(r => r.Id == id && r.HotelId == hotelId);
         }
 
         public async Task AtualizarReservaAsync(Reserva reserva)
@@ -54,16 +54,16 @@ namespace HotelApp.Infrastructure
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int> ContarReservasAsync(ReservaConsultaDto consulta)
+        public async Task<int> ContarReservasAsync(ReservaConsultaDto consulta, int hotelId)
         {
-            var query = MontarQuery(consulta);
+            var query = MontarQuery(consulta, hotelId);
 
             return await query.CountAsync();
         }
 
-        public async Task<List<Reserva>> ListarReservasPaginadasAsync(ReservaConsultaDto consulta)
+        public async Task<List<Reserva>> ListarReservasPaginadasAsync(ReservaConsultaDto consulta, int hotelId)
         {
-            var query = MontarQuery(consulta);
+            var query = MontarQuery(consulta, hotelId);
 
             return await query
                 .OrderBy(r => r.Id)
@@ -72,9 +72,11 @@ namespace HotelApp.Infrastructure
                 .ToListAsync();
         }
 
-        private IQueryable<Reserva> MontarQuery(ReservaConsultaDto consulta)
+        private IQueryable<Reserva> MontarQuery(ReservaConsultaDto consulta, int hotelId)
         {
-            var query = _context.Reservas.AsQueryable();
+            var query = _context.Reservas
+                .Where(r => r.HotelId == hotelId)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(consulta.NomeHospede))
             {
@@ -101,6 +103,7 @@ namespace HotelApp.Infrastructure
                     join quarto in _context.Quartos
                         on reserva.QuartoId equals quarto.Id
                     where quarto.Numero == consulta.NumeroQuarto
+                    && quarto.HotelId == hotelId
                     select reserva;
             }
 

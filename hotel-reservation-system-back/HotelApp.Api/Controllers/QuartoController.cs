@@ -73,7 +73,7 @@ namespace HotelApp.Api.Controllers
             return Ok(quarto);
         }
 
-        [Authorize]
+        [Authorize(Roles = "Gestor")]
         [HttpDelete("numero/{numero}")]
         public async Task<IActionResult> DeletePorNumero(string numero)
         {

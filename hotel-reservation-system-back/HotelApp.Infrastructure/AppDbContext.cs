@@ -41,6 +41,12 @@ public class AppDbContext : DbContext
             .HasForeignKey(q => q.HotelId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Reserva>()
+            .HasOne<Hotel>()
+            .WithMany()
+            .HasForeignKey(r => r.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
     }
 
 }

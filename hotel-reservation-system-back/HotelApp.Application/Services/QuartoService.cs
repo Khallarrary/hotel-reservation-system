@@ -34,7 +34,7 @@ namespace HotelApp.Application.Services
 
             foreach (var quarto in quartos)
             {
-                var reservas = await _reservaRepo.ObterReservasPorQuartoAsync(quarto.Id);
+                var reservas = await _reservaRepo.ObterReservasPorQuartoAsync(quarto.Id, hotelId.Value);
 
                 resultado.Add(new QuartoDto
                 {
@@ -102,7 +102,7 @@ namespace HotelApp.Application.Services
             if (quarto == null)
                 throw new NotFoundException("Quarto não encontrado");
 
-            var reservasQuarto = await _reservaRepo.ObterReservasPorQuartoAsync(id);
+            var reservasQuarto = await _reservaRepo.ObterReservasPorQuartoAsync(id, hotelId.Value);
 
             if (reservasQuarto.Any())
             {

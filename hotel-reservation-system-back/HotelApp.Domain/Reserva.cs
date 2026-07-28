@@ -8,6 +8,7 @@ public class Reserva
     public DateTime CheckOut { get; private set; }
     public string NomeDoHospede { get; private set; }
     public ReservaStatus Status { get; private set; }
+    public int HotelId { get; set; }
     private Reserva()
     {
         NomeDoHospede = string.Empty;
@@ -38,7 +39,7 @@ public class Reserva
     /// - Nome do hóspede deve ser válido
     /// - Quarto deve ser válido
     /// </summary>
-    public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId)
+    public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId, int hotelId)
     {
         if (checkOut <= checkIn)
         {
@@ -66,11 +67,16 @@ public class Reserva
             throw new ArgumentException("Reserva não pode ultrapassar 30 dias.");
         }
 
+        if (hotelId < 1)
+        {
+            throw new ArgumentException("O quarto deve conter um hotel");
+        }
 
         CheckIn = checkIn;
         CheckOut = checkOut;
         NomeDoHospede = nomeDoHospede.Trim();
         QuartoId = quartoId;
+        HotelId =  hotelId;
 
 
     }
