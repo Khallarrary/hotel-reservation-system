@@ -16,16 +16,18 @@ namespace HotelApp.Application.Services
         private readonly ISenhaHasher _senhaHasher;
         private readonly ITokenService _tokenService;
         private readonly IHotelRepository _hotelRepository;
+        private readonly IHotelContexto _contextoHotel;
 
-        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token, IHotelRepository hotelRepository)
+        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token, IHotelRepository hotelRepository, IHotelContexto contextoHotel  )
         {
             _repo = repo;
             _senhaHasher = senha;
             _tokenService = token;
             _hotelRepository = hotelRepository;
+            _contextoHotel = contextoHotel;
         }
 
-        public async Task CriarUsuario(string nome, string email, string senha, string perfil, int hotelId)
+        public async Task CriarUsuario(string nome, string email, string senha, string perfil)
         {
 
             if (string.IsNullOrWhiteSpace(nome)) 
@@ -69,21 +71,23 @@ namespace HotelApp.Application.Services
                 throw new ArgumentException("O perfil Master não pode ser criado por este endpoint.");
             }
 
-            if(hotelId <= 0)
+            var hotelId =  _contextoHotel.ObterHotelId();
+
+            if(!hotelId.HasValue)
             {
-                throw new ArgumentException("Hotel Id invalido.");
+                throw new ForbiddenException("Hotel id invalido.");
             }
 
-            var verificaHotelId = await _hotelRepository.ObterPorIdAsync(hotelId);
+            var verificaHotelId = await _hotelRepository.ObterPorIdAsync(hotelId.Value);
 
             if(verificaHotelId == null)
             {
-                throw new NotFoundException("Hotel id invalido.");
+                throw new NotFoundException("Hotel não encontrado.");
             }
 
             if (!verificaHotelId.Ativo)
             {
-                throw new ArgumentException("Hotel Id inativo.");
+                throw new ForbiddenException("Hotel inativo.");
             }
 
             var senhaHash = _senhaHasher.GerarSenhaHash(senha);
@@ -133,5 +137,62 @@ namespace HotelApp.Application.Services
             return new LoginRespostaDto { Token = token, Email = usuario.Email, Nome = usuario.Nome, Perfil = usuario.Perfil.ToString() };
 
         }
+
+        public async Task CriarGestorHotel(string nome, string email, string senha, int hotelId)
+        {
+
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                throw new ArgumentException("Nome do usuario é obrigatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Email do usuario é obrigatorio.");
+            }
+
+            var verificaEmail = await _repo.ObterPorEmailAsync(email);
+
+            if (verificaEmail != null)
+            {
+                throw new ConflictException("Email já existente.");
+            }
+
+            if (string.IsNullOrWhiteSpace(senha))
+            {
+                throw new ArgumentException("Senha do usuario é obrigatorio.");
+            }
+
+            if( hotelId <= 0)
+            {
+                throw new ArgumentException("Id do hotel é obrigatorio.");
+
+            }
+
+            var hotelIdValidado = await _hotelRepository.ObterPorIdAsync(hotelId);
+
+            if(hotelIdValidado == null)
+            {
+                throw new NotFoundException("Hotel não encontrado.");
+            }
+
+            if (!hotelIdValidado.Ativo)
+            {
+                throw new ForbiddenException("Hotel inativo.");
+            }
+
+            var senhaHash = _senhaHasher.GerarSenhaHash(senha);
+
+            var novo = new Usuario(nome, email, senhaHash, PerfilUsuario.Gestor, hotelIdValidado.Id);
+
+            await _repo.AdicionarAsync(novo);
+        }
     }
 }
+
+
+
+//public string Nome { get; set; }
+//public string Email { get; set; }
+//public string Senha { get; set; }
+//public int HotelId { get; set; }

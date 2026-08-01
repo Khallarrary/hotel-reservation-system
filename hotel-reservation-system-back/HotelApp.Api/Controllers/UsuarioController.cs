@@ -28,7 +28,7 @@ namespace HotelApp.Api.Controllers
             try
             {
                 await _service.CriarUsuario
-                     (request.Nome, request.Email, request.Senha, request.Perfil, request.HotelId);
+                     (request.Nome, request.Email, request.Senha, request.Perfil);
 
                 return StatusCode(201);
             }
@@ -53,6 +53,24 @@ namespace HotelApp.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [Authorize(Roles = "Master")]
+        [HttpPost("gestor-hotel")]
+        public async Task<IActionResult> CriarGestorAsync([FromBody] CriarGestorHotelDto request)
+        {
+            try
+            {
+                await _service.CriarGestorHotel
+                     (request.Nome, request.Email, request.Senha, request.HotelId);
+
+                return StatusCode(201);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
         }
     }
 }

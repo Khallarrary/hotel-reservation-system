@@ -22,6 +22,7 @@ public class CaixaServiceTests
     public async Task Deve_Lancar_Erro_Quando_Saldo_For_Diferente_De_Zero_Ao_Encerrar()
     {
         var conta = new ContaReserva(1);
+        DefinirId(conta, 1);
         var contaRepo = new ContaReservaRepositoryFake(conta);
         var lancamentoRepo = new LancamentoContaRepositoryFake(new List<LancamentoConta>
         {
@@ -41,6 +42,7 @@ public class CaixaServiceTests
     public async Task Deve_Encerrar_Conta_Quando_Saldo_For_Zero()
     {
         var conta = new ContaReserva(1);
+        DefinirId(conta, 1);
         var contaRepo = new ContaReservaRepositoryFake(conta);
         var lancamentoRepo = new LancamentoContaRepositoryFake(new List<LancamentoConta>
         {
@@ -54,6 +56,13 @@ public class CaixaServiceTests
         conta.Status.Should().Be(ContaStatus.Encerrada);
         conta.DataEncerramento.Should().NotBeNull();
         contaRepo.Atualizou.Should().BeTrue();
+    }
+
+    private static void DefinirId(ContaReserva conta, int id)
+    {
+        typeof(ContaReserva)
+            .GetProperty(nameof(ContaReserva.Id))!
+            .SetValue(conta, id);
     }
 
     [Fact]
