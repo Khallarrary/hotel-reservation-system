@@ -9,5 +9,6 @@ namespace HotelApp.Application.Interfaces
     {
         Task<Usuario?> ObterPorEmailAsync(string email);
         Task AdicionarAsync(Usuario usuario);
+        Task<List<Usuario>> ListarUsuariosAsync(int hotelId);
     }
 }

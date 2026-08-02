@@ -187,12 +187,41 @@ namespace HotelApp.Application.Services
 
             await _repo.AdicionarAsync(novo);
         }
+
+        public async Task<List<UsuarioDto>> ListarUsuarios()
+        {
+            var id = _contextoHotel.ObterHotelId();
+
+            if (!id.HasValue)
+            {
+                throw new ForbiddenException("Hotel id invalido.");
+            }
+
+            var verificaHotelId = await _hotelRepository.ObterPorIdAsync(id.Value);
+
+            if (verificaHotelId == null)
+            {
+                throw new NotFoundException("Hotel não encontrado.");
+            }
+
+            if (!verificaHotelId.Ativo)
+            {
+                throw new ForbiddenException("Hotel inativo.");
+            }
+
+            var usuarios = await _repo.ListarUsuariosAsync(verificaHotelId.Id);
+
+            return usuarios.Select(usuario => new UsuarioDto
+            {
+                Id = usuario.Id,
+                Nome = usuario.Nome,
+                Email = usuario.Email,
+                Perfil = usuario.Perfil.ToString(),
+                Ativo = usuario.Ativo,
+            }).ToList();
+        }
     }
 }
 
 
 
-//public string Nome { get; set; }
-//public string Email { get; set; }
-//public string Senha { get; set; }
-//public int HotelId { get; set; }

@@ -27,5 +27,10 @@ namespace HotelApp.Infrastructure
             await _context.Usuario.AddAsync(usuario);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<Usuario>> ListarUsuariosAsync(int hotelId)
+        {
+            return await _context.Usuario.Where(u => u.HotelId == hotelId).ToListAsync();
+        }
     }
 }

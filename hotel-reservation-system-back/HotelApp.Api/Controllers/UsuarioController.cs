@@ -72,5 +72,17 @@ namespace HotelApp.Api.Controllers
             }
 
         }
+
+        [Authorize(Roles = "Gestor")]
+        [HttpGet]
+        public async Task<ActionResult<List<UsuarioDto>>> ListarUsuarios()
+        {
+            
+            var usuarios = await _service.ListarUsuarios();
+
+            return Ok(usuarios);
+            
+        }
+
     }
 }
