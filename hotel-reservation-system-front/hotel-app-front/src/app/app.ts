@@ -46,6 +46,12 @@ export class AppComponent {
     });
   }
 
+  abrirGerenciamentoUsuarios(): void {
+    this.menuAberto = false;
+    this.router.navigate(['/usuarios'], {
+    });
+  }
+
   sair(): void {
     this.authService.logout();
     this.menuAberto = false;

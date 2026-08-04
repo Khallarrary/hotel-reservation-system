@@ -1,1 +1,70 @@
-<p>usuarios works!</p>
+<section class="pagina-usuarios">
+    <header class="pagina-header">
+        <div>
+            <h1>Gerenciamento de Usuários</h1>
+            <p>{{ usuarios.length }} usuários cadastrados</p>
+        </div>
+
+        <button type="button" class="btn-novo-usuario">
+            Novo Usuário
+        </button>
+    </header>
+
+    <p *ngIf="carregando" class="estado-pagina">
+        Carregando usuários...
+    </p>
+
+    <p *ngIf="mensagemErro" class="toast toast-erro">
+        {{ mensagemErro }}
+    </p>
+
+    <p *ngIf="!carregando && usuarios.length === 0" class="estado-pagina">
+        Nenhum usuário encontrado.
+    </p>
+
+    <div *ngIf="!carregando && usuarios.length > 0" class="usuarios-panel">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Perfil</th>
+                        <th>Situação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let usuario of usuarios">
+                        <td class="usuario-nome">{{ usuario.nome }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>
+                            <span class="perfil-badge">{{ usuario.perfil }}</span>
+                        </td>
+                        <td>
+                            <span
+                                class="status-badge"
+                                [class.status-ativo]="usuario.ativo"
+                                [class.status-inativo]="!usuario.ativo">
+                                {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="acoes-usuario">
+                                <button type="button" class="btn-acao btn-editar">Editar</button>
+                                <button
+                                    type="button"
+                                    class="btn-acao"
+                                    [class.btn-desativar]="usuario.ativo"
+                                    [class.btn-ativar]="!usuario.ativo">
+                                    {{ usuario.ativo ? 'Desativar' : 'Ativar' }}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

@@ -52,6 +52,11 @@
             Criar quarto
           </button>
 
+          <button *ngIf="ehGestor()" type="button" class="menu-item" (click)="abrirGerenciamentoUsuarios()">
+            <span class="menu-item-icon">&#9881;</span>
+            Gestao de Usuários
+          </button>
+
           <button type="button" class="menu-item menu-item-danger" (click)="sair()">
             <span class="menu-item-icon">&#8594;</span>
             Sair
