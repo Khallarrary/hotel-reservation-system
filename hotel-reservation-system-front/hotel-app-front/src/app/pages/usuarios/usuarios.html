@@ -5,10 +5,61 @@
             <p>{{ usuarios.length }} usuários cadastrados</p>
         </div>
 
-        <button type="button" class="btn-novo-usuario">
-            Novo Usuário
+        
+        <button type="button" class="btn-novo-usuario" (click)="alterarFormulario()">
+            {{ exibirFormulario ? 'Fechar' : 'Novo Usuário' }}
         </button>
+
     </header>
+
+    <form *ngIf="exibirFormulario" class="formulario-cadastro" (ngSubmit)="criarUsuario()">
+        <div class="campo-formulario">
+            <label for="nome">Nome</label>
+            <input
+                id="nome"
+                type="text"
+                name="nome"
+                [(ngModel)]="novoUsuario.nome">
+        </div>
+
+        <div class="campo-formulario">
+            <label for="email">E-mail</label>
+            <input
+                id="email"
+                type="email"
+                name="email"
+                [(ngModel)]="novoUsuario.email">
+        </div>
+
+        <div class="campo-formulario">
+            <label for="senha">Senha</label>
+            <input
+                id="senha"
+                type="password"
+                name="senha"
+                [(ngModel)]="novoUsuario.senha">
+        </div>
+
+        <div class="campo-formulario">
+            <label for="perfil">Perfil</label>
+
+            <select name="perfil" id="perfil" [(ngModel)]="novoUsuario.perfil">
+                <option value="Operador">Operador</option>
+                <option value="Gestor">Gestor</option>
+            </select>
+        </div>
+
+        <div class="acoes-formulario">
+            <button type="button" class="btn-formulario btn-cancelar" (click)="alterarFormulario()">
+            Cancelar
+            </button>
+
+            <button type="submit" class="btn-formulario btn-salvar">
+            Salvar
+            </button>
+        </div>
+        
+    </form>
 
     <p *ngIf="carregando" class="estado-pagina">
         Carregando usuários...

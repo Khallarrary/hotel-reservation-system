@@ -288,8 +288,8 @@ getOffset(reserva: any): number {
   return diff / (1000 * 60 * 60 * 24);
 }
 
-mostrarForm = false;
-mostrarFormReserva = false;
+mostrarForm: boolean = false;
+mostrarFormReserva: boolean = false;
 
 alterarFormularioQuarto() {
   this.mostrarForm = !this.mostrarForm;

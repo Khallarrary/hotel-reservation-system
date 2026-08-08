@@ -13,6 +13,14 @@ export interface Usuario {
   ativo: boolean;
 }
 
+export interface CriarUsuario {
+  nome: string;
+  email: string;
+  senha: string;
+  perfil: string;
+  
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -24,6 +32,10 @@ constructor(private http: HttpClient) {}
 
 listar(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiUrl);
+}
+
+criar(usuario: CriarUsuario): Observable<void> {
+  return this.http.post<void>(this.apiUrl, usuario)
 }
 
 }
