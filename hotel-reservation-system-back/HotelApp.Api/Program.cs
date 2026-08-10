@@ -48,6 +48,9 @@ builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IHotelContexto, HotelContexto>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUsuarioContexto, UsuarioContexto>();
+
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 

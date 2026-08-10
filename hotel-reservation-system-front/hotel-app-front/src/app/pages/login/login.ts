@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../../services/auth';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +18,7 @@ export class Login {
 
   
 
-  constructor(private authService: Auth, private router: Router) {}
+  constructor(private authService: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
 
   entrar(): void {
     this.mensagemErro = ''
@@ -47,6 +48,7 @@ export class Login {
       },
       error: (err) =>{
         this.mensagemErro = err.error || 'Nao foi possivel logar'
+        this.cdr.detectChanges();
       }
     })
   }

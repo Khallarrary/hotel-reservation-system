@@ -84,5 +84,12 @@ namespace HotelApp.Api.Controllers
             
         }
 
+        [Authorize(Roles = "Gestor")]
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> AlterarAtivacaoAsync(int id, [FromBody] AtivoDto request)
+        {
+           await _service.AlterarAtivacao(id, request.Ativo);
+           return NoContent();            
+        }
     }
 }

@@ -38,4 +38,10 @@ criar(usuario: CriarUsuario): Observable<void> {
   return this.http.post<void>(this.apiUrl, usuario)
 }
 
+
+alterarAtivacao(usuarioId: number, ativo: boolean): Observable<void>{
+  const corpo = { ativo };
+
+  return this.http.patch<void>(`${this.apiUrl}/${usuarioId}/status`, corpo)
+}
 }

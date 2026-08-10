@@ -48,6 +48,7 @@ export class Usuarios implements OnInit
         },
         error: (err) => {
           this.mostrarErro(err.erros?.message || "Erro ao carregar usuarios")
+          this.cdr.detectChanges(); 
           this.carregando = false;
         }
       })
@@ -104,5 +105,20 @@ export class Usuarios implements OnInit
     }
    })
     
+  }
+
+  alterarAtivacao(usuario: Usuario): void{
+    const novoEstado = !usuario.ativo;
+
+    this.usuarioService.alterarAtivacao(usuario.id, novoEstado).subscribe({
+      next: () =>{
+        this.carregarUsuarios();
+        this.mostrarSucesso("Usuaio criado com suceso!");
+      },
+      error: (err) => {
+        this.mostrarErro(err.erros?.message || 'Erro ao atualizar usuario.');
+        this.cdr.detectChanges(); 
+      }
+    })
   }
 }

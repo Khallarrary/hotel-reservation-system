@@ -17,14 +17,16 @@ namespace HotelApp.Application.Services
         private readonly ITokenService _tokenService;
         private readonly IHotelRepository _hotelRepository;
         private readonly IHotelContexto _contextoHotel;
+        private readonly IUsuarioContexto _contextoUsuario;
 
-        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token, IHotelRepository hotelRepository, IHotelContexto contextoHotel  )
+        public UsuarioService(IUsuarioRepository repo, ISenhaHasher senha, ITokenService token, IHotelRepository hotelRepository, IHotelContexto contextoHotel, IUsuarioContexto contextoUsuario)
         {
             _repo = repo;
             _senhaHasher = senha;
             _tokenService = token;
             _hotelRepository = hotelRepository;
             _contextoHotel = contextoHotel;
+            _contextoUsuario = contextoUsuario;
         }
 
         public async Task CriarUsuario(string nome, string email, string senha, string perfil)
@@ -219,6 +221,46 @@ namespace HotelApp.Application.Services
                 Perfil = usuario.Perfil.ToString(),
                 Ativo = usuario.Ativo,
             }).ToList();
+        }
+
+        public async Task AlterarAtivacao(int id, bool ativo)
+        {
+            var hotelId = _contextoHotel.ObterHotelId();
+
+            var usuarioId = _contextoUsuario.ObterUsuarioId();
+
+            if (!hotelId.HasValue)
+            {
+                throw new ForbiddenException("Hotel id invalido.");
+            }
+            
+
+            if (!usuarioId.HasValue)
+            {
+                throw new ForbiddenException("Usuario id invalido.");
+            }
+
+            var usuario = await _repo.ObterUsuarioPorIdAsync(id, hotelId.Value);
+
+            if(usuario == null)
+            {
+                throw new NotFoundException("Usuario não encontrado.");
+            }
+
+            if(id == usuarioId.Value && !ativo)
+            {
+                throw new ConflictException("Não é permitido desativar o próprio usuário");
+            }
+
+            if(ativo)
+            {
+                usuario.Ativar();
+            } else
+            {
+                usuario.Desativar();
+            }
+
+            await _repo.AtualizarUsuarioAsync(usuario);
         }
     }
 }

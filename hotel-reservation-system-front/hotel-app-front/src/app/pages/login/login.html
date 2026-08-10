@@ -37,13 +37,15 @@
           [(ngModel)]="senha">
       </div>
 
-      <p *ngIf="mensagemErro" class="login-error">
-        {{ mensagemErro }}
-      </p>
+      <div class="login-actions">
+        <button type="submit" class="login-button">
+          Acessar sistema
+        </button>
 
-      <button type="submit" class="login-button">
-        Acessar sistema
-      </button>
+        <p *ngIf="mensagemErro" class="login-error" aria-live="polite">
+          {{ mensagemErro }}
+        </p>
+      </div>
     </form>
   </section>
 </main>

@@ -50,6 +50,14 @@ namespace HotelApp.Domain
             HotelId = hotelId;
         }
 
-       
+       public void Ativar() 
+       {
+            Ativo = true; 
+       }
+
+        public void Desativar()
+        {
+            Ativo = false;
+        }
     }
 }

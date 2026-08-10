@@ -107,9 +107,12 @@
                                 <button
                                     type="button"
                                     class="btn-acao"
+                                    (click)="alterarAtivacao(usuario)"
                                     [class.btn-desativar]="usuario.ativo"
                                     [class.btn-ativar]="!usuario.ativo">
                                     {{ usuario.ativo ? 'Desativar' : 'Ativar' }}
+                                    
+                                    
                                 </button>
                             </div>
                         </td>
