@@ -262,6 +262,64 @@ namespace HotelApp.Application.Services
 
             await _repo.AtualizarUsuarioAsync(usuario);
         }
+
+        public async Task AlterarUsuario(string nome, string email, string perfil, int id)
+        {
+            var hotelId = _contextoHotel.ObterHotelId();
+            var usuarioId = _contextoUsuario.ObterUsuarioId();
+
+            if (!hotelId.HasValue)
+            {
+                throw new ForbiddenException("Hotel id invalido.");
+            }
+
+            var usuario = await _repo.ObterUsuarioPorIdAsync(id, hotelId.Value);
+
+            if (usuario == null)
+            {
+                throw new NotFoundException("Usuario não encontrado.");
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("E-mail é obrigatório.");
+            }
+
+            var emailNormalizado = email.Trim().ToLowerInvariant();
+            var usuarioComEmail = await _repo.ObterPorEmailAsync(emailNormalizado);
+
+            if (usuarioComEmail != null && usuarioComEmail.Id != usuario.Id)
+            {
+                throw new ConflictException(
+                    "E-mail já utilizado por outro usuário.");
+            }
+
+            var perfilValido = Enum.TryParse<PerfilUsuario>(perfil, true, out var perfilConvertido);
+
+            var perfilPermitido = perfilConvertido == PerfilUsuario.Operador || perfilConvertido == PerfilUsuario.Gestor;
+
+            if (!perfilValido || !perfilPermitido)
+            {
+                throw new ArgumentException("Perfil de usuario invalido.");
+            }
+
+            if (!usuarioId.HasValue)
+            {
+                throw new ForbiddenException(
+                    "Usuário autenticado não identificado.");
+            }
+
+            if (usuario.Id == usuarioId &&
+                perfilConvertido != usuario.Perfil)
+            {
+                throw new ConflictException(
+                    "Não é possivel alterar essa opção.");
+            }
+
+            usuario.AtualizarDados(nome, emailNormalizado, perfilConvertido);
+
+            await _repo.AtualizarUsuarioAsync(usuario);
+        }
     }
 }
 

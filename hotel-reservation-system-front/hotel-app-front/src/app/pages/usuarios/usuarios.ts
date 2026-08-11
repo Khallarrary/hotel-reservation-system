@@ -18,6 +18,13 @@ export class Usuarios implements OnInit
   carregando: boolean = false
   mensagemSucesso: string = "";
   mensagemErro: string = ""
+  usuarioEmEdicao: Usuario | null = null;
+
+  formularioEmEdicao = {
+    nome: '',
+    email: '',
+    perfil: ''
+  }
 
   constructor(private usuarioService: UsuarioService, private cdr: ChangeDetectorRef) {}
 
@@ -47,7 +54,7 @@ export class Usuarios implements OnInit
           this.cdr.detectChanges();          
         },
         error: (err) => {
-          this.mostrarErro(err.erros?.message || "Erro ao carregar usuarios")
+          this.mostrarErro(err.error?.message || "Erro ao carregar usuarios")
           this.cdr.detectChanges(); 
           this.carregando = false;
         }
@@ -101,7 +108,7 @@ export class Usuarios implements OnInit
       this.novoUsuario = {nome: '', email: '', senha: '', perfil: 'Operador'}
     }, 
     error: (err) => {
-      this.mostrarErro(err.erros?.message || 'Erro ao criar usuario.');
+      this.mostrarErro(err.error?.message || 'Erro ao criar usuario.');
     }
    })
     
@@ -113,12 +120,54 @@ export class Usuarios implements OnInit
     this.usuarioService.alterarAtivacao(usuario.id, novoEstado).subscribe({
       next: () =>{
         this.carregarUsuarios();
-        this.mostrarSucesso("Usuaio criado com suceso!");
+        this.mostrarSucesso("Ativação alterada com suceso!");
       },
       error: (err) => {
-        this.mostrarErro(err.erros?.message || 'Erro ao atualizar usuario.');
+        this.mostrarErro(err.error?.message || 'Erro ao atualizar usuario.');
         this.cdr.detectChanges(); 
       }
     })
   }
+
+  iniciarEdicao(usuario: Usuario): void{
+    this.usuarioEmEdicao = usuario;
+
+    this.formularioEmEdicao = {
+      nome: usuario.nome,
+      email: usuario.email,
+      perfil: usuario.perfil
+    }
+  }
+
+  salvarEdicao(): void{
+    if(this.usuarioEmEdicao == null){
+      return
+    }
+
+    this.usuarioService.alterarUsuario(this.usuarioEmEdicao.id, this.formularioEmEdicao).subscribe({
+      next: () => {
+        this.carregarUsuarios();
+        this.cancelarEdicao();
+        this.mostrarSucesso("Usuario alterado com sucesso!");
+        this.cdr.detectChanges(); 
+      },
+      error: (err) => {
+        this.mostrarErro(err.error?.message || 'Erro ao atualizar usuario.');
+        this.cdr.detectChanges(); 
+      }
+    })
+
+  }
+
+  cancelarEdicao(): void{
+    this.usuarioEmEdicao = null;
+
+    this.formularioEmEdicao = {
+      nome: '',
+      email: '',
+      perfil: ''
+    }
+  }
+
+
 }

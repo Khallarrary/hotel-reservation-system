@@ -91,5 +91,13 @@ namespace HotelApp.Api.Controllers
            await _service.AlterarAtivacao(id, request.Ativo);
            return NoContent();            
         }
+
+        [Authorize(Roles = "Gestor")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AlterarUsuarioAsync(int id, [FromBody] AlterarUsuarioDto request)
+        {
+            await _service.AlterarUsuario(request.Nome, request.Email, request.Perfil, id);
+            return NoContent();
+        }
     }
 }

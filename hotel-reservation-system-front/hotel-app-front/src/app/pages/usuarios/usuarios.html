@@ -61,12 +61,63 @@
         
     </form>
 
+    <form
+        *ngIf="usuarioEmEdicao"
+        class="formulario-cadastro formulario-edicao"
+        (ngSubmit)="salvarEdicao()">
+        <div class="campo-formulario">
+            <label for="edicao-nome">Nome</label>
+            <input
+                id="edicao-nome"
+                type="text"
+                name="edicaoNome"
+                [(ngModel)]="formularioEmEdicao.nome">
+        </div>
+
+        <div class="campo-formulario">
+            <label for="edicao-email">E-mail</label>
+            <input
+                id="edicao-email"
+                type="email"
+                name="edicaoEmail"
+                [(ngModel)]="formularioEmEdicao.email">
+        </div>
+
+        <div class="campo-formulario">
+            <label for="edicao-perfil">Perfil</label>
+            <select
+                id="edicao-perfil"
+                name="edicaoPerfil"
+                [(ngModel)]="formularioEmEdicao.perfil">
+                <option value="Operador">Operador</option>
+                <option value="Gestor">Gestor</option>
+            </select>
+        </div>
+
+        <div class="acoes-formulario">
+            <button
+                type="button"
+                class="btn-formulario btn-cancelar"
+                (click)="cancelarEdicao()">
+                Cancelar
+            </button>
+
+            <button type="submit" class="btn-formulario btn-salvar">
+                Salvar alterações
+            </button>
+        </div>
+    </form>
+
     <p *ngIf="carregando" class="estado-pagina">
         Carregando usuários...
     </p>
 
     <p *ngIf="mensagemErro" class="toast toast-erro">
         {{ mensagemErro }}
+    </p>
+
+    <p *ngIf="mensagemSucesso" class="toast toast-sucesso">
+        {{ mensagemSucesso }}
     </p>
 
     <p *ngIf="!carregando && usuarios.length === 0" class="estado-pagina">
@@ -103,7 +154,7 @@
                         </td>
                         <td>
                             <div class="acoes-usuario">
-                                <button type="button" class="btn-acao btn-editar">Editar</button>
+                                <button type="button" class="btn-acao btn-editar" (click)="iniciarEdicao(usuario)">Editar</button>
                                 <button
                                     type="button"
                                     class="btn-acao"

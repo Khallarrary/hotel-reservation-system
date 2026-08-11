@@ -21,6 +21,13 @@ export interface CriarUsuario {
   
 }
 
+export interface AlterarUsuario {
+  nome: string;
+  email: string;
+  perfil: string;
+  
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -44,4 +51,9 @@ alterarAtivacao(usuarioId: number, ativo: boolean): Observable<void>{
 
   return this.http.patch<void>(`${this.apiUrl}/${usuarioId}/status`, corpo)
 }
+
+alterarUsuario(usuarioId: number, usuarioEditado: AlterarUsuario): Observable<void>{
+  return this.http.put<void>(`${this.apiUrl}/${usuarioId}`, usuarioEditado)
+}
+
 }

@@ -65,6 +65,10 @@
   box-shadow: var(--shadow-md);
 }
 
+.formulario-edicao {
+  grid-template-columns: minmax(180px, 1.2fr) minmax(240px, 1.5fr) minmax(150px, 0.8fr) auto;
+}
+
 .campo-formulario {
   display: flex;
   min-width: 0;
@@ -346,6 +350,12 @@ tbody tr:last-child td {
   color: #8f1f1f;
 }
 
+.toast-sucesso {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -378,6 +388,10 @@ tbody tr:last-child td {
     padding: 1rem;
   }
 
+  .formulario-edicao {
+    grid-template-columns: 1fr;
+  }
+
   .acoes-formulario {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -406,6 +420,10 @@ tbody tr:last-child td {
 
 @media (min-width: 769px) and (max-width: 1180px) {
   .formulario-cadastro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formulario-edicao {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

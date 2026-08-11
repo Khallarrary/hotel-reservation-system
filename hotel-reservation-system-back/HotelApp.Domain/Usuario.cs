@@ -59,5 +59,35 @@ namespace HotelApp.Domain
         {
             Ativo = false;
         }
+
+        public void AtualizarDados(string nome, string email, PerfilUsuario perfil)
+        {
+         
+            if(!HotelId.HasValue)
+            {
+                throw new ArgumentException("Usuário não está vinculado a um hotel.");
+            }
+
+            if ((perfil != PerfilUsuario.Gestor && perfil != PerfilUsuario.Operador))
+            {
+                throw new ArgumentException("Perfil permitido apenas para Gestor ou Operador.");
+            }
+
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                throw new ArgumentException("Usuario deve conter um nome valido");
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new ArgumentException("Usuario deve conter um e-mail valido");
+            }
+
+         
+            Nome = nome.Trim();
+            Email = email.Trim().ToLowerInvariant();
+            Perfil = perfil;
+            
+        }
     }
 }
