@@ -6,7 +6,7 @@ using HotelApp.Application.Services;
 using HotelApp.Domain;
 using Microsoft.AspNetCore.Authorization;
 
-public class UsuarioServiceTests
+public class UsuarioServiceTests 
 {
     [Fact]
     public async Task Deve_Vincular_Usuario_Ao_Hotel_Do_Contexto_Autenticado()
@@ -110,14 +110,17 @@ public class UsuarioServiceTests
     private static UsuarioService CriarService(
         IUsuarioRepository usuarioRepo,
         IHotelRepository hotelRepo,
-        int? hotelId)
+        int? hotelId,
+        int? usuarioId =1)
     {
         return new UsuarioService(
             usuarioRepo,
             new SenhaHasherFake(),
             new TokenServiceFake(),
             hotelRepo,
-            new HotelContextoFake(hotelId));
+            new HotelContextoFake(hotelId),
+            new UsuarioContextoFake(usuarioId));
+            
     }
 
     private static Hotel CriarHotel(int id)
@@ -146,6 +149,21 @@ public class UsuarioServiceTests
         public Task AdicionarAsync(Usuario usuario)
         {
             UsuarioAdicionado = usuario;
+            return Task.CompletedTask;
+        }
+
+        public Task<List<Usuario>> ListarUsuariosAsync(int hotelId)
+        {
+            return Task.FromResult(new List<Usuario>());
+        }
+
+        public Task<Usuario?> ObterUsuarioPorIdAsync(int id, int hotelId)
+        {
+            return Task.FromResult((Usuario?)null);
+        }
+
+        public Task AtualizarUsuarioAsync(Usuario usuario)
+        {
             return Task.CompletedTask;
         }
     }
@@ -190,6 +208,18 @@ public class UsuarioServiceTests
         }
 
         public int? ObterHotelId() => _hotelId;
+    }
+
+    private class UsuarioContextoFake : IUsuarioContexto
+    {
+        private readonly int? _usuarioId;
+
+        public UsuarioContextoFake(int? usuarioId)
+        {
+            _usuarioId = usuarioId;
+        }
+
+        public int? ObterUsuarioId() => _usuarioId;
     }
 
     private class SenhaHasherFake : ISenhaHasher
