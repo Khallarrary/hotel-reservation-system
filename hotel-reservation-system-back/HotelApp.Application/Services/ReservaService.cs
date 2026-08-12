@@ -17,14 +17,17 @@ public class ReservaService
     private readonly IQuartoRepository _quartoRepo;
     private readonly IContaReservaRepository _contaRepo;
     private readonly IHotelContexto _hotelContexto;
-    
+    private readonly ITransacao _transacao;
 
-    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto)
+
+
+    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao)
     {
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
         _contaRepo = contaRepo ?? throw new ArgumentNullException(nameof(contaRepo));
         _hotelContexto = hotelContexto;
+        _transacao = transacao;
     }
 
 
@@ -76,7 +79,7 @@ public class ReservaService
             throw new ArgumentException("Nome do Hospede é obrigatorio.");
         }
 
-        if (quartoId <= 0) 
+        if (quartoId <= 0)
         {
             throw new ArgumentException("Quarto inválido.");
         }
@@ -84,7 +87,7 @@ public class ReservaService
         // Verifica se o quarto existe
         var quarto = await _quartoRepo.ObterPorIdAsync(quartoId, hotelId.Value);
 
-     
+
 
         if (quarto == null)
         {
@@ -105,19 +108,22 @@ public class ReservaService
             if (reserva is null)
                 continue;
 
-            if (nova.ConflitaCom(reserva)) 
+            if (nova.ConflitaCom(reserva))
             {
                 throw new ConflictException("Quarto já ocupado nesse período");
             }
-        
+
         }
 
-        await _repo.AdicionarReservaAsync(nova);
+        await _transacao.ExecutarAsync(async () =>
+        {
+            await _repo.AdicionarReservaAsync(nova);
 
-        var conta = new ContaReserva(nova.Id);
-        await _contaRepo.AdicionarAsync(conta);
+            var conta = new ContaReserva(nova.Id);
+            await _contaRepo.AdicionarAsync(conta);
 
-    }
+        });
+      }
 
     public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto)
     {
