@@ -53,6 +53,8 @@ builder.Services.AddScoped<IUsuarioContexto, UsuarioContexto>();
 
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
+builder.Services.AddScoped<ITransacao, Transacao>();
+
 
 
 /// <summary>
