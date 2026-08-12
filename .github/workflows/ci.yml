@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar código
+      uses: actions/checkout@v4
+
+    - name: Configurar .NET
+      uses: actions/setup-dotnet@v4 
+      with:
+       dotnet-version: '10.0.x'
+
+    - name: Restaurar dependências
+      run: dotnet restore ./hotel-reservation-system-back/HotelApp.slnx
+
+    - name: Compilar Backend
+      run: dotnet build ./hotel-reservation-system-back/HotelApp.slnx --configuration Release --no-restore
+
+    - name: Executar Testes
+      run: dotnet test ./hotel-reservation-system-back/HotelApp.slnx --configuration Release --no-build
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps: 
+    - name: Baixar código
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: hotel-reservation-system-front/hotel-app-front/package-lock.json
+
+    - name: Instalar dependências
+      working-directory: ./hotel-reservation-system-front/hotel-app-front
+      run: npm ci
+
+    - name: Compilar Frontend
+      working-directory: ./hotel-reservation-system-front/hotel-app-front
+      run: npm run build
