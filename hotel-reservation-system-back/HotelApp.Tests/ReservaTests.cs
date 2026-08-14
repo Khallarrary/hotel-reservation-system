@@ -138,4 +138,56 @@ public class ReservaTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Fact]
+    public void Deve_Cancelar_Reserva_Pendente()
+    {
+        var reserva = new Reserva(
+            DateTime.Today.AddDays(1),
+            DateTime.Today.AddDays(2),
+            "Joao",
+            1,
+            1
+        );
+
+        reserva.Cancelar();
+
+        reserva.Status.Should().Be(ReservaStatus.Cancelada);
+    }
+
+    [Fact]
+    public void Nao_Deve_Cancelar_Reserva_Em_CheckIn()
+    {
+        var reserva = new Reserva(
+            DateTime.Today,
+            DateTime.Today.AddDays(1),
+            "Joao",
+            1,
+            1
+        );
+        reserva.RealizarCheckIn();
+
+        Action action = () => reserva.Cancelar();
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Status.Should().Be(ReservaStatus.CheckIn);
+    }
+
+    [Fact]
+    public void Nao_Deve_Cancelar_Reserva_Ja_Cancelada()
+    {
+        var reserva = new Reserva(
+            DateTime.Today.AddDays(1),
+            DateTime.Today.AddDays(2),
+            "Joao",
+            1,
+            1
+        );
+        reserva.Cancelar();
+
+        Action action = () => reserva.Cancelar();
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Status.Should().Be(ReservaStatus.Cancelada);
+    }
+
 }

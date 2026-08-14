@@ -86,7 +86,7 @@ namespace HotelApp.Api.Controllers
         {
             try
             {
-                await _service.DeletarReserva(id);
+                await _service.CancelarReserva(id);
                 return NoContent();
             }
             catch (NotFoundException ex)

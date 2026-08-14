@@ -18,16 +18,18 @@ public class ReservaService
     private readonly IContaReservaRepository _contaRepo;
     private readonly IHotelContexto _hotelContexto;
     private readonly ITransacao _transacao;
+    private readonly IConsultaSaldoConta _consultaSaldo;
+    
 
 
-
-    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao)
+    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao, IConsultaSaldoConta consultaSaldo)
     {
-        _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        _repo = repo ?? throw new ArgumentNullException(nameof(repo)); 
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
         _contaRepo = contaRepo ?? throw new ArgumentNullException(nameof(contaRepo));
         _hotelContexto = hotelContexto;
         _transacao = transacao;
+        _consultaSaldo = consultaSaldo;
     }
 
 
@@ -266,6 +268,37 @@ public class ReservaService
             TotalPaginas = totalDePaginas
 
         };
+
+
+    }
+
+    public async Task CancelarReserva(int id)
+    {
+        var hotelId = _hotelContexto.ObterHotelId();
+   
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
+
+        if (reserva == null)
+        {
+            throw new NotFoundException("Reserva nao encontrada");
+        }
+
+        var saldo = await _consultaSaldo.ObterSaldoAsync(id);
+
+        if (saldo != 0m)
+        {
+            throw new ConflictException(
+                "A reserva não pode ser cancelada enquanto a conta possuir saldo.");
+        }
+
+        reserva.Cancelar();
+
+        await _repo.AtualizarReservaAsync(reserva);
     }
 }
  
