@@ -31,6 +31,8 @@ ContaReservaRepository>();
 builder.Services.AddScoped<ILancamentoContaRepository,
 LancamentoContaRepository>();
 
+builder.Services.AddScoped<IConsultaSaldoConta, ConsultaSaldoConta>();
+
 builder.Services.AddScoped<CaixaService>();
 
 builder.Services.AddScoped<IQuartoRepository, QuartoRepository>();

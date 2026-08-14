@@ -118,4 +118,15 @@ public class Reserva
         Status = ReservaStatus.CheckOut;
 
     }
+
+    public void Cancelar()
+    {
+        if (Status != ReservaStatus.Pendente)
+        {
+            throw new ArgumentException("Não é possivel cancelar reserva com esse status");
+        }
+
+        
+        Status = ReservaStatus.Cancelada;
+    }
 }

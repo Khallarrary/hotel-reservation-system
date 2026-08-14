@@ -1,5 +1,6 @@
 using FluentAssertions;
 using HotelApp.Application.DTOs;
+using HotelApp.Application.Exceptions;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
 using HotelApp.Domain;
@@ -21,7 +22,8 @@ public class ReservaServiceTests
             new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
             contaRepo,
             new HotelContextoFake(hotelId),
-            transacao);
+            transacao,
+            new ConsultaSaldoContaFake(0m));
 
         await service.CriarReserva(
             DateTime.Today.AddDays(1),
@@ -33,6 +35,90 @@ public class ReservaServiceTests
         reservaRepo.ReservaAdicionada.Should().NotBeNull();
         contaRepo.ContaAdicionada.Should().NotBeNull();
         contaRepo.ContaAdicionada!.ReservaId.Should().Be(reservaIdGerado);
+    }
+
+    [Fact]
+    public async Task Deve_Cancelar_Reserva_Quando_Saldo_Estiver_Zerado()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            new ConsultaSaldoContaFake(0m));
+
+        await service.CancelarReserva(reservaId);
+
+        reserva.Status.Should().Be(ReservaStatus.Cancelada);
+        reservaRepo.ReservaAtualizada.Should().BeSameAs(reserva);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Cancelar_Reserva_Quando_Saldo_For_Diferente_De_Zero()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            new ConsultaSaldoContaFake(50m));
+
+        Func<Task> action = () => service.CancelarReserva(reservaId);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        reserva.Status.Should().Be(ReservaStatus.Pendente);
+        reservaRepo.ReservaAtualizada.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Cancelar_Reserva_De_Outro_Hotel()
+    {
+        const int hotelIdAutenticado = 1;
+        const int reservaId = 25;
+        var reservaOutroHotel = CriarReserva(reservaId, hotelId: 2);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reservaOutroHotel);
+        var consultaSaldo = new ConsultaSaldoContaFake(0m);
+        var service = CriarService(reservaRepo, hotelIdAutenticado, consultaSaldo);
+
+        Func<Task> action = () => service.CancelarReserva(reservaId);
+
+        await action.Should().ThrowAsync<NotFoundException>();
+        consultaSaldo.QuantidadeConsultas.Should().Be(0);
+        reservaRepo.ReservaAtualizada.Should().BeNull();
+    }
+
+    private static ReservaService CriarService(
+        ReservaRepositoryFake reservaRepo,
+        int hotelId,
+        IConsultaSaldoConta consultaSaldo)
+    {
+        return new ReservaService(
+            reservaRepo,
+            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), 10),
+            new ContaReservaRepositoryFake(),
+            new HotelContextoFake(hotelId),
+            new TransacaoFake(),
+            consultaSaldo);
+    }
+
+    private static Reserva CriarReserva(int reservaId, int hotelId)
+    {
+        var reserva = new Reserva(
+            DateTime.Today.AddDays(1),
+            DateTime.Today.AddDays(2),
+            "Hospede Teste",
+            10,
+            hotelId);
+
+        typeof(Reserva)
+            .GetProperty(nameof(Reserva.Id))!
+            .SetValue(reserva, reservaId);
+
+        return reserva;
     }
 
     private class TransacaoFake : ITransacao
@@ -58,15 +144,37 @@ public class ReservaServiceTests
         public int? ObterHotelId() => _hotelId;
     }
 
+    private class ConsultaSaldoContaFake : IConsultaSaldoConta
+    {
+        private readonly decimal _saldo;
+
+        public int QuantidadeConsultas { get; private set; }
+
+        public ConsultaSaldoContaFake(decimal saldo)
+        {
+            _saldo = saldo;
+        }
+
+        public Task<decimal> ObterSaldoAsync(int reservaId)
+        {
+            QuantidadeConsultas++;
+            return Task.FromResult(_saldo);
+        }
+    }
+
     private class ReservaRepositoryFake : IReservaRepository
     {
         private readonly int _reservaIdGerado;
 
-        public Reserva? ReservaAdicionada { get; private set; }
+        private readonly Reserva? _reservaExistente;
 
-        public ReservaRepositoryFake(int reservaIdGerado)
+        public Reserva? ReservaAdicionada { get; private set; }
+        public Reserva? ReservaAtualizada { get; private set; }
+
+        public ReservaRepositoryFake(int reservaIdGerado, Reserva? reservaExistente = null)
         {
             _reservaIdGerado = reservaIdGerado;
+            _reservaExistente = reservaExistente;
         }
 
         public Task AdicionarReservaAsync(Reserva reserva)
@@ -88,9 +196,16 @@ public class ReservaServiceTests
         public Task DeletarReservaAsync(Reserva reserva) => Task.CompletedTask;
 
         public Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId) =>
-            Task.FromResult<Reserva?>(null);
+            Task.FromResult<Reserva?>(
+                _reservaExistente?.Id == id && _reservaExistente.HotelId == hotelId
+                    ? _reservaExistente
+                    : null);
 
-        public Task AtualizarReservaAsync(Reserva reserva) => Task.CompletedTask;
+        public Task AtualizarReservaAsync(Reserva reserva)
+        {
+            ReservaAtualizada = reserva;
+            return Task.CompletedTask;
+        }
 
         public Task<int> ContarReservasAsync(ReservaConsultaDto consulta, int hotelId) =>
             Task.FromResult(0);
