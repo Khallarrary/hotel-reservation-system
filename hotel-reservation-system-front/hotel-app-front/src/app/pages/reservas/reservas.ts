@@ -7,6 +7,13 @@ import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
 import { Auth } from '../../services/auth';
+import { ReservaDetalhesBase } from '../../shared/reserva-detalhes-base';
+import {
+  calcularDuracaoNaTimeline,
+  calcularOffsetNaTimeline,
+  gerarDiasTimeline,
+  reservaEstaNaTimeline
+} from '../../shared/reserva-timeline';
 
 @Component({
   selector: 'app-reservas',
@@ -16,16 +23,22 @@ import { Auth } from '../../services/auth';
   styleUrl: './reservas.css'
 })
 
-export class ReservasComponent implements OnInit
+export class ReservasComponent extends ReservaDetalhesBase implements OnInit
 {
   quartos: any[] = [];
   dias: Date[] = []; 
   inicioTimeLine = new Date();
   
 
-  constructor(private reservaService: ReservaService, private quartoService: QuartoService,
-  private cdr: ChangeDetectorRef, private router: Router, private route: ActivatedRoute,
-  private authService: Auth){}
+  constructor(reservaService: ReservaService, private quartoService: QuartoService,
+  cdr: ChangeDetectorRef, router: Router, private route: ActivatedRoute,
+  private authService: Auth){
+    super(reservaService, router, cdr);
+  }
+
+  protected recarregarDados(): void {
+    this.carregarQuartos();
+  }
 
   ngOnInit(): void {
     this.inicioTimeLine.setHours(0, 0, 0, 0);
@@ -50,32 +63,11 @@ export class ReservasComponent implements OnInit
 
 
   gerarDias() {
-  const totalDias = 10;
-
-  this.dias = [];
-
-  for (let i = 0; i < totalDias; i++) {
-    const d = new Date(this.inicioTimeLine);
-    d.setDate(this.inicioTimeLine.getDate() + i);
-    this.dias.push(d);
-  }
+  this.dias = gerarDiasTimeline(this.inicioTimeLine, 10);
 }
 
 reservaEstaVisivel(reserva: any): boolean{
-  const inicioTimeLine = this.dias[0];
-  const fimTimeLine = new Date(inicioTimeLine);
-  fimTimeLine.setDate(inicioTimeLine.getDate() + this.dias.length)
-  const checkIn = new Date(reserva.checkIn)
-  const checkOut = new Date(reserva.checkOut)
-
-
-  if(inicioTimeLine >= checkOut){
-    return false
-  } else if(fimTimeLine <= checkIn){
-    return false
-  } else {
-    return true
-  }
+  return reservaEstaNaTimeline(reserva, this.dias);
 }
 
 avancarData(){
@@ -165,32 +157,6 @@ novaReservaPorNumero: ReservaPorNumero = {
   numeroDoQuarto: ''
 };
 
-mensagemSucesso: string = "";
-mensagemErro: string = "";
-
-limparMensagens() {
-  this.mensagemErro = '';
-  this.mensagemSucesso = '';
-}
-
-mostrarSucesso(texto: string) {
-  this.mensagemSucesso = texto;
-  this.mensagemErro = '';
-
-  setTimeout(() => {
-    this.mensagemSucesso = '';
-  }, 3000);
-}
-
-mostrarErro(texto: string) {
-  this.mensagemErro = texto;
-  this.mensagemSucesso = '';
-
-  setTimeout(() => {
-    this.mensagemErro = '';
-  }, 3000);
-}
-
 criarReservaPorNumero() {
 
 
@@ -239,53 +205,11 @@ criarReservaPorNumero() {
 
 
 getDuracao(reserva: any): number {
-  const checkIn = new Date(reserva.checkIn);
-  const checkOut = new Date(reserva.checkOut);
-  const inicioTimeLine = this.dias[0];
-  const fimTimeLine = new Date(inicioTimeLine);
-  fimTimeLine.setDate(inicioTimeLine.getDate() + this.dias.length)
-
-  let inicioVisual = inicioTimeLine;
-
-  if(checkIn > inicioTimeLine){
-     inicioVisual = checkIn;
-  } 
-
-let fimVisual =fimTimeLine;
-
-  if(checkOut < fimTimeLine){
-     fimVisual = checkOut;
-  } 
-
-  
-
-   
-  const diff = fimVisual.getTime() - inicioVisual.getTime();
-  let duracao = diff / (1000 * 60 * 60 * 24);
-
-  if(checkIn < inicioTimeLine){
-    duracao = duracao + 0.5;
-  }
-
-  return duracao;
+  return calcularDuracaoNaTimeline(reserva, this.dias);
 }
 
 getOffset(reserva: any): number {
-  const inicioTimeLine = this.dias[0];
-  
-  const checkIn = new Date(reserva.checkIn);
-  let inicioVisual = inicioTimeLine;
-
-  if(checkIn > inicioTimeLine){
-     inicioVisual = checkIn;
-  } 
-
-  if(checkIn < inicioTimeLine){
-    return -0.5;
-  }
-
-  const diff = inicioVisual.getTime() - inicioTimeLine.getTime();
-  return diff / (1000 * 60 * 60 * 24);
+  return calcularOffsetNaTimeline(reserva, this.dias);
 }
 
 mostrarForm: boolean = false;
@@ -339,84 +263,5 @@ criarQuarto() {
     }
   });
 }
-
-reservaSelecionada: Reserva | null = null;
-
-exibirDetalhesReserva(reserva: Reserva){
-  this.reservaSelecionada = reserva;
-  console.log(reserva);
-}
-
-deletarReservaSelecionada(){
-  if(this.reservaSelecionada != null){
-    this.reservaService.deletarReserva(this.reservaSelecionada.id).subscribe({
-      next: () => {
-        this.reservaSelecionada = null;
-        this.carregarQuartos();
-        this.mostrarSucesso("Reserva cancelada com sucesso");
-      }, 
-      error: (err) => {
-        console.log(err);
-        console.log(err.error);
-        this.mostrarErro(err.erros?.message || 'Erro ao deletar reserva');
-      }
-    })
-  }
-}
-
-fecharDetalhesReserva() {
-  this.reservaSelecionada = null;
-}
-
-realizarCheckIn(){
-  if(this.reservaSelecionada != null){
-    this.reservaService.realizarCheckIn(this.reservaSelecionada.id).subscribe({
-      next: () => {
-        const reserva = this.reservaSelecionada;
-        if(reserva == null){
-          return
-        }
-        reserva.status = "CheckIn";
-        this.carregarQuartos();
-        this.mostrarSucesso("Reserva em check-in!")
-    },
-      error: (err) => {
-        console.log(err);
-        console.log(err.error);
-        this.mostrarErro(err.error || 'Erro ao realizar check-in da reserva');
-      }
-    })
-  }
-}
-
-realizarCheckOut(){
-  if(this.reservaSelecionada != null){
-    this.reservaService.realizarCheckOut(this.reservaSelecionada.id).subscribe({
-      next: () => {
-        const reserva = this.reservaSelecionada;
-        if(reserva == null){
-          return
-        }
-        reserva.status = "CheckOut";
-        this.carregarQuartos();
-        this.mostrarSucesso("Reserva em check-out!")
-    },
-      error: (err) => {
-        console.log(err);
-        console.log(err.error);
-        this.mostrarErro(err.error || 'Erro ao realizar check-out da reserva');
-      }
-    })
-  }
-}
-
-abrirCaixa(): void {
-  if(this.reservaSelecionada != null){
-    const reserva = this.reservaSelecionada;
-    this.router.navigate(['/reservas', reserva.id, 'caixa'])
-  }
-}
-
-
 
 };
