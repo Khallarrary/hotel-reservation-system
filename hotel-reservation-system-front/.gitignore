@@ -31,3 +31,5 @@ src/environments/*.ts
 
 # Misc
 .env
+
+hotelapp-front.zip

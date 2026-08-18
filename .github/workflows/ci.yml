@@ -2,7 +2,15 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   backend:
@@ -15,7 +23,7 @@ jobs:
     - name: Configurar .NET
       uses: actions/setup-dotnet@v4 
       with:
-       dotnet-version: '10.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Restaurar dependências
       run: dotnet restore ./hotel-reservation-system-back/HotelApp.slnx
@@ -47,3 +55,82 @@ jobs:
     - name: Compilar Frontend
       working-directory: ./hotel-reservation-system-front/hotel-app-front
       run: npm run build
+
+    - name: Guardar build do frontend
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: hotel-reservation-system-front/hotel-app-front/dist/hotel-app-front/browser
+        retention-days: 1
+
+  deploy-backend:
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Autenticar no Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Autenticar no ACR
+        run: az acr login --name acrhotelapp7910
+
+      - name: Construir e publicar imagem
+        run: |
+          IMAGE="acrhotelapp7910.azurecr.io/hotelapp-api:${{ github.sha }}"
+          docker build -t "$IMAGE" ./hotel-reservation-system-back
+          docker push "$IMAGE"
+
+      - name: Atualizar API no Azure
+        run: |
+          IMAGE="acrhotelapp7910.azurecr.io/hotelapp-api:${{ github.sha }}"
+          az webapp config container set \
+            --resource-group rg-hotelapp-demo \
+            --name hotelapp-api-demo-8066 \
+            --container-image-name "$IMAGE" \
+            --output none
+          az webapp restart \
+            --resource-group rg-hotelapp-demo \
+            --name hotelapp-api-demo-8066
+
+  deploy-frontend:
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar build validado
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-build
+
+      - name: Preparar pacote ZIP
+        run: |
+          cd frontend-build
+          zip -r ../hotelapp-front.zip .
+
+      - name: Autenticar no Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Publicar frontend no Azure
+        run: |
+          az webapp deploy \
+            --resource-group rg-hotelapp-demo \
+            --name hotelapp-front-demo-3567 \
+            --src-path hotelapp-front.zip \
+            --type zip \
+            --clean true \
+            --restart true
