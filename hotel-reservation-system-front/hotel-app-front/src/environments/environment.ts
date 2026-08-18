@@ -1,3 +1,3 @@
 export const environment = {
-    apiUrl: 'https://localhost:7265'
+    apiUrl: 'https://hotelapp-api-demo-8066.azurewebsites.net'
 };
