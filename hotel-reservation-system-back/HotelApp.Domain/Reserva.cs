@@ -39,7 +39,7 @@ public class Reserva
     /// - Nome do hóspede deve ser válido
     /// - Quarto deve ser válido
     /// </summary>
-    public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId, int hotelId)
+    public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId, int hotelId, DateOnly dataAtual)
     {
         if (checkOut <= checkIn)
         {
@@ -47,7 +47,7 @@ public class Reserva
         }
 
         // Evita reservas com datas já expiradas
-        if (checkIn.Date < DateTime.Today)
+        if (DateOnly.FromDateTime(checkIn) < dataAtual)
         {
             throw new ArgumentException("A data de check-in não pode estar no passado.");
         }   
@@ -81,19 +81,22 @@ public class Reserva
 
     }
 
-    public void RealizarCheckIn()
+    public void RealizarCheckIn(DateOnly dataAtual)
     {
-        if(Status != ReservaStatus.Pendente)
+        var dataCheckIn = DateOnly.FromDateTime(CheckIn);
+        var dataCheckOut = DateOnly.FromDateTime(CheckOut);
+
+        if (Status != ReservaStatus.Pendente)
         {
             throw new ArgumentException("Reserva deve estar com status Pendente para dar check-in");
         }
 
-        if (CheckIn.Date > DateTime.Today) {
+        if (dataCheckIn > dataAtual) {
             throw new ArgumentException("Não é possivel realizar check-in em reservas futuras. Troque a data da reserva");
 
         }
 
-        if (CheckOut.Date <= DateTime.Today)
+        if (dataCheckOut <= dataAtual)
         {
             throw new ArgumentException("Não é possivel realizar check-in em reservas passadas. Troque a data da reserva");
         }
@@ -102,14 +105,16 @@ public class Reserva
        
     }
 
-    public void RealizarCheckOut()
+    public void RealizarCheckOut(DateOnly dataAtual)
     {
+        var dataCheckOut = DateOnly.FromDateTime(CheckOut);
+
         if (Status != ReservaStatus.CheckIn)
         {
             throw new ArgumentException("Reserva deve estar com status check-in para dar check-out");
         }
 
-        if (DateTime.Today < CheckOut.Date)
+        if (dataAtual < dataCheckOut)
         {
             throw new ArgumentException("Não é possivel realizar check-out antecipado. Troque a data da reserva");
 

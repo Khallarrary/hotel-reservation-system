@@ -101,11 +101,12 @@ public class CaixaServiceTests
     private static Reserva CriarReserva(int hotelId)
     {
         return new Reserva(
-            DateTime.Today.AddDays(1),
-            DateTime.Today.AddDays(2),
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
             "Hospede Teste",
             quartoId: 1,
-            hotelId);
+            hotelId,
+            new DateOnly(2030, 4, 1));
     }
 
     private class ContaReservaRepositoryFake : IContaReservaRepository
