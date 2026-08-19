@@ -57,6 +57,8 @@ builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 builder.Services.AddScoped<ITransacao, Transacao>();
 
+builder.Services.AddSingleton<IRelogioHotel, RelogioHotel>();
+
 
 
 /// <summary>

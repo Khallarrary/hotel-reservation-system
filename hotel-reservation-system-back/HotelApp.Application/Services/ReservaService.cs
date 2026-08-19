@@ -19,10 +19,12 @@ public class ReservaService
     private readonly IHotelContexto _hotelContexto;
     private readonly ITransacao _transacao;
     private readonly IConsultaSaldoConta _consultaSaldo;
+    private readonly IHotelRepository _hotelRepositoy;
+    private readonly IRelogioHotel _relogioHotel;
     
 
 
-    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao, IConsultaSaldoConta consultaSaldo)
+    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao, IConsultaSaldoConta consultaSaldo, IRelogioHotel relogioHotel, IHotelRepository hotelRepo)
     {
         _repo = repo ?? throw new ArgumentNullException(nameof(repo)); 
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
@@ -30,6 +32,8 @@ public class ReservaService
         _hotelContexto = hotelContexto;
         _transacao = transacao;
         _consultaSaldo = consultaSaldo;
+        _relogioHotel = relogioHotel;
+        _hotelRepositoy = hotelRepo;
     }
 
 
@@ -75,6 +79,8 @@ public class ReservaService
             throw new ForbiddenException("Hotel não encontrado");
         }
 
+        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
+
         // Validação básica de entrada
         if (string.IsNullOrWhiteSpace(nome))
         {
@@ -101,7 +107,7 @@ public class ReservaService
         var reservas = await _repo.ObterReservasPorQuartoAsync(quartoId, hotelId.Value) ?? new List<Reserva>();
 
         // Cria nova reserva (validação adicional ocorre no domínio)
-        var nova = new Reserva(checkIn, checkOut, nome, quartoId, hotelId.Value);
+        var nova = new Reserva(checkIn, checkOut, nome, quartoId, hotelId.Value, dataAtual);
 
 
         // Verifica conflito com reservas existentes
@@ -176,6 +182,8 @@ public class ReservaService
             throw new ForbiddenException("Hotel não encontrado");
         }
 
+        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
+
         var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
 
         if(reserva == null)
@@ -183,7 +191,7 @@ public class ReservaService
             throw new NotFoundException("Reserva nao encontrada");
         }
 
-        reserva.RealizarCheckIn();
+        reserva.RealizarCheckIn(dataAtual);
 
         await _repo.AtualizarReservaAsync(reserva);
     }
@@ -197,6 +205,8 @@ public class ReservaService
             throw new ForbiddenException("Hotel não encontrado");
         }
 
+        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
+
         var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
 
         if (reserva == null)
@@ -204,7 +214,7 @@ public class ReservaService
             throw new NotFoundException("Reserva nao encontrada");
         }
 
-        reserva.RealizarCheckOut();
+        reserva.RealizarCheckOut(dataAtual);
 
         await _repo.AtualizarReservaAsync(reserva);
     }
@@ -299,6 +309,20 @@ public class ReservaService
         reserva.Cancelar();
 
         await _repo.AtualizarReservaAsync(reserva);
+    }
+
+    private async Task<DateOnly> ObterDataAtualHotel(int hotelId)
+    {
+        var hotel = await _hotelRepositoy.ObterPorIdAsync(hotelId);
+
+        if (hotel == null)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var dataAtual = _relogioHotel.ObterDataAtual(hotel.FusoHorario);
+
+        return dataAtual;
     }
 }
  

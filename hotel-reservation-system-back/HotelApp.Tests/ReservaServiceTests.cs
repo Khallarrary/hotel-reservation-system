@@ -7,6 +7,8 @@ using HotelApp.Domain;
 
 public class ReservaServiceTests
 {
+    private static readonly DateOnly DataAtual = new(2030, 4, 1);
+
     [Fact]
     public async Task Deve_Criar_Reserva_E_Conta_Dentro_Da_Transacao()
     {
@@ -23,11 +25,13 @@ public class ReservaServiceTests
             contaRepo,
             new HotelContextoFake(hotelId),
             transacao,
-            new ConsultaSaldoContaFake(0m));
+            new ConsultaSaldoContaFake(0m),
+            new RelogioHotelFake(DataAtual),
+            new HotelRepositoryFake(hotelId));
 
         await service.CriarReserva(
-            DateTime.Today.AddDays(1),
-            DateTime.Today.AddDays(2),
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
             "Hospede Teste",
             quartoId);
 
@@ -102,17 +106,20 @@ public class ReservaServiceTests
             new ContaReservaRepositoryFake(),
             new HotelContextoFake(hotelId),
             new TransacaoFake(),
-            consultaSaldo);
+            consultaSaldo,
+            new RelogioHotelFake(DataAtual),
+            new HotelRepositoryFake(hotelId));
     }
 
     private static Reserva CriarReserva(int reservaId, int hotelId)
     {
         var reserva = new Reserva(
-            DateTime.Today.AddDays(1),
-            DateTime.Today.AddDays(2),
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
             "Hospede Teste",
             10,
-            hotelId);
+            hotelId,
+            DataAtual);
 
         typeof(Reserva)
             .GetProperty(nameof(Reserva.Id))!
@@ -142,6 +149,45 @@ public class ReservaServiceTests
         }
 
         public int? ObterHotelId() => _hotelId;
+    }
+
+    private class RelogioHotelFake : IRelogioHotel
+    {
+        private readonly DateOnly _dataAtual;
+
+        public RelogioHotelFake(DateOnly dataAtual)
+        {
+            _dataAtual = dataAtual;
+        }
+
+        public DateOnly ObterDataAtual(string fusoHorario) => _dataAtual;
+    }
+
+    private class HotelRepositoryFake : IHotelRepository
+    {
+        private readonly int _hotelId;
+        private readonly Hotel _hotel = new(
+            "Hotel Teste",
+            "12.345.678/0001-90",
+            "America/Sao_Paulo");
+
+        public HotelRepositoryFake(int hotelId)
+        {
+            _hotelId = hotelId;
+        }
+
+        public Task<Hotel?> ObterPorIdAsync(int id) =>
+            Task.FromResult<Hotel?>(id == _hotelId ? _hotel : null);
+
+        public Task AdicionarAsync(Hotel hotel) => Task.CompletedTask;
+
+        public Task<Hotel?> ObterPorDocumentoAsync(string documento) =>
+            Task.FromResult<Hotel?>(null);
+
+        public Task<List<Hotel>> ListarAsync() =>
+            Task.FromResult(new List<Hotel>());
+
+        public Task AtualizarAsync(Hotel hotel) => Task.CompletedTask;
     }
 
     private class ConsultaSaldoContaFake : IConsultaSaldoConta
