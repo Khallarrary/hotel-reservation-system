@@ -65,6 +65,34 @@ public class ReservaTests
     }
 
     [Fact]
+    public void Nao_Deve_Conflitar_Quando_Reserva_Existente_Estiver_Cancelada()
+    {
+        var reservaExistente = new Reserva(
+            new DateTime(2030, 4, 10),
+            new DateTime(2030, 4, 15),
+            "Joao",
+            1,
+            1,
+            DataAtual
+        );
+
+        var novaReserva = new Reserva(
+            new DateTime(2030, 4, 12),
+            new DateTime(2030, 4, 18),
+            "Maria",
+            1,
+            1,
+            DataAtual
+        );
+
+        reservaExistente.Cancelar();
+
+        var resultado = novaReserva.ConflitaCom(reservaExistente);
+
+        resultado.Should().BeFalse();
+    }
+
+    [Fact]
     public void Deve_Lancar_Erro_Quando_CheckOut_Menor_Que_CheckIn()
     {
         Action action = () => new Reserva(

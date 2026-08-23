@@ -36,11 +36,13 @@ namespace HotelApp.Application.Services
             {
                 var reservas = await _reservaRepo.ObterReservasPorQuartoAsync(quarto.Id, hotelId.Value);
 
+                var reservasFiltradas = reservas.Where(r => r.Status != ReservaStatus.Cancelada);
+
                 resultado.Add(new QuartoDto
                 {
                     numero = quarto.Numero,
                     tipo = quarto.Tipo,
-                    ReservaList = reservas.Select(r => new ReservaDto
+                    ReservaList = reservasFiltradas.Select(r => new ReservaDto
                     {
                         Id = r.Id,
                         CheckIn = r.CheckIn,

@@ -55,7 +55,8 @@
         </div>
         <button 
           type="button" 
-          class="btn-modal btn-modal-danger" 
+          class="btn-modal btn-modal-danger"
+          [disabled]="reserva.status !== 'Pendente'"
           (click)="aoCancelar()">
           Cancelar
         </button>
