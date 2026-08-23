@@ -148,6 +148,15 @@
   box-shadow: var(--shadow-md);
 }
 
+.btn-modal:disabled,
+.btn-modal:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(0.35);
+}
+
 .btn-modal-primary {
   background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
   color: var(--navy-900);
