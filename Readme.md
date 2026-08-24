@@ -1,305 +1,200 @@
 # Hotel Reservation System
 
-Sistema de reservas de hotel desenvolvido como projeto de estudos, com backend em .NET e frontend em Angular.
+[![CI](https://github.com/Khallarrary/hotel-reservation-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Khallarrary/hotel-reservation-system/actions/workflows/ci.yml)
+![.NET](https://img.shields.io/badge/.NET-10-512BD4)
+![Angular](https://img.shields.io/badge/Angular-21-DD0031)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1)
+![Azure](https://img.shields.io/badge/Azure-Deploy-0078D4)
 
-O objetivo do projeto e praticar a construcao de uma aplicacao fullstack com regras de negocio reais, integrando API REST, banco de dados, frontend, fluxo operacional de reservas e controle financeiro basico da hospedagem.
+Sistema web para operação de pequenas pousadas e hotéis, desenvolvido com **ASP.NET Core**, **Angular** e **PostgreSQL**.
 
----
+O projeto começou como uma aplicação de estudos e evoluiu para uma base de produto SaaS multi-hotel, reunindo mapa de ocupação, reservas, caixa, usuários, autenticação, isolamento de dados e entrega automatizada na nuvem.
 
-## Status do projeto
+> **Status:** em desenvolvimento, com uma demonstração técnica publicada no Azure.
 
-Em desenvolvimento.
+## Demo
 
-O sistema ja possui um fluxo funcional de reservas, mapa/timeline, listagem paginada, modal de detalhes, status da reserva, check-in, check-out, cancelamento e modulo de caixa da reserva.
+- **Aplicação:** [hotelapp-front-demo-3567.azurewebsites.net](https://hotelapp-front-demo-3567.azurewebsites.net)
+- **API base (consumida pelo frontend):** `https://hotelapp-api-demo-8066.azurewebsites.net`
 
----
+O ambiente online é destinado à validação técnica e pode receber alterações durante o desenvolvimento. A documentação Swagger fica disponível somente no ambiente local.
 
 ## Funcionalidades
 
+### Reservas e operação
+
+- mapa de reservas em formato de timeline por quarto e período;
+- criação de reservas com validação de datas e conflitos de ocupação;
+- criação da reserva e de sua conta financeira na mesma transação;
+- fluxo de status `Pendente`, `CheckIn`, `CheckOut` e `Cancelada`;
+- reservas canceladas preservadas no histórico, removidas do mapa e desconsideradas em novos conflitos;
+- busca com filtros por hóspede, status, número do quarto e identificador da reserva;
+- paginação realizada no backend;
+- validações de data baseadas no fuso horário configurado para cada hotel.
+
 ### Quartos
 
-- Cadastro de quartos
-- Listagem de quartos
-- Busca por id e numero
-- Validacao de numero e tipo
-- Bloqueio de remocao de quarto com reservas vinculadas
-
-### Reservas
-
-- Criacao de reserva pelo numero do quarto
-- Validacao de conflito de datas no mesmo quarto
-- Validacao de datas invalidas
-- Validacao de limite de permanencia
-- Exibicao de reservas em mapa/timeline
-- Listagem de reservas em tabela
-- Listagem paginada no backend
-- Modal com detalhes da reserva
-- Cancelamento de reserva
-- Fluxo de check-in
-- Fluxo de check-out
-- Acesso ao caixa da reserva pelo modal
-- Status da reserva:
-  - Pendente
-  - CheckIn
-  - CheckOut
-  - Cancelada
+- cadastro e consulta de quartos;
+- numeração única dentro de cada hotel;
+- bloqueio de remoção quando existem reservas vinculadas;
+- isolamento de quartos por hotel autenticado.
 
 ### Caixa da reserva
 
-- Criacao automatica de conta ao criar uma reserva
-- Resumo do caixa por reserva
-- Lancamento de creditos
-- Lancamento de debitos
-- Formas de pagamento para credito:
-  - Dinheiro
-  - Pix
-  - Deposito
-  - Visa
-  - Master
-  - Amex
-- Calculo de total de debitos
-- Calculo de total de creditos
-- Calculo de saldo
-- Listagem de lancamentos
-- Encerramento de conta
-- Bloqueio de encerramento quando o saldo e diferente de zero
-- Bloqueio de novos lancamentos em conta encerrada
+- conta criada automaticamente junto com a reserva;
+- lançamentos de crédito e débito;
+- formas de pagamento para créditos;
+- cálculo de débitos, créditos e saldo;
+- histórico de lançamentos;
+- encerramento permitido somente com saldo zerado;
+- bloqueio de novos lançamentos em contas encerradas.
 
-### Frontend
+### Usuários e segurança
 
-- Navegacao entre mapa e lista de reservas
-- Mapa de reservas em formato de timeline
-- Cards de reserva com cores por status
-- Formulario de criacao de reserva
-- Modal de detalhes da reserva
-- Acoes de check-in, check-out, cancelamento e caixa
-- Tela de lista de reservas
-- Paginacao visual consumindo endpoint paginado
-- Tela de caixa da reserva
-- Formulario para lancar credito e debito
-- Toasts e mensagens de sucesso/erro
-- Formatacao de datas sem deslocamento por timezone
+- autenticação com JWT e senhas armazenadas por hash;
+- perfis `Master`, `Gestor` e `Operador`;
+- autorização de endpoints por perfil;
+- gerenciamento de usuários pelo Gestor;
+- cadastro, edição, ativação e desativação de usuários;
+- proteção contra alteração indevida do próprio perfil ou desativação do próprio usuário;
+- Angular Guard para rotas protegidas e interceptor para envio do token;
+- chave JWT mantida fora do repositório por User Secrets e configurações seguras do Azure.
 
----
+## Multi-hotel
 
-## Destaque do projeto
+A aplicação utiliza uma arquitetura **multi-tenant compartilhada**, na qual os registros possuem um `HotelId` e o hotel atual é identificado por uma claim no JWT.
 
-O principal diferencial do projeto e o mapa de reservas em formato de timeline, inspirado em sistemas reais de hotelaria.
+Esse contexto é aplicado nas consultas de usuários, quartos, reservas e contas para impedir acesso cruzado entre hotéis. O perfil `Master` administra a criação dos hotéis e seus primeiros gestores, enquanto `Gestor` e `Operador` permanecem vinculados a um único hotel.
 
-As reservas aparecem como blocos posicionados dinamicamente com base em:
+## Arquitetura
 
-- data de check-in
-- data de check-out
-- duracao da estadia
-- janela visivel da timeline
-- quarto vinculado
-- status da reserva
+O backend está dividido em projetos com responsabilidades distintas:
 
-Esse fluxo permite visualizar rapidamente a ocupacao dos quartos por periodo.
+```text
+HotelApp.Domain          Entidades, enums e regras de negócio
+HotelApp.Application     DTOs, contratos e serviços de aplicação
+HotelApp.Infrastructure  Entity Framework, PostgreSQL e implementações externas
+HotelApp.Api             Controllers, autenticação e pipeline HTTP
+HotelApp.Tests           Testes automatizados de domínio e serviços
+```
 
-Outro ponto importante e o modulo de caixa da reserva, que aproxima o projeto de um fluxo operacional real: a reserva possui uma conta, recebe lancamentos financeiros e pode ser encerrada apenas quando o saldo esta zerado.
+O frontend Angular utiliza componentes standalone, services para integração HTTP, guards, interceptor de autenticação e páginas separadas por fluxo operacional.
 
----
+Entre as decisões aplicadas estão Repository Pattern, injeção de dependência, DTOs, abstração do contexto do hotel, abstração de relógio por fuso horário e transação explícita na criação de reserva e conta.
 
-## Tecnologias utilizadas
+## Tecnologias
 
 ### Backend
 
-- .NET
-- ASP.NET Core
-- C#
-- Entity Framework Core
-- PostgreSQL
-- Swagger / Swashbuckle
-- Arquitetura em camadas:
-  - Domain
-  - Application
-  - Infrastructure
-  - API
+- .NET 10 e C#;
+- ASP.NET Core Web API;
+- Entity Framework Core;
+- PostgreSQL com Npgsql;
+- autenticação JWT Bearer;
+- Swagger / OpenAPI;
+- xUnit e FluentAssertions.
 
 ### Frontend
 
-- Angular
-- TypeScript
-- Standalone Components
-- HTML
-- CSS
-- Consumo de API REST
+- Angular 21;
+- TypeScript;
+- RxJS;
+- HTML e CSS;
+- componentes standalone.
 
----
+### Infraestrutura
 
-## Estrutura da API
+- Docker para empacotamento da API;
+- GitHub Actions para CI/CD;
+- Azure Container Registry;
+- Azure App Service para API e frontend;
+- Azure Database for PostgreSQL Flexible Server;
+- autenticação do pipeline no Azure por OpenID Connect.
 
-### Quartos
+## Qualidade e entrega
 
-```http
-GET /api/Quarto
-GET /api/Quarto/{id}
-GET /api/Quarto/numero/{numero}
-POST /api/Quarto
-DELETE /api/Quarto/{id}
-DELETE /api/Quarto/numero/{numero}
-```
+O workflow do GitHub Actions é executado em pushes e pull requests para a `main`:
 
-### Reservas
+1. restaura, compila e executa os testes do backend em Release;
+2. instala as dependências e gera o build de produção do frontend;
+3. após merge na `main`, publica uma nova imagem da API no ACR;
+4. atualiza a API e o frontend hospedados no Azure.
 
-```http
-GET /api/Reserva
-GET /api/Reserva/paginadas?pagina=1&tamanhoPagina=10
-POST /api/Reserva
-POST /api/Reserva/numero
-DELETE /api/Reserva/{id}
-PATCH /api/Reserva/{id}/check-in
-PATCH /api/Reserva/{id}/check-out
-```
+A suíte atual possui **41 testes automatizados**. A branch principal também utiliza proteção para impedir merge quando as verificações obrigatórias falham.
 
-### Caixa
+## Como executar localmente
 
-```http
-GET /reserva/{reservaId}/caixa
-GET /reserva/{reservaId}/lancamentos
-POST /reserva/{reservaId}/credito
-POST /reserva/{reservaId}/debito
-PATCH /reserva/{reservaId}/caixa/encerrar
-```
+### Pré-requisitos
 
----
-
-## Regras de negocio
-
-### Reservas
-
-- Nao e permitido criar reserva com check-out menor ou igual ao check-in
-- Nao e permitido criar reserva com check-in no passado
-- Nao e permitido criar reserva acima do limite de permanencia definido
-- Nao e permitido conflito de reservas no mesmo quarto
-- Check-in so pode ser realizado em reservas pendentes
-- Check-in nao pode ser realizado antes da data da reserva
-- Check-in nao pode ser realizado em reservas expiradas
-- Check-out so pode ser realizado em reservas com status CheckIn
-- Check-out nao pode ser realizado antes da data final da reserva
-- Quarto nao pode ser removido se possuir reservas vinculadas
-
-### Caixa
-
-- Toda reserva criada deve possuir uma conta vinculada
-- Creditos precisam ter forma de pagamento
-- Debitos nao possuem forma de pagamento
-- Nao e permitido lancar credito em conta encerrada
-- Nao e permitido lancar debito em conta encerrada
-- Conta so pode ser encerrada com saldo igual a zero
-
----
-
-## Como rodar o projeto
+- .NET SDK 10;
+- Node.js 22 e npm;
+- PostgreSQL;
+- Entity Framework CLI (`dotnet-ef`).
 
 ### Backend
 
-Entre na pasta do backend:
-
-```bash
-cd hotel-reservation-system-back
-```
-
-Configure a variavel de ambiente com a connection string do PostgreSQL:
+Na raiz do repositório:
 
 ```powershell
-$env:HOTELAPP_CONNECTION="Host=localhost;Port=5432;Database=hotelapp;Username=postgres;Password=sua_senha"
-```
+cd hotel-reservation-system-back
 
-Rode as migrations:
+$connection = "Host=localhost;Port=5432;Database=hotelapp;Username=postgres;Password=sua_senha"
+$env:HOTELAPP_CONNECTION = $connection
 
-```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" $connection --project HotelApp.Api
+dotnet user-secrets set "Jwt:Key" "uma-chave-local-com-pelo-menos-32-caracteres" --project HotelApp.Api
+
 dotnet ef database update --project HotelApp.Infrastructure --startup-project HotelApp.Api
-```
-
-Inicie a API:
-
-```bash
 dotnet run --project HotelApp.Api
 ```
 
-Acesse o Swagger:
-
-```text
-https://localhost:7265/swagger
-```
+O Swagger estará disponível em `https://localhost:7265/swagger`.
 
 ### Frontend
 
-Entre na pasta do frontend:
+Em outro terminal, a partir da raiz do repositório:
 
-```bash
+```powershell
 cd hotel-reservation-system-front/hotel-app-front
-```
-
-Instale as dependencias:
-
-```bash
-npm install
-```
-
-Inicie o Angular:
-
-```bash
+npm ci
 npm start
 ```
 
-Acesse:
+A aplicação estará disponível em `http://localhost:4200`.
 
-```text
-http://localhost:4200
+### Testes e builds
+
+```powershell
+dotnet test hotel-reservation-system-back/HotelApp.slnx --configuration Release
+
+cd hotel-reservation-system-front/hotel-app-front
+npm run build
 ```
 
----
+### Docker
 
-## Testes
+A imagem da API pode ser criada a partir da pasta do backend:
 
-Para rodar os testes do backend:
-
-```bash
+```powershell
 cd hotel-reservation-system-back
-dotnet test
+docker build -t hotelapp-api:dev .
 ```
 
----
+As configurações de banco e JWT devem ser fornecidas ao container por variáveis de ambiente. Nenhuma credencial de execução é versionada no repositório.
 
-## Aprendizados
+## Próximos passos
 
-Durante o desenvolvimento foram praticados:
+- garantir idempotência e proteção contra concorrência na criação de reservas;
+- bloquear movimentações financeiras em reservas canceladas;
+- criar tarifário por categoria de quarto;
+- implementar rotina de diárias;
+- permitir edição de reservas;
+- criar cadastro de hóspedes e vínculo com reservas;
+- desenvolver dashboard operacional;
+- evoluir o módulo de solicitações de hóspedes.
 
-- separacao de responsabilidades entre backend e frontend
-- modelagem de entidades de dominio
-- criacao de regras de negocio no dominio
-- uso de DTOs
-- padrao Repository e Service
-- migrations com Entity Framework
-- integracao Angular com API REST
-- comunicacao entre componentes com Input e Output
-- tratamento de datas e timezone
-- controle de estado visual no frontend
-- paginacao real no backend com Skip e Take
-- consumo de resposta paginada no Angular
-- criacao de fluxos financeiros simples
-- testes unitarios de regras de dominio e servicos
-- investigacao e correcao de conflito de pacotes Swagger/OpenAPI
+## Objetivo do projeto
 
----
+Além de consolidar conhecimentos fullstack, o projeto busca modelar problemas reais da hotelaria e servir como base para uma futura solução comercial voltada a pequenas pousadas.
 
-## Proximos passos
-
-- Adicionar busca com filtros na listagem de reservas
-- Criar usuarios e niveis de autenticacao
-- Criar tarifario por categoria de quarto
-- Criar rotina de diarias
-- Criar edicao de reserva
-- Criar cadastro de hospede e vincular a reserva
-- Avaliar cache para dados de cadastro, como quartos e futuro tarifario
-- Melhorar warnings de nullable nos DTOs
-- Preparar deploy/demo do projeto
-
----
-
-## Licenca
-
-Projeto desenvolvido para fins de estudo e portfolio.
+Projeto desenvolvido para estudo e portfólio.
