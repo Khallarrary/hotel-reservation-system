@@ -24,7 +24,7 @@ namespace HotelApp.Application.Services
             _reservaRepo = reservaRepo;
         }
 
-        private async Task<ContaReserva> ObterContaSegura(int reservaId)
+        private async Task<(ContaReserva conta, Reserva reserva)> ObterContaSegura(int reservaId)
         {
             var hotelId = _hotelContexto.ObterHotelId();
 
@@ -41,18 +41,31 @@ namespace HotelApp.Application.Services
             if (conta == null)
                 throw new NotFoundException("Conta não encontrada");
 
+            return (conta, reserva);
+
+        }
+
+        private async Task<ContaReserva> ObterContaParaLancamento(int reservaId)
+        {
+            var (conta, reserva) = await ObterContaSegura(reservaId);
+
+            if (reserva.Status == ReservaStatus.Cancelada)
+            {
+                throw new ConflictException("Não é possível realizar lançamentos em uma reserva cancelada.");
+            }
+
+            if (conta.Status == ContaStatus.Encerrada)
+            {
+                throw new ConflictException("Não é possível realizar lançamentos em uma conta encerrada.");
+            }
+
             return conta;
 
         }
 
         public async Task LancarCredito(int reservaId, decimal valor, FormaPagamento formaPagamento, string descricao)
         {
-            var conta = await ObterContaSegura(reservaId);
-
-            if (conta.Status == ContaStatus.Encerrada)
-            {
-                throw new ArgumentException("Não é possível lançar crédito em uma conta encerrada.");
-            }
+            var conta = await ObterContaParaLancamento(reservaId);
 
             var lancamento = new LancamentoConta(
             conta.Id,
@@ -64,14 +77,11 @@ namespace HotelApp.Application.Services
 
             await _lancamentoRepo.AdicionarAsync(lancamento);
         }
+
+
         public async Task LancarDebito(int reservaId, decimal valor, string descricao)
         {
-            var conta = await ObterContaSegura(reservaId);
-                       
-            if (conta.Status == ContaStatus.Encerrada)
-            {
-                throw new ArgumentException("Não é possível lançar débitos em uma conta encerrada.");
-            }
+            var conta = await ObterContaParaLancamento(reservaId);
 
             var lancamento = new LancamentoConta(
             conta.Id,
@@ -85,7 +95,7 @@ namespace HotelApp.Application.Services
 
         public async Task<List<LancamentoContaDto>> ListarLancamentosPorReserva(int reservaId)
         {
-            var conta = await ObterContaSegura(reservaId);
+            var (conta, _) = await ObterContaSegura(reservaId);
 
             var lancamentos = await _lancamentoRepo.ListarPorContaReservaIdAsync(conta.Id);
 
@@ -102,7 +112,7 @@ namespace HotelApp.Application.Services
 
         public async Task<CaixaResumoDto> ResumoCaixa(int reservaId) 
         {
-            var conta = await ObterContaSegura(reservaId);
+            var (conta, _) = await ObterContaSegura(reservaId);
 
             var lancamentos = await ListarLancamentosPorReserva(reservaId);
 
@@ -128,7 +138,7 @@ namespace HotelApp.Application.Services
 
         public async Task EncerrarConta(int reservaId)
         {
-            var conta = await ObterContaSegura(reservaId);
+            var (conta, _) = await ObterContaSegura(reservaId);
 
             var resumo = await ResumoCaixa(reservaId);
 
