@@ -126,9 +126,14 @@ novaReserva: Reserva = {
   status: ''
 };
 
+salvando: boolean = false;
+
 criarReserva() {
+
+  
   this.reservaService.criar(this.novaReserva).subscribe({
     next: () => {
+      
       alert('Reserva criada com sucesso!');
       this.carregarQuartos();
 
@@ -142,10 +147,15 @@ criarReserva() {
         numeroQuarto: '',
         status: ''
       };
+
+      this.cdr.detectChanges();
+      
     },
     error: (err) => {
       console.log(err);
       alert(err.error?.message || 'Erro ao criar reserva');
+      this.salvando = false;
+      this.cdr.detectChanges();
     }
   });
 }
@@ -182,8 +192,15 @@ criarReservaPorNumero() {
     return
   }
 
+  if(this.salvando){
+        return
+      }
+
+  this.salvando = true;
+
   this.reservaService.criarPorNumero(this.novaReservaPorNumero).subscribe({
     next: () => {
+
       this.mostrarSucesso("Reserva criada com sucesso")
 
       this.carregarQuartos();
@@ -195,10 +212,14 @@ criarReservaPorNumero() {
         nomeDoHospede: '',
         numeroDoQuarto: ''
       };
+      this.salvando = false;
+      this.cdr.detectChanges();
     },
     error: (err) => {
       console.log(err);
       this.mostrarErro(err.error?.message || "Erro ao criar reserva");
+      this.salvando = false;
+      this.cdr.detectChanges();
     }
   });
 }

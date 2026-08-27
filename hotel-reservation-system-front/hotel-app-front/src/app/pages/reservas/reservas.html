@@ -71,7 +71,7 @@
         type="date"
         [(ngModel)]="novaReservaPorNumero.checkOut"
         name="checkOut">
-      <button type="button" class="btn-secondary" (click)="criarReservaPorNumero()">Salvar Reserva</button>
+      <button type="button" class="btn-secondary" (click)="criarReservaPorNumero()" [disabled]="salvando">{{ salvando ? 'Salvando...' : 'Salvar' }}</button>
     </form>
   </div>
 
