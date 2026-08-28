@@ -92,8 +92,8 @@ jobs:
 
           az postgres flexible-server firewall-rule create \
             --resource-group rg-hotelapp-demo \
-            --name pg-hotelapp-demo-9882 \
-            --rule-name "$RULE_NAME" \
+            --server-name pg-hotelapp-demo-9882 \
+            --name "$RULE_NAME" \
             --start-ip-address "$RUNNER_IP" \
             --end-ip-address "$RUNNER_IP" \
             --output none
@@ -135,8 +135,8 @@ jobs:
           if [ -n "${FIREWALL_RULE_NAME:-}" ]; then
             az postgres flexible-server firewall-rule delete \
               --resource-group rg-hotelapp-demo \
-              --name pg-hotelapp-demo-9882 \
-              --rule-name "$FIREWALL_RULE_NAME" \
+              --server-name pg-hotelapp-demo-9882 \
+              --name "$FIREWALL_RULE_NAME" \
               --yes
           fi
 
