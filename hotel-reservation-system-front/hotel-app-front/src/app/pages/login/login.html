@@ -23,6 +23,7 @@
           type="email"
           autocomplete="email"
           placeholder="seu@email.com"
+          [disabled]="processando"
           [(ngModel)]="email">
       </div>
 
@@ -34,12 +35,17 @@
           type="password"
           autocomplete="current-password"
           placeholder="Digite sua senha"
+          [disabled]="processando"
           [(ngModel)]="senha">
       </div>
 
       <div class="login-actions">
-        <button type="submit" class="login-button">
-          Acessar sistema
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="processando"
+          [attr.aria-busy]="processando">
+          {{ processando ? 'Entrando...' : 'Acessar sistema' }}
         </button>
 
         <p *ngIf="mensagemErro" class="login-error" aria-live="polite">

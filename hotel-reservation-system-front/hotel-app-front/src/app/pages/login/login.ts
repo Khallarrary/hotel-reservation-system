@@ -15,12 +15,17 @@ export class Login {
   email: string = ''
   senha: string = ''
   mensagemErro: string = ''
+  processando: boolean = false
 
   
 
   constructor(private authService: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
 
   entrar(): void {
+    if (this.processando) {
+      return;
+    }
+
     this.mensagemErro = ''
 
     
@@ -35,19 +40,26 @@ export class Login {
     }
 
     const dados = {
-    email: this.email,
-    senha: this.senha
-  }
+      email: this.email,
+      senha: this.senha
+    }
+
+    this.processando = true;
 
     this.authService.login(dados).subscribe({
       next:(resposta) => {
+        this.processando = false;
+
         if(resposta != null){
           this.authService.salvarSessao(resposta);
           this.router.navigate(['/reservas']);
         }
       },
       error: (err) =>{
-        this.mensagemErro = err.error || 'Nao foi possivel logar'
+        this.processando = false;
+        this.mensagemErro = err.status === 0
+          ? 'Não foi possível conectar ao sistema. Tente novamente.'
+          : err.error?.message || 'Não foi possível entrar. Tente novamente.';
         this.cdr.detectChanges();
       }
     })
