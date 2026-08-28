@@ -114,7 +114,7 @@ jobs:
           fi
 
           echo "::add-mask::$CONNECTION_STRING"
-          echo "DATABASE_CONNECTION_STRING=$CONNECTION_STRING" >> "$GITHUB_ENV"
+          echo "HOTELAPP_CONNECTION=$CONNECTION_STRING" >> "$GITHUB_ENV"
 
       - name: Instalar ferramenta do Entity Framework
         run: dotnet tool install --global dotnet-ef --version 10.0.9
@@ -127,7 +127,7 @@ jobs:
           dotnet ef database update \
             --project ./hotel-reservation-system-back/HotelApp.Infrastructure \
             --startup-project ./hotel-reservation-system-back/HotelApp.Api \
-            --connection "$DATABASE_CONNECTION_STRING"
+            --connection "$HOTELAPP_CONNECTION"
 
       - name: Remover acesso temporário ao PostgreSQL
         if: always()
