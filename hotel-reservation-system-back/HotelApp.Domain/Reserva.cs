@@ -9,6 +9,7 @@ public class Reserva
     public string NomeDoHospede { get; private set; }
     public ReservaStatus Status { get; private set; }
     public int HotelId { get; set; }
+    public Guid? ChaveIdempotencia { get; private set; }
     private Reserva()
     {
         NomeDoHospede = string.Empty;
@@ -42,7 +43,7 @@ public class Reserva
     /// - Nome do hóspede deve ser válido
     /// - Quarto deve ser válido
     /// </summary>
-    public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId, int hotelId, DateOnly dataAtual)
+    public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId, int hotelId, DateOnly dataAtual, Guid? chaveIdempotencia = null)
     {
         if (checkOut <= checkIn)
         {
@@ -75,11 +76,17 @@ public class Reserva
             throw new ArgumentException("O quarto deve conter um hotel");
         }
 
+        if (chaveIdempotencia.HasValue && chaveIdempotencia.Value == Guid.Empty)
+        {
+            throw new ArgumentException("Chave de idempotência inválida.");
+        }
+
         CheckIn = checkIn;
         CheckOut = checkOut;
         NomeDoHospede = nomeDoHospede.Trim();
         QuartoId = quartoId;
         HotelId =  hotelId;
+        ChaveIdempotencia = chaveIdempotencia;
 
 
     }

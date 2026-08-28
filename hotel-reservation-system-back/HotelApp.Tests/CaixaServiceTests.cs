@@ -174,6 +174,18 @@ public class CaixaServiceTests
             return Task.FromResult(reserva);
         }
 
+        public Task<Reserva?> ObterPorChaveIdempotenciaAsync(
+            Guid chaveIdempotencia,
+            int hotelId)
+        {
+            var reserva = _reserva?.ChaveIdempotencia == chaveIdempotencia &&
+                          _reserva.HotelId == hotelId
+                ? _reserva
+                : null;
+
+            return Task.FromResult(reserva);
+        }
+
         public Task<List<Reserva>> ObterReservasPorQuartoAsync(int quartoId, int hotelId)
         {
             return Task.FromResult(new List<Reserva>());

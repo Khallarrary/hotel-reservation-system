@@ -62,12 +62,27 @@ public class ReservaService
         }).ToList();
     }
 
+    private static void ValidarMesmaSolicitacao(Reserva reservaExistente, DateTime checkIn, DateTime checkOut, string nome, int quartoId)
+    {
+        var mesmaSolicitacao =
+            reservaExistente.CheckIn == checkIn &&
+            reservaExistente.CheckOut == checkOut &&
+            reservaExistente.QuartoId == quartoId &&
+            reservaExistente.NomeDoHospede == nome.Trim();
+
+        if (!mesmaSolicitacao)
+        {
+            throw new ConflictException(
+                "A chave de idempotência já foi utilizada em outra solicitação.");
+        }
+    }
+
     /// <summary>
     /// Cria uma nova reserva validando:
     /// - Existência do quarto
     /// - Conflito de datas com reservas existentes
     /// </summary>
-    public async Task CriarReserva(DateTime checkIn, DateTime checkOut, string nome, int quartoId)
+    public async Task CriarReserva(DateTime checkIn, DateTime checkOut, string nome, int quartoId, Guid chaveIdempotencia)
     {
         checkIn = DateTime.SpecifyKind(checkIn, DateTimeKind.Utc);
         checkOut = DateTime.SpecifyKind(checkOut, DateTimeKind.Utc);
@@ -78,8 +93,6 @@ public class ReservaService
         {
             throw new ForbiddenException("Hotel não encontrado");
         }
-
-        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
 
         // Validação básica de entrada
         if (string.IsNullOrWhiteSpace(nome))
@@ -92,10 +105,13 @@ public class ReservaService
             throw new ArgumentException("Quarto inválido.");
         }
 
+        if (chaveIdempotencia == Guid.Empty)
+        {
+            throw new ArgumentException("Chave de idempotência inválida.");
+        }
+
         // Verifica se o quarto existe
         var quarto = await _quartoRepo.ObterPorIdAsync(quartoId, hotelId.Value);
-
-
 
         if (quarto == null)
         {
@@ -103,37 +119,88 @@ public class ReservaService
 
         }
 
-        // Busca reservas existentes do quarto
+        var reservaExistente =
+        await _repo.ObterPorChaveIdempotenciaAsync(
+            chaveIdempotencia,
+            hotelId.Value);
+
+        if (reservaExistente != null)
+        {
+            ValidarMesmaSolicitacao(
+                reservaExistente,
+                checkIn,
+                checkOut,
+                nome,
+                quartoId);
+
+            return;
+        }
+
+        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
+
+        var nova = new Reserva(checkIn, checkOut, nome, quartoId, hotelId.Value, dataAtual, chaveIdempotencia);
+
         var reservas = await _repo.ObterReservasPorQuartoAsync(quartoId, hotelId.Value) ?? new List<Reserva>();
 
-        // Cria nova reserva (validação adicional ocorre no domínio)
-        var nova = new Reserva(checkIn, checkOut, nome, quartoId, hotelId.Value, dataAtual);
-
-
-        // Verifica conflito com reservas existentes
-        foreach (var reserva in reservas) {
-
-            if (reserva is null)
+        foreach (var reserva in reservas)
+        {
+            if(reserva == null)
+            {
                 continue;
+            }
+
+            if(reserva.ChaveIdempotencia == chaveIdempotencia)
+            {
+                ValidarMesmaSolicitacao(
+                reserva,
+                checkIn,
+                checkOut,
+                nome,
+                quartoId);
+
+                return;
+            }
 
             if (nova.ConflitaCom(reserva))
             {
-                throw new ConflictException("Quarto já ocupado nesse período");
+                throw new ConflictException("Quarto ja ocupado nesse período");
             }
 
+            
         }
 
-        await _transacao.ExecutarAsync(async () =>
+        try
         {
-            await _repo.AdicionarReservaAsync(nova);
+            await _transacao.ExecutarAsync(async () =>
+            {
+                await _repo.AdicionarReservaAsync(nova);
 
-            var conta = new ContaReserva(nova.Id);
-            await _contaRepo.AdicionarAsync(conta);
+                var conta = new ContaReserva(nova.Id);
+                await _contaRepo.AdicionarAsync(conta);
+            });
+        }
+        catch (ChaveIdempotenciaDuplicadaException)
+        {
+            var reservaProcessada =
+                await _repo.ObterPorChaveIdempotenciaAsync(
+                    chaveIdempotencia,
+                    hotelId.Value);
 
-        });
-      }
+            if (reservaProcessada == null)
+            {
+                throw;
+            }
 
-    public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto)
+            ValidarMesmaSolicitacao(
+                reservaProcessada,
+                checkIn,
+                checkOut,
+                nome,
+                quartoId);
+        }
+    }
+
+    public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto, Guid chaveIdempotencia)
     {
 
         var hotelId = _hotelContexto.ObterHotelId();
@@ -151,7 +218,7 @@ public class ReservaService
             throw new NotFoundException("Quarto nao existe");
         }
                        
-        await CriarReserva(checkIn, checkOut, nome, quarto.Id);
+        await CriarReserva(checkIn, checkOut, nome, quarto.Id, chaveIdempotencia);
     }
 
     public async Task DeletarReserva (int id)

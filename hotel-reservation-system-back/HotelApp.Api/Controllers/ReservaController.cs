@@ -18,13 +18,16 @@ namespace HotelApp.Api.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CriarReserva([FromBody] ReservaDto request)
+        public async Task<IActionResult> CriarReserva(
+            [FromBody] ReservaDto request,
+            [FromHeader(Name = "Idempotency-Key")] Guid chaveIdempotencia)
         {
             await _service.CriarReserva(
                 request.CheckIn,
                 request.CheckOut,
                 request.NomeDoHospede,
-                request.QuartoId
+                request.QuartoId,
+                chaveIdempotencia
                 );
 
             return StatusCode(201);
@@ -32,13 +35,16 @@ namespace HotelApp.Api.Controllers
 
         [Authorize]
         [HttpPost ("numero")]
-        public async Task<IActionResult> CriarReservaPorNumero([FromBody] CriarReservaDto request)
+        public async Task<IActionResult> CriarReservaPorNumero(
+            [FromBody] CriarReservaDto request,
+            [FromHeader(Name = "Idempotency-Key")] Guid chaveIdempotencia)
         {
             await _service.CriarReservaPorNumero(
                 request.CheckIn,
                 request.CheckOut,
                 request.NomeDoHospede,
-                request.NumeroDoQuarto
+                request.NumeroDoQuarto,
+                chaveIdempotencia
                 );
 
             return StatusCode(201);

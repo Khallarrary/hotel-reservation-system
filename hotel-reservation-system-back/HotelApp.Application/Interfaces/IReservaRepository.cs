@@ -16,6 +16,7 @@ namespace HotelApp.Application.Interfaces
         Task AtualizarReservaAsync(Reserva reserva);
         Task<int> ContarReservasAsync(ReservaConsultaDto consulta, int hotelId);
         Task<List<Reserva>> ListarReservasPaginadasAsync(ReservaConsultaDto consulta, int hotelId);
+        Task<Reserva?> ObterPorChaveIdempotenciaAsync(Guid chaveIdempotencia, int hotelId);
         
     }
 }

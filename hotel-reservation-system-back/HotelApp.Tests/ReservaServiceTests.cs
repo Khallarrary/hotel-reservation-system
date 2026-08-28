@@ -33,12 +33,139 @@ public class ReservaServiceTests
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
             "Hospede Teste",
-            quartoId);
+            quartoId,
+            Guid.NewGuid());
 
         transacao.QuantidadeExecucoes.Should().Be(1);
         reservaRepo.ReservaAdicionada.Should().NotBeNull();
         contaRepo.ContaAdicionada.Should().NotBeNull();
         contaRepo.ContaAdicionada!.ReservaId.Should().Be(reservaIdGerado);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Criar_Novamente_Ao_Repetir_Mesma_Chave_E_Dados()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var reservaRepo = new ReservaRepositoryFake(25);
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId);
+
+        await service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            chaveIdempotencia);
+
+        await service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            chaveIdempotencia);
+
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Reutilizar_Mesma_Chave_Com_Dados_Diferentes()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var reservaRepo = new ReservaRepositoryFake(25);
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId);
+
+        await service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            chaveIdempotencia);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Outro Hospede",
+            quartoId,
+            chaveIdempotencia);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Criar_Reserva_Com_Chave_Idempotencia_Vazia()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var reservaRepo = new ReservaRepositoryFake(25);
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            Guid.Empty);
+
+        await action.Should().ThrowAsync<ArgumentException>();
+        transacao.QuantidadeExecucoes.Should().Be(0);
+        contaRepo.QuantidadeAdicoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Deve_Tratar_Disputa_Concorrente_Da_Mesma_Chave_Como_Sucesso()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var reservaRepo = new ReservaRepositoryFake(25)
+        {
+            SimularChaveIdempotenciaDuplicada = true
+        };
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().NotThrowAsync();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(0);
     }
 
     [Fact]
@@ -107,6 +234,24 @@ public class ReservaServiceTests
             new HotelContextoFake(hotelId),
             new TransacaoFake(),
             consultaSaldo,
+            new RelogioHotelFake(DataAtual),
+            new HotelRepositoryFake(hotelId));
+    }
+
+    private static ReservaService CriarServiceParaCriacao(
+        ReservaRepositoryFake reservaRepo,
+        ContaReservaRepositoryFake contaRepo,
+        TransacaoFake transacao,
+        int hotelId,
+        int quartoId)
+    {
+        return new ReservaService(
+            reservaRepo,
+            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
+            contaRepo,
+            new HotelContextoFake(hotelId),
+            transacao,
+            new ConsultaSaldoContaFake(0m),
             new RelogioHotelFake(DataAtual),
             new HotelRepositoryFake(hotelId));
     }
@@ -212,10 +357,11 @@ public class ReservaServiceTests
     {
         private readonly int _reservaIdGerado;
 
-        private readonly Reserva? _reservaExistente;
+        private Reserva? _reservaExistente;
 
         public Reserva? ReservaAdicionada { get; private set; }
         public Reserva? ReservaAtualizada { get; private set; }
+        public bool SimularChaveIdempotenciaDuplicada { get; set; }
 
         public ReservaRepositoryFake(int reservaIdGerado, Reserva? reservaExistente = null)
         {
@@ -229,7 +375,18 @@ public class ReservaServiceTests
                 .GetProperty(nameof(Reserva.Id))!
                 .SetValue(reserva, _reservaIdGerado);
 
+            if (SimularChaveIdempotenciaDuplicada)
+            {
+                SimularChaveIdempotenciaDuplicada = false;
+                _reservaExistente = reserva;
+
+                throw new ChaveIdempotenciaDuplicadaException(
+                    "A tentativa de criação da reserva já foi processada.",
+                    new InvalidOperationException());
+            }
+
             ReservaAdicionada = reserva;
+            _reservaExistente = reserva;
             return Task.CompletedTask;
         }
 
@@ -244,6 +401,15 @@ public class ReservaServiceTests
         public Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId) =>
             Task.FromResult<Reserva?>(
                 _reservaExistente?.Id == id && _reservaExistente.HotelId == hotelId
+                    ? _reservaExistente
+                    : null);
+
+        public Task<Reserva?> ObterPorChaveIdempotenciaAsync(
+            Guid chaveIdempotencia,
+            int hotelId) =>
+            Task.FromResult<Reserva?>(
+                _reservaExistente?.ChaveIdempotencia == chaveIdempotencia &&
+                _reservaExistente.HotelId == hotelId
                     ? _reservaExistente
                     : null);
 
@@ -298,9 +464,11 @@ public class ReservaServiceTests
     private class ContaReservaRepositoryFake : IContaReservaRepository
     {
         public ContaReserva? ContaAdicionada { get; private set; }
+        public int QuantidadeAdicoes { get; private set; }
 
         public Task AdicionarAsync(ContaReserva conta)
         {
+            QuantidadeAdicoes++;
             ContaAdicionada = conta;
             return Task.CompletedTask;
         }

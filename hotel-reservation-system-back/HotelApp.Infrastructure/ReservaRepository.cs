@@ -5,6 +5,10 @@ using HotelApp.Domain;
 using Microsoft.EntityFrameworkCore;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.DTOs;
+using HotelApp.Application.Exceptions;
+using Npgsql;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+
 
 namespace HotelApp.Infrastructure
 {
@@ -27,8 +31,17 @@ namespace HotelApp.Infrastructure
 
         public async Task AdicionarReservaAsync(Reserva reserva)
         {
-            await _context.Reservas.AddAsync(reserva);
-            await _context.SaveChangesAsync();
+            try
+                {
+                    await _context.Reservas.AddAsync(reserva);
+                    await _context.SaveChangesAsync();
+                }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException postgresException && postgresException.SqlState == PostgresErrorCodes.UniqueViolation && postgresException.ConstraintName == "IX_Reservas_HotelId_ChaveIdempotencia")
+                {
+                    throw new ChaveIdempotenciaDuplicadaException("A tentativa de criação de reserva ja foi processada.", ex);
+                } 
+            
+               
         }
 
         public async Task<List<Reserva>> ListarReservasAsync(int hotelId)
@@ -108,6 +121,11 @@ namespace HotelApp.Infrastructure
             }
 
             return query;
+        }
+
+        public async Task<Reserva?> ObterPorChaveIdempotenciaAsync(Guid chaveIdempotencia, int hotelId)
+        {
+            return await _context.Reservas.AsNoTracking().FirstOrDefaultAsync(r => r.ChaveIdempotencia == chaveIdempotencia && r.HotelId == hotelId);
         }
 
     }

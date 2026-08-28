@@ -128,10 +128,14 @@ novaReserva: Reserva = {
 
 salvando: boolean = false;
 
+private chaveIdempotenciaReserva: string | null = null;
+private chaveIdempotenciaReservaPorNumero: string | null = null;
+
 criarReserva() {
 
-  
-  this.reservaService.criar(this.novaReserva).subscribe({
+  this.chaveIdempotenciaReserva ??= crypto.randomUUID();
+
+  this.reservaService.criar(this.novaReserva, this.chaveIdempotenciaReserva).subscribe({
     next: () => {
       
       alert('Reserva criada com sucesso!');
@@ -149,7 +153,7 @@ criarReserva() {
       };
 
       this.cdr.detectChanges();
-      
+      this.chaveIdempotenciaReserva = null;
     },
     error: (err) => {
       console.log(err);
@@ -167,8 +171,12 @@ novaReservaPorNumero: ReservaPorNumero = {
   numeroDoQuarto: ''
 };
 
+
+
+
 criarReservaPorNumero() {
 
+  this.chaveIdempotenciaReservaPorNumero ??= crypto.randomUUID();
 
   this.limparMensagens()
 
@@ -198,7 +206,7 @@ criarReservaPorNumero() {
 
   this.salvando = true;
 
-  this.reservaService.criarPorNumero(this.novaReservaPorNumero).subscribe({
+  this.reservaService.criarPorNumero(this.novaReservaPorNumero, this.chaveIdempotenciaReservaPorNumero).subscribe({
     next: () => {
 
       this.mostrarSucesso("Reserva criada com sucesso")
@@ -214,6 +222,7 @@ criarReservaPorNumero() {
       };
       this.salvando = false;
       this.cdr.detectChanges();
+      this.chaveIdempotenciaReservaPorNumero = null;
     },
     error: (err) => {
       console.log(err);
@@ -248,6 +257,8 @@ alterarFormularioReserva() {
   this.mostrarFormReserva = !this.mostrarFormReserva;
 
   if (!this.mostrarFormReserva) {
+    this.chaveIdempotenciaReservaPorNumero = null;
+
     this.novaReservaPorNumero = {
       checkIn: '',
       checkOut: '',
