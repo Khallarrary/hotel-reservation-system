@@ -47,6 +47,15 @@ public class AppDbContext : DbContext
             .HasForeignKey(r => r.HotelId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Reserva>()
+            .HasIndex(r => new
+            {
+                r.HotelId,
+                r.ChaveIdempotencia
+            })
+            .IsUnique()
+            .HasFilter("\"ChaveIdempotencia\" IS NOT NULL");
+
     }
 
 }

@@ -111,6 +111,13 @@ public class QuartoServiceTests
         public Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId) =>
             Task.FromResult<Reserva?>(null);
 
+        public Task<Reserva?> ObterPorChaveIdempotenciaAsync(
+            Guid chaveIdempotencia,
+            int hotelId) =>
+            Task.FromResult<Reserva?>(_reservas.FirstOrDefault(r =>
+                r.ChaveIdempotencia == chaveIdempotencia &&
+                r.HotelId == hotelId));
+
         public Task AtualizarReservaAsync(Reserva reserva) => Task.CompletedTask;
 
         public Task<int> ContarReservasAsync(ReservaConsultaDto consulta, int hotelId) =>

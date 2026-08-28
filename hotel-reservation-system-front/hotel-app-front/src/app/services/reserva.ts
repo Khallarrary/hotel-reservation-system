@@ -49,12 +49,20 @@ listar(): Observable<Reserva[]> {
     return this.http.get<Reserva[]>(this.apiUrl);
 }
 
-criar(reserva: Reserva) {
-  return this.http.post(this.apiUrl, reserva);
+criar(reserva: Reserva, chaveIdempotencia: string) {
+  return this.http.post(this.apiUrl, reserva, {
+    headers: {
+      'Idempotency-key': chaveIdempotencia
+    }
+  });
 }
 
-criarPorNumero(reservaPorNumero: ReservaPorNumero) {
-  return this.http.post(this.apiUrlCriarPorNumero, reservaPorNumero);
+criarPorNumero(reservaPorNumero: ReservaPorNumero, chaveIdempotencia: string) {
+  return this.http.post(this.apiUrlCriarPorNumero, reservaPorNumero, {
+    headers: {
+      'Idempotency-Key': chaveIdempotencia
+    }
+  });
 }
 
 deletarReserva(id: number) {
