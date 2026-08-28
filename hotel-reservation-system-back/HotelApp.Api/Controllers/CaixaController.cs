@@ -1,9 +1,7 @@
 ﻿using HotelApp.Application.DTOs;
-using HotelApp.Application.Exceptions;
 using HotelApp.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
 
 namespace HotelApp.Api.Controllers
 {
@@ -20,93 +18,42 @@ namespace HotelApp.Api.Controllers
         [HttpPost("reserva/{reservaId}/credito")]
         public async Task<IActionResult> LancarCredito(int reservaId, [FromBody] LancarCreditoDto request)
         {
-            try
-            {
-                await _service.LancarCredito(reservaId, request.Valor, request.FormaPagamento, request.Descricao);
+            await _service.LancarCredito(reservaId, request.Valor, request.FormaPagamento, request.Descricao);
 
-                return NoContent();
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-
+            return NoContent();
         }
 
         [Authorize]
         [HttpPost("reserva/{reservaId}/debito")]
         public async Task<IActionResult> LancarDebito(int reservaId, [FromBody] LancarDebitoDto request)
         {
-            try
-            {
-                await _service.LancarDebito(reservaId, request.Valor, request.Descricao);
+            await _service.LancarDebito(reservaId, request.Valor, request.Descricao);
 
-                return NoContent();
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-
+            return NoContent();
         }
 
         [Authorize]
         [HttpGet("reserva/{reservaId}/lancamentos")]
         public async Task<IActionResult> ListarLancamento(int reservaId)
         {
-            try
-            {
-                var lancamentos = await _service.ListarLancamentosPorReserva(reservaId);
-                return Ok(lancamentos);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var lancamentos = await _service.ListarLancamentosPorReserva(reservaId);
+            return Ok(lancamentos);
         }
 
         [Authorize]
         [HttpGet("reserva/{reservaId}/caixa")]
         public async Task<IActionResult> ResumoCaixa(int reservaId)
         {
-            try
-            {
-                var caixa = await _service.ResumoCaixa(reservaId);
-                return Ok(caixa);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var caixa = await _service.ResumoCaixa(reservaId);
+            return Ok(caixa);
         }
 
         [Authorize]
         [HttpPatch("reserva/{reservaId}/caixa/encerrar")]
         public async Task<IActionResult> EncerrarConta(int reservaId)
         {
-            try
-            {
-                await _service.EncerrarConta(reservaId);
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            await _service.EncerrarConta(reservaId);
+            return NoContent();
         }
     }
 }

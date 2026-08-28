@@ -1,7 +1,5 @@
 ﻿using HotelApp.Application.DTOs;
-using HotelApp.Application.Exceptions;
 using HotelApp.Application.Services;
-using HotelApp.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,52 +20,28 @@ namespace HotelApp.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CriarReserva([FromBody] ReservaDto request)
         {
-            try
-            {
-                await _service.CriarReserva(
-                    request.CheckIn,
-                    request.CheckOut,
-                    request.NomeDoHospede,
-                    request.QuartoId
-                    );
+            await _service.CriarReserva(
+                request.CheckIn,
+                request.CheckOut,
+                request.NomeDoHospede,
+                request.QuartoId
+                );
 
-                return StatusCode(201);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ConflictException ex)
-            {
-                return Conflict(ex.Message);
-            }
-
+            return StatusCode(201);
         }
 
         [Authorize]
         [HttpPost ("numero")]
         public async Task<IActionResult> CriarReservaPorNumero([FromBody] CriarReservaDto request)
         {
-            try
-            {
-                await _service.CriarReservaPorNumero(
-                    request.CheckIn,
-                    request.CheckOut,
-                    request.NomeDoHospede,
-                    request.NumeroDoQuarto
-                    );
+            await _service.CriarReservaPorNumero(
+                request.CheckIn,
+                request.CheckOut,
+                request.NomeDoHospede,
+                request.NumeroDoQuarto
+                );
 
-                return StatusCode(201);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ConflictException ex)
-            {
-                return Conflict(ex.Message);
-            }
-
+            return StatusCode(201);
         }
 
         [Authorize]
@@ -84,53 +58,24 @@ namespace HotelApp.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletarReserva(int id)
         {
-            try
-            {
-                await _service.CancelarReserva(id);
-                return NoContent();
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            await _service.CancelarReserva(id);
+            return NoContent();
         }
 
         [Authorize]
         [HttpPatch("{id}/check-in")]
         public async Task<IActionResult> RealizarCheckIn(int id)
         {
-            try
-            {
-                await _service.RealizarCheckIn(id);
-                return NoContent();
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _service.RealizarCheckIn(id);
+            return NoContent();
         }
 
         [Authorize]
         [HttpPatch("{id}/check-out")]
         public async Task<IActionResult> RealizarCheckOut(int id)
         {
-            try
-            {
-                await _service.RealizarCheckOut(id);
-                return NoContent();
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _service.RealizarCheckOut(id);
+            return NoContent();
         }
 
         [Authorize]
