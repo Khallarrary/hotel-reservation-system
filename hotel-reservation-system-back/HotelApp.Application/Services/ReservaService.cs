@@ -198,6 +198,27 @@ public class ReservaService
                 nome,
                 quartoId);
         }
+        catch (ConflitoPeriodoReservaException)
+        {
+            var reservaProcessada =
+                await _repo.ObterPorChaveIdempotenciaAsync(
+                    chaveIdempotencia,
+                    hotelId.Value);
+
+            if (reservaProcessada == null)
+            {
+                throw new ConflictException("Conflito de reservas sobrepostas no mesmo periodo.");
+            }
+
+            ValidarMesmaSolicitacao(
+                reservaProcessada,
+                checkIn,
+                checkOut,
+                nome,
+                quartoId);
+
+           
+        }
     }
 
     public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto, Guid chaveIdempotencia)

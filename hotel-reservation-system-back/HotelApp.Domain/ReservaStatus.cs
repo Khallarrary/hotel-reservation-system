@@ -6,6 +6,6 @@ namespace HotelApp.Domain
 {
     public enum ReservaStatus
     {
-        Pendente, CheckIn, CheckOut, Cancelada
+        Pendente = 0, CheckIn = 1,CheckOut = 2, Cancelada = 3
     }
 }

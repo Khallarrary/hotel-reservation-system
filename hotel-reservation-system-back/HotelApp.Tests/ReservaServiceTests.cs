@@ -169,6 +169,67 @@ public class ReservaServiceTests
     }
 
     [Fact]
+    public async Task Deve_Lancar_Conflito_Quando_Periodo_For_Reservado_Por_Outra_Solicitacao()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var reservaRepo = new ReservaRepositoryFake(25)
+        {
+            SimularConflitoPeriodo = true
+        };
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().ThrowAsync<ConflictException>();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Deve_Tratar_Conflito_Periodo_Da_Mesma_Chave_Como_Sucesso_Idempotente()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var reservaRepo = new ReservaRepositoryFake(25)
+        {
+            SimularConflitoPeriodo = true,
+            RegistrarReservaAntesDoConflitoPeriodo = true
+        };
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Hospede Teste",
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().NotThrowAsync();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Deve_Cancelar_Reserva_E_Encerrar_Conta_Quando_Saldo_Estiver_Zerado()
     {
         const int hotelId = 1;
@@ -405,6 +466,8 @@ public class ReservaServiceTests
         public Reserva? ReservaAdicionada { get; private set; }
         public Reserva? ReservaAtualizada { get; private set; }
         public bool SimularChaveIdempotenciaDuplicada { get; set; }
+        public bool SimularConflitoPeriodo { get; set; }
+        public bool RegistrarReservaAntesDoConflitoPeriodo { get; set; }
 
         public ReservaRepositoryFake(int reservaIdGerado, Reserva? reservaExistente = null)
         {
@@ -425,6 +488,18 @@ public class ReservaServiceTests
 
                 throw new ChaveIdempotenciaDuplicadaException(
                     "A tentativa de criação da reserva já foi processada.",
+                    new InvalidOperationException());
+            }
+
+            if (SimularConflitoPeriodo)
+            {
+                if (RegistrarReservaAntesDoConflitoPeriodo)
+                {
+                    _reservaExistente = reserva;
+                }
+
+                throw new ConflitoPeriodoReservaException(
+                    "O quarto já possui uma reserva no período informado.",
                     new InvalidOperationException());
             }
 
