@@ -169,21 +169,29 @@ public class ReservaServiceTests
     }
 
     [Fact]
-    public async Task Deve_Cancelar_Reserva_Quando_Saldo_Estiver_Zerado()
+    public async Task Deve_Cancelar_Reserva_E_Encerrar_Conta_Quando_Saldo_Estiver_Zerado()
     {
         const int hotelId = 1;
         const int reservaId = 25;
         var reserva = CriarReserva(reservaId, hotelId);
+        var conta = new ContaReserva(reservaId);
         var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
         var service = CriarService(
             reservaRepo,
             hotelId,
-            new ConsultaSaldoContaFake(0m));
+            new ConsultaSaldoContaFake(0m),
+            contaRepo,
+            transacao);
 
         await service.CancelarReserva(reservaId);
 
         reserva.Status.Should().Be(ReservaStatus.Cancelada);
+        conta.Status.Should().Be(ContaStatus.Encerrada);
         reservaRepo.ReservaAtualizada.Should().BeSameAs(reserva);
+        contaRepo.ContaAtualizada.Should().BeSameAs(conta);
+        transacao.QuantidadeExecucoes.Should().Be(1);
     }
 
     [Fact]
@@ -192,17 +200,50 @@ public class ReservaServiceTests
         const int hotelId = 1;
         const int reservaId = 25;
         var reserva = CriarReserva(reservaId, hotelId);
+        var conta = new ContaReserva(reservaId);
         var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
         var service = CriarService(
             reservaRepo,
             hotelId,
-            new ConsultaSaldoContaFake(50m));
+            new ConsultaSaldoContaFake(50m),
+            contaRepo,
+            transacao);
 
         Func<Task> action = () => service.CancelarReserva(reservaId);
 
         await action.Should().ThrowAsync<ConflictException>();
         reserva.Status.Should().Be(ReservaStatus.Pendente);
+        conta.Status.Should().Be(ContaStatus.Aberta);
         reservaRepo.ReservaAtualizada.Should().BeNull();
+        contaRepo.ContaAtualizada.Should().BeNull();
+        transacao.QuantidadeExecucoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Cancelar_Reserva_Quando_Conta_Nao_Existir()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var consultaSaldo = new ConsultaSaldoContaFake(0m);
+        var transacao = new TransacaoFake();
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            consultaSaldo,
+            new ContaReservaRepositoryFake(),
+            transacao);
+
+        Func<Task> action = () => service.CancelarReserva(reservaId);
+
+        await action.Should().ThrowAsync<NotFoundException>();
+        reserva.Status.Should().Be(ReservaStatus.Pendente);
+        consultaSaldo.QuantidadeConsultas.Should().Be(0);
+        reservaRepo.ReservaAtualizada.Should().BeNull();
+        transacao.QuantidadeExecucoes.Should().Be(0);
     }
 
     [Fact]
@@ -225,14 +266,16 @@ public class ReservaServiceTests
     private static ReservaService CriarService(
         ReservaRepositoryFake reservaRepo,
         int hotelId,
-        IConsultaSaldoConta consultaSaldo)
+        IConsultaSaldoConta consultaSaldo,
+        ContaReservaRepositoryFake? contaRepo = null,
+        TransacaoFake? transacao = null)
     {
         return new ReservaService(
             reservaRepo,
             new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), 10),
-            new ContaReservaRepositoryFake(),
+            contaRepo ?? new ContaReservaRepositoryFake(),
             new HotelContextoFake(hotelId),
-            new TransacaoFake(),
+            transacao ?? new TransacaoFake(),
             consultaSaldo,
             new RelogioHotelFake(DataAtual),
             new HotelRepositoryFake(hotelId));
@@ -463,8 +506,16 @@ public class ReservaServiceTests
 
     private class ContaReservaRepositoryFake : IContaReservaRepository
     {
+        private readonly ContaReserva? _contaExistente;
+
         public ContaReserva? ContaAdicionada { get; private set; }
+        public ContaReserva? ContaAtualizada { get; private set; }
         public int QuantidadeAdicoes { get; private set; }
+
+        public ContaReservaRepositoryFake(ContaReserva? contaExistente = null)
+        {
+            _contaExistente = contaExistente;
+        }
 
         public Task AdicionarAsync(ContaReserva conta)
         {
@@ -474,11 +525,16 @@ public class ReservaServiceTests
         }
 
         public Task<ContaReserva?> ObterPorReservaIdAsync(int reservaId) =>
-            Task.FromResult<ContaReserva?>(null);
+            Task.FromResult<ContaReserva?>(
+                _contaExistente?.ReservaId == reservaId ? _contaExistente : null);
 
         public Task<ContaReserva?> ObterPorIdAsync(int id) =>
             Task.FromResult<ContaReserva?>(null);
 
-        public Task AtualizarAsync(ContaReserva conta) => Task.CompletedTask;
+        public Task AtualizarAsync(ContaReserva conta)
+        {
+            ContaAtualizada = conta;
+            return Task.CompletedTask;
+        }
     }
 }
