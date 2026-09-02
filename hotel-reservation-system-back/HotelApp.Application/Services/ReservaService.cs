@@ -365,6 +365,13 @@ public class ReservaService
             throw new NotFoundException("Reserva nao encontrada");
         }
 
+        var conta = await _contaRepo.ObterPorReservaIdAsync(id);
+
+        if(conta == null)
+        {
+            throw new NotFoundException("Conta nao encontrada");
+        }
+
         var saldo = await _consultaSaldo.ObterSaldoAsync(id);
 
         if (saldo != 0m)
@@ -373,9 +380,19 @@ public class ReservaService
                 "A reserva não pode ser cancelada enquanto a conta possuir saldo.");
         }
 
-        reserva.Cancelar();
+        await _transacao.ExecutarAsync(async () => 
+        { 
+            conta.Encerrar();
 
-        await _repo.AtualizarReservaAsync(reserva);
+            reserva.Cancelar();
+
+            await _contaRepo.AtualizarAsync(conta);
+
+            await _repo.AtualizarReservaAsync(reserva);
+
+        });
+
+        
     }
 
     private async Task<DateOnly> ObterDataAtualHotel(int hotelId)
