@@ -8,6 +8,7 @@ using HotelApp.Application.DTOs;
 using HotelApp.Application.Exceptions;
 using Npgsql;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using System.Data;
 
 
 namespace HotelApp.Infrastructure
@@ -40,6 +41,10 @@ namespace HotelApp.Infrastructure
                 {
                     throw new ChaveIdempotenciaDuplicadaException("A tentativa de criação de reserva ja foi processada.", ex);
                 } 
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException postgresException && postgresException.SqlState == PostgresErrorCodes.ExclusionViolation && postgresException.ConstraintName == "ImpedirConcorrencia")
+                {
+                throw new ConflitoPeriodoReservaException("Nao foi possivel adicionar a reserva devido a uma concorrencia.", ex);
+                }
             
                
         }
