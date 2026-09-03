@@ -45,4 +45,29 @@ public class ContaReservaTests
 
         action.Should().Throw<ArgumentException>();
     }
+
+    [Fact]
+    public void Deve_Marcar_Conta_Aberta_Como_Pendente()
+    {
+        var conta = new ContaReserva(1);
+
+        conta.MarcarComoPendente();
+        
+        conta.Status.Should().Be(ContaStatus.Pendente);
+        conta.DataEncerramento.Should().BeNull();
+    }
+
+    [Fact]
+    public void Deve_Lancar_Erro_Ao_Marcar_Conta_Encerrada_Como_Pendente()
+    {
+        var conta = new ContaReserva(1);
+
+        conta.Encerrar();
+
+        Action action = () => conta.MarcarComoPendente();
+
+        action.Should().Throw<ArgumentException>();
+        conta.Status.Should().Be(ContaStatus.Encerrada);
+        conta.DataEncerramento.Should().NotBeNull();
+    }
 }

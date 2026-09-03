@@ -6,6 +6,6 @@ namespace HotelApp.Domain
 {
     public enum ContaStatus
     {
-        Aberta, Encerrada
+        Aberta =0, Encerrada = 1, Pendente = 2
     }
 }
