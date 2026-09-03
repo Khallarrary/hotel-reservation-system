@@ -48,9 +48,9 @@
       </div>
 
       <div class="modal-actions">
-        <div class="btn-disabled-wrapper" (click)="tentarAcaoPrincipal()">
-          <button type="button" class="btn-modal btn-modal-primary" [disabled]="!podeExecutarAcaoPrincipal()">
-            {{ obterTextoAcaoPrincipal() }}
+        <div *ngIf="reserva.status === 'Pendente'" class="btn-disabled-wrapper" (click)="tentarCheckIn()">
+          <button type="button" class="btn-modal btn-modal-primary" [disabled]="!podeRealizarCheckIn()">
+            Check-in
           </button>
         </div>
         <button 

@@ -97,6 +97,23 @@
   box-shadow: var(--shadow-sm);
 }
 
+.btn-checkout {
+  min-height: 42px;
+  padding: 0.7rem 1.05rem;
+  border: 1px solid var(--gold-500);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: var(--navy-900);
+  font-size: 0.9rem;
+  font-weight: 900;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-checkout:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
 .btn-encerrar:hover:not(:disabled) {
   background: #fee2e2;
   border-color: #fca5a5;
@@ -428,6 +445,10 @@ tbody tr:hover {
   }
 
   .btn-encerrar {
+    flex: 1 1 100%;
+  }
+
+  .btn-checkout {
     flex: 1 1 100%;
   }
 

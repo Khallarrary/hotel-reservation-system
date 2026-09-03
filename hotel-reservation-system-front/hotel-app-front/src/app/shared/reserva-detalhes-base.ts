@@ -90,29 +90,6 @@ export abstract class ReservaDetalhesBase {
     });
   }
 
-  realizarCheckOut(): void {
-    if (this.reservaSelecionada == null) {
-      return;
-    }
-
-    this.reservaService.realizarCheckOut(this.reservaSelecionada.id).subscribe({
-      next: () => {
-        if (this.reservaSelecionada == null) {
-          return;
-        }
-
-        this.reservaSelecionada.status = 'CheckOut';
-        this.recarregarDados();
-        this.mostrarSucesso('Reserva em check-out!');
-      },
-      error: (err) => {
-        console.log(err);
-        console.log(err.error);
-        this.mostrarErro(err.error || 'Erro ao realizar check-out da reserva');
-      }
-    });
-  }
-
   abrirCaixa(): void {
     if (this.reservaSelecionada == null) {
       return;
