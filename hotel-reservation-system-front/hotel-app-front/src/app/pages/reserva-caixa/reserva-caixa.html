@@ -21,6 +21,10 @@
           {{ caixa.statusConta }}
         </span>
 
+        <button type="button" class="btn-checkout" (click)="realizarCheckOut()">
+          Realizar check-out
+        </button>
+
         <button type="button" 
         [disabled]="caixa.statusConta === 'Encerrada' || caixa.saldo !== 0"
         class="btn-encerrar" (click)="encerrarConta()">

@@ -5,6 +5,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { CaixaResumo, CaixaService, LancarCredito, LancarDebito } from '../../services/caixa'
+import { ReservaService } from '../../services/reserva';
 
 @Component({
   selector: 'app-reserva-caixa',
@@ -22,7 +23,13 @@ export class ReservaCaixa {
   mensagemSucesso: string = "";
   mensagemErro: string = "";
 
-  constructor(private route: ActivatedRoute, private caixaService: CaixaService, private cdr: ChangeDetectorRef, private location: Location) {}
+  constructor(
+    private route: ActivatedRoute,
+    private caixaService: CaixaService,
+    private reservaService: ReservaService,
+    private cdr: ChangeDetectorRef,
+    private location: Location
+  ) {}
 
   ngOnInit(): void {
     this.reservaId = Number(this.route.snapshot.paramMap.get('id'));
@@ -130,6 +137,17 @@ export class ReservaCaixa {
       },
       error: (err) => {
         this.mostrarErro(err.error?.message || 'Nao foi possivel encerrar a conta.')
+      }
+    })
+  }
+
+  realizarCheckOut(): void {
+    this.reservaService.realizarCheckOut(this.reservaId).subscribe({
+      next: () => {
+        this.mostrarSucesso('Check-out realizado com sucesso!')
+      },
+      error: (err) => {
+        this.mostrarErro(err.error?.message || err.error || 'Nao foi possivel realizar o check-out.')
       }
     })
   }
