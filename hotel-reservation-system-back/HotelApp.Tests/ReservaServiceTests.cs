@@ -275,7 +275,7 @@ public class ReservaServiceTests
         Func<Task> action = () => service.CancelarReserva(reservaId);
 
         await action.Should().ThrowAsync<ConflictException>();
-        reserva.Status.Should().Be(ReservaStatus.Pendente);
+        reserva.Status.Should().Be(ReservaStatus.Confirmada);
         conta.Status.Should().Be(ContaStatus.Aberta);
         reservaRepo.ReservaAtualizada.Should().BeNull();
         contaRepo.ContaAtualizada.Should().BeNull();
@@ -301,7 +301,7 @@ public class ReservaServiceTests
         Func<Task> action = () => service.CancelarReserva(reservaId);
 
         await action.Should().ThrowAsync<NotFoundException>();
-        reserva.Status.Should().Be(ReservaStatus.Pendente);
+        reserva.Status.Should().Be(ReservaStatus.Confirmada);
         consultaSaldo.QuantidadeConsultas.Should().Be(0);
         reservaRepo.ReservaAtualizada.Should().BeNull();
         transacao.QuantidadeExecucoes.Should().Be(0);

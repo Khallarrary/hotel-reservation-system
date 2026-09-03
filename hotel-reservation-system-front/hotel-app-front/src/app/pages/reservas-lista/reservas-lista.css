@@ -193,7 +193,7 @@ tbody tr:last-child td {
   border: 1px solid transparent;
 }
 
-.status-pendente {
+.status-confirmada {
   background: #fff7d6;
   color: #7a4c00;
   border-color: #f0c84b;

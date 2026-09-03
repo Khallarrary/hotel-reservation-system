@@ -100,7 +100,7 @@
         <div *ngIf="reservaEstaVisivel(reserva)"
           class="reserva-card"
           [ngClass]="{
-            'reserva-card-pendente': reserva.status === 'Pendente',
+            'reserva-card-confirmada': reserva.status === 'Confirmada',
             'reserva-card-checkin': reserva.status === 'CheckIn',
             'reserva-card-checkout': reserva.status === 'CheckOut'
           }"

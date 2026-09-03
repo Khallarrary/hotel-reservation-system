@@ -13,7 +13,7 @@ public class Reserva
     private Reserva()
     {
         NomeDoHospede = string.Empty;
-        Status = ReservaStatus.Pendente;
+        Status = ReservaStatus.Confirmada;
     }
 
     /// <summary>
@@ -96,7 +96,7 @@ public class Reserva
         var dataCheckIn = DateOnly.FromDateTime(CheckIn);
         var dataCheckOut = DateOnly.FromDateTime(CheckOut);
 
-        if (Status != ReservaStatus.Pendente)
+        if (Status != ReservaStatus.Confirmada)
         {
             throw new ArgumentException("Reserva deve estar com status Pendente para dar check-in");
         }
@@ -136,7 +136,7 @@ public class Reserva
 
     public void Cancelar()
     {
-        if (Status != ReservaStatus.Pendente)
+        if (Status != ReservaStatus.Confirmada)
         {
             throw new ArgumentException("Não é possivel cancelar reserva com esse status");
         }
