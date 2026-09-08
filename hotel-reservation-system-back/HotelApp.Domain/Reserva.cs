@@ -115,7 +115,7 @@ public class Reserva
        
     }
 
-    public void RealizarCheckOut(DateOnly dataAtual)
+    public void RealizarCheckOut(DateOnly dataAtual, bool checkOutAntecipadoConfirmado)
     {
         var dataCheckOut = DateOnly.FromDateTime(CheckOut);
 
@@ -124,9 +124,9 @@ public class Reserva
             throw new ArgumentException("Reserva deve estar com status check-in para dar check-out");
         }
 
-        if (dataAtual < dataCheckOut)
+        if (dataAtual < dataCheckOut && !checkOutAntecipadoConfirmado)
         {
-            throw new ArgumentException("Não é possivel realizar check-out antecipado. Troque a data da reserva");
+            throw new ArgumentException("Confirme a realização do check-out antecipado.");
 
         }
 

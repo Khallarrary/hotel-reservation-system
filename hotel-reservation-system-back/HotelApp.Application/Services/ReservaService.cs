@@ -1,4 +1,5 @@
 ﻿namespace HotelApp.Application.Services;
+
 using HotelApp.Application.DTOs;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Exceptions;
@@ -21,12 +22,12 @@ public class ReservaService
     private readonly IConsultaSaldoConta _consultaSaldo;
     private readonly IHotelRepository _hotelRepositoy;
     private readonly IRelogioHotel _relogioHotel;
-    
+
 
 
     public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao, IConsultaSaldoConta consultaSaldo, IRelogioHotel relogioHotel, IHotelRepository hotelRepo)
     {
-        _repo = repo ?? throw new ArgumentNullException(nameof(repo)); 
+        _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
         _contaRepo = contaRepo ?? throw new ArgumentNullException(nameof(contaRepo));
         _hotelContexto = hotelContexto;
@@ -37,10 +38,10 @@ public class ReservaService
     }
 
 
-        /// <summary>
+    /// <summary>
     /// Retorna todas as reservas cadastradas.
     /// </summary>
-    public async Task<List<ReservaDto>> ListarReservas() 
+    public async Task<List<ReservaDto>> ListarReservas()
     {
         var hotelId = _hotelContexto.ObterHotelId();
 
@@ -144,12 +145,12 @@ public class ReservaService
 
         foreach (var reserva in reservas)
         {
-            if(reserva == null)
+            if (reserva == null)
             {
                 continue;
             }
 
-            if(reserva.ChaveIdempotencia == chaveIdempotencia)
+            if (reserva.ChaveIdempotencia == chaveIdempotencia)
             {
                 ValidarMesmaSolicitacao(
                 reserva,
@@ -166,7 +167,7 @@ public class ReservaService
                 throw new ConflictException("Quarto ja ocupado nesse período");
             }
 
-            
+
         }
 
         try
@@ -217,7 +218,7 @@ public class ReservaService
                 nome,
                 quartoId);
 
-           
+
         }
     }
 
@@ -234,15 +235,15 @@ public class ReservaService
 
         var quarto = await _quartoRepo.ObterPorNumeroAsync(numeroDoQuarto, hotelId.Value);
 
-        if(quarto == null)
+        if (quarto == null)
         {
             throw new NotFoundException("Quarto nao existe");
         }
-                       
+
         await CriarReserva(checkIn, checkOut, nome, quarto.Id, chaveIdempotencia);
     }
 
-    public async Task DeletarReserva (int id)
+    public async Task DeletarReserva(int id)
     {
         var hotelId = _hotelContexto.ObterHotelId();
 
@@ -261,30 +262,7 @@ public class ReservaService
         await _repo.DeletarReservaAsync(reserva);
     }
 
-    public async Task RealizarCheckIn(int id) 
-    {
-        var hotelId = _hotelContexto.ObterHotelId();
-
-        if (!hotelId.HasValue)
-        {
-            throw new ForbiddenException("Hotel não encontrado");
-        }
-
-        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
-
-        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
-
-        if(reserva == null)
-        {
-            throw new NotFoundException("Reserva nao encontrada");
-        }
-
-        reserva.RealizarCheckIn(dataAtual);
-
-        await _repo.AtualizarReservaAsync(reserva);
-    }
-
-    public async Task RealizarCheckOut(int id)
+    public async Task RealizarCheckIn(int id)
     {
         var hotelId = _hotelContexto.ObterHotelId();
 
@@ -302,9 +280,67 @@ public class ReservaService
             throw new NotFoundException("Reserva nao encontrada");
         }
 
-        reserva.RealizarCheckOut(dataAtual);
+        reserva.RealizarCheckIn(dataAtual);
 
         await _repo.AtualizarReservaAsync(reserva);
+    }
+
+    public async Task RealizarCheckOut(int id, RealizarCheckOutDto dto)
+    {
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (dto == null)
+        {
+            throw new ArgumentNullException(nameof(dto), "Confirmacao não encontrada");
+        }
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var dataAtual = await ObterDataAtualHotel(hotelId.Value);
+
+        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
+
+        if (reserva == null)
+        {
+            throw new NotFoundException("Reserva nao encontrada");
+        }
+
+        var contaReserva = await _contaRepo.ObterPorReservaIdAsync(id);
+
+        if (contaReserva == null)
+        {
+            throw new NotFoundException("Conta nao encontrada");
+        }
+
+        var saldo = await _consultaSaldo.ObterSaldoAsync(id);
+
+        if (saldo != 0m && dto.ConfirmarSaldoAberto == false)
+        {
+            throw new ConflictException("A conta possui saldo em aberto. Confirme para continuar o check-out.");
+        }
+
+
+        await _transacao.ExecutarAsync(async () =>
+         {
+             reserva.RealizarCheckOut(dataAtual, dto.ConfirmarCheckOutAntecipado);
+
+             if (saldo == 0m)
+             {
+                 contaReserva.Encerrar();
+             }
+             else
+             {
+
+                 contaReserva.MarcarComoPendente();
+             }
+
+             await _repo.AtualizarReservaAsync(reserva);
+
+             await _contaRepo.AtualizarAsync(contaReserva);
+         });
     }
 
     public async Task<ReservasPaginadasDto> ListarReservasPaginadas(ReservaConsultaDto consulta)
@@ -323,19 +359,19 @@ public class ReservaService
             consulta.Pagina = 1;
         }
 
-        if(consulta.TamanhoPagina <= 0)
+        if (consulta.TamanhoPagina <= 0)
         {
             consulta.TamanhoPagina = 10;
         }
 
-        if(consulta.TamanhoPagina > 50)
+        if (consulta.TamanhoPagina > 50)
         {
             consulta.TamanhoPagina = 50;
         }
 
-        
+
         var totalItens = await _repo.ContarReservasAsync(consulta, hotelId.Value);
-        
+
         var totalDePaginas = (int)Math.Ceiling((decimal)totalItens / consulta.TamanhoPagina);
 
         var reservasPagina = await _repo.ListarReservasPaginadasAsync(consulta, hotelId.Value);
@@ -373,7 +409,7 @@ public class ReservaService
     public async Task CancelarReserva(int id)
     {
         var hotelId = _hotelContexto.ObterHotelId();
-   
+
         if (!hotelId.HasValue)
         {
             throw new ForbiddenException("Hotel não encontrado");
@@ -388,7 +424,7 @@ public class ReservaService
 
         var conta = await _contaRepo.ObterPorReservaIdAsync(id);
 
-        if(conta == null)
+        if (conta == null)
         {
             throw new NotFoundException("Conta nao encontrada");
         }
@@ -401,8 +437,8 @@ public class ReservaService
                 "A reserva não pode ser cancelada enquanto a conta possuir saldo.");
         }
 
-        await _transacao.ExecutarAsync(async () => 
-        { 
+        await _transacao.ExecutarAsync(async () =>
+        {
             conta.Encerrar();
 
             reserva.Cancelar();
@@ -413,7 +449,7 @@ public class ReservaService
 
         });
 
-        
+
     }
 
     private async Task<DateOnly> ObterDataAtualHotel(int hotelId)
@@ -430,4 +466,4 @@ public class ReservaService
         return dataAtual;
     }
 }
- 
+

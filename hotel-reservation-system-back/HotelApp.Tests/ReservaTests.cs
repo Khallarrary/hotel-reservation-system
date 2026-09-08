@@ -233,4 +233,69 @@ public class ReservaTests
         reserva.Status.Should().Be(ReservaStatus.Cancelada);
     }
 
+    [Fact]
+    public void Deve_Realizar_CheckOut_Na_Data_Prevista_Sem_Confirmacao()
+    {
+        var reserva = new Reserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            "Joao",
+            1,
+            1,
+            DataAtual
+        );
+
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+
+        reserva.RealizarCheckOut(new DateOnly(2030, 4, 3), false);
+
+        reserva.Status.Should().Be(ReservaStatus.CheckOut);
+
+
+    }
+
+    [Fact]
+    public void Deve_Bloquear_CheckOut_Antecipado_Sem_Confirmacao()
+    {
+        var reserva = new Reserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 4),
+            "Joao",
+            1,
+            1,
+            DataAtual
+        );
+
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+
+        Action action = () => reserva.RealizarCheckOut(new DateOnly(2030, 4, 3), false);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Status.Should().Be(ReservaStatus.CheckIn);
+
+
+    }
+
+    [Fact]
+    public void Deve_Realizar_CheckOut_Antecipado_Quando_Confirmado()
+    {
+        var reserva = new Reserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 4),
+            "Joao",
+            1,
+            1,
+            DataAtual
+        );
+
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+
+        reserva.RealizarCheckOut(new DateOnly(2030, 4, 3), true);
+
+        reserva.Status.Should().Be(ReservaStatus.CheckOut);
+
+
+    }
+
+    
 }

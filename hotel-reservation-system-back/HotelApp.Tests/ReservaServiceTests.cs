@@ -4,6 +4,7 @@ using HotelApp.Application.Exceptions;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
 using HotelApp.Domain;
+using HotelApp.Infrastructure;
 
 public class ReservaServiceTests
 {
@@ -329,7 +330,8 @@ public class ReservaServiceTests
         int hotelId,
         IConsultaSaldoConta consultaSaldo,
         ContaReservaRepositoryFake? contaRepo = null,
-        TransacaoFake? transacao = null)
+        TransacaoFake? transacao = null,
+        DateOnly? dataAtual = null)
     {
         return new ReservaService(
             reservaRepo,
@@ -338,7 +340,7 @@ public class ReservaServiceTests
             new HotelContextoFake(hotelId),
             transacao ?? new TransacaoFake(),
             consultaSaldo,
-            new RelogioHotelFake(DataAtual),
+            new RelogioHotelFake(dataAtual ?? DataAtual),
             new HotelRepositoryFake(hotelId));
     }
 
@@ -611,5 +613,188 @@ public class ReservaServiceTests
             ContaAtualizada = conta;
             return Task.CompletedTask;
         }
+    }
+
+    [Fact]
+    public async Task Deve_Realizar_CheckOut_E_Encerrar_Conta_Quando_Saldo_For_Zero()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+
+        var conta = new ContaReserva(reservaId);
+
+
+        var consultaSaldo = new ConsultaSaldoContaFake(0m);
+
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
+
+        var service = CriarService(
+        reservaRepo,
+        hotelId,
+        consultaSaldo,
+        contaRepo,
+        transacao,
+        dataAtual: new DateOnly(2030, 4, 3));
+        
+
+        var dto = new RealizarCheckOutDto
+        {
+            ConfirmarCheckOutAntecipado = false,
+            ConfirmarSaldoAberto = false
+        };
+
+
+
+        await service.RealizarCheckOut(reservaId, dto);
+
+        reserva.Status.Should().Be(ReservaStatus.CheckOut);
+        conta.Status.Should().Be(ContaStatus.Encerrada);
+        conta.DataEncerramento.Should().NotBeNull();
+
+        reservaRepo.ReservaAtualizada.Should().BeSameAs(reserva);
+        contaRepo.ContaAtualizada.Should().BeSameAs(conta);
+        transacao.QuantidadeExecucoes.Should().Be(1);
+
+    }
+
+    [Fact]
+    public async Task Deve_Bloquear_CheckOut_Com_Saldo_Aberto_Sem_Confirmacao()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+        var conta = new ContaReserva(reservaId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            new ConsultaSaldoContaFake(150m),
+            contaRepo,
+            transacao,
+            dataAtual: new DateOnly(2030, 4, 3));
+        var dto = new RealizarCheckOutDto
+        {
+            ConfirmarCheckOutAntecipado = false,
+            ConfirmarSaldoAberto = false
+        };
+
+        Func<Task> action = () => service.RealizarCheckOut(reservaId, dto);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        reserva.Status.Should().Be(ReservaStatus.CheckIn);
+        conta.Status.Should().Be(ContaStatus.Aberta);
+        reservaRepo.ReservaAtualizada.Should().BeNull();
+        contaRepo.ContaAtualizada.Should().BeNull();
+        transacao.QuantidadeExecucoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Deve_Realizar_CheckOut_E_Marcar_Conta_Pendente_Quando_Saldo_Aberto_For_Confirmado()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+        var conta = new ContaReserva(reservaId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            new ConsultaSaldoContaFake(150m),
+            contaRepo,
+            transacao,
+            dataAtual: new DateOnly(2030, 4, 3));
+        var dto = new RealizarCheckOutDto
+        {
+            ConfirmarCheckOutAntecipado = false,
+            ConfirmarSaldoAberto = true
+        };
+
+        await service.RealizarCheckOut(reservaId, dto);
+
+        reserva.Status.Should().Be(ReservaStatus.CheckOut);
+        conta.Status.Should().Be(ContaStatus.Pendente);
+        conta.DataEncerramento.Should().BeNull();
+        reservaRepo.ReservaAtualizada.Should().BeSameAs(reserva);
+        contaRepo.ContaAtualizada.Should().BeSameAs(conta);
+        transacao.QuantidadeExecucoes.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Deve_Bloquear_CheckOut_Antecipado_Sem_Confirmacao_No_Service()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+        var conta = new ContaReserva(reservaId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            new ConsultaSaldoContaFake(0m),
+            contaRepo,
+            transacao,
+            dataAtual: new DateOnly(2030, 4, 2));
+        var dto = new RealizarCheckOutDto
+        {
+            ConfirmarCheckOutAntecipado = false,
+            ConfirmarSaldoAberto = false
+        };
+
+        Func<Task> action = () => service.RealizarCheckOut(reservaId, dto);
+
+        await action.Should().ThrowAsync<ArgumentException>();
+        reserva.Status.Should().Be(ReservaStatus.CheckIn);
+        conta.Status.Should().Be(ContaStatus.Aberta);
+        reservaRepo.ReservaAtualizada.Should().BeNull();
+        contaRepo.ContaAtualizada.Should().BeNull();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Deve_Realizar_CheckOut_Antecipado_E_Encerrar_Conta_Quando_Confirmado_E_Saldo_For_Zero()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+        var conta = new ContaReserva(reservaId);
+        var reservaRepo = new ReservaRepositoryFake(reservaId, reserva);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var transacao = new TransacaoFake();
+        var service = CriarService(
+            reservaRepo,
+            hotelId,
+            new ConsultaSaldoContaFake(0m),
+            contaRepo,
+            transacao,
+            dataAtual: new DateOnly(2030, 4, 2));
+        var dto = new RealizarCheckOutDto
+        {
+            ConfirmarCheckOutAntecipado = true,
+            ConfirmarSaldoAberto = false
+        };
+
+        await service.RealizarCheckOut(reservaId, dto);
+
+        reserva.Status.Should().Be(ReservaStatus.CheckOut);
+        conta.Status.Should().Be(ContaStatus.Encerrada);
+        conta.DataEncerramento.Should().NotBeNull();
+        reservaRepo.ReservaAtualizada.Should().BeSameAs(reserva);
+        contaRepo.ContaAtualizada.Should().BeSameAs(conta);
+        transacao.QuantidadeExecucoes.Should().Be(1);
     }
 }

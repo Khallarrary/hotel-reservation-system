@@ -78,9 +78,9 @@ namespace HotelApp.Api.Controllers
 
         [Authorize]
         [HttpPatch("{id}/check-out")]
-        public async Task<IActionResult> RealizarCheckOut(int id)
+        public async Task<IActionResult> RealizarCheckOut(int id, [FromBody] RealizarCheckOutDto request)
         {
-            await _service.RealizarCheckOut(id);
+            await _service.RealizarCheckOut(id, request);
             return NoContent();
         }
 
