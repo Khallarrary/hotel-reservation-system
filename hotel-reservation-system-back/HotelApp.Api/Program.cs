@@ -88,11 +88,20 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+var origensPermitidas = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+if (origensPermitidas.Length == 0)
+{
+    throw new InvalidOperationException("Configure ao menos uma origem permitida em Cors:AllowedOrigins.");
+}
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("Frontend",
         policy => policy
-            .AllowAnyOrigin()
+            .WithOrigins(origensPermitidas)
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
@@ -171,7 +180,7 @@ app.MapGet("/", () => Results.Redirect("/swagger"));
 /// </summary>
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
