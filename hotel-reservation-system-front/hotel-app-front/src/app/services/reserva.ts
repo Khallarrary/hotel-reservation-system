@@ -35,6 +35,11 @@ export interface ReservaPorNumero{
   numeroDoQuarto: string;
 }
 
+export interface ConfirmacoesCheckOut{
+  confirmarCheckOutAntecipado: boolean;
+  confirmarSaldoAberto: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -73,8 +78,8 @@ realizarCheckIn(id: number){
   return this.http.patch(`${this.apiUrl}/${id}/check-in`, null)
 }
 
-realizarCheckOut(id: number){
-  return this.http.patch(`${this.apiUrl}/${id}/check-out`, null)
+realizarCheckOut(id: number, confirmacoes: ConfirmacoesCheckOut ){
+  return this.http.patch(`${this.apiUrl}/${id}/check-out`, confirmacoes)
 }
 
 listarPaginada(pagina: number, tamanhoPagina: number, filtros?: ReservaConsulta): Observable<ReservaPaginada>{
