@@ -70,8 +70,8 @@ export class ReservaDetalhes {
             return 'Selecione uma reserva para realizar check-in.';
         }
 
-        if (this.reserva.status !== 'Pendente') {
-            return 'Check-in disponivel apenas para reservas pendentes.';
+        if (this.reserva.status !== 'Confirmada') {
+            return 'Check-in disponivel apenas para reservas confirmadas.';
         }
 
         if (this.obterDataLocalHoje() < this.obterDataApi(this.reserva.checkIn)) {
@@ -87,7 +87,7 @@ export class ReservaDetalhes {
             return false
         }
 
-        if(this.reserva.status !== "Pendente"){
+        if(this.reserva.status !== "Confirmada"){
             return false
         }
         

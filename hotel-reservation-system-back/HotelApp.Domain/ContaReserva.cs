@@ -36,5 +36,15 @@ namespace HotelApp.Domain
             Status = ContaStatus.Encerrada;
             DataEncerramento = DateTime.UtcNow;
         }
+
+        public void MarcarComoPendente()
+        {
+            if(Status != ContaStatus.Aberta)
+            {
+                throw new ArgumentException("Apenas contas abertas podem se tornar uma conta Pendente.");
+            }
+
+            Status = ContaStatus.Pendente;
+        }
     }
 }

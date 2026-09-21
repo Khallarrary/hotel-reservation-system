@@ -5,7 +5,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { CaixaResumo, CaixaService, LancarCredito, LancarDebito } from '../../services/caixa'
-import { ReservaService } from '../../services/reserva';
+import { ReservaService, ConfirmacoesCheckOut } from '../../services/reserva';
 
 @Component({
   selector: 'app-reserva-caixa',
@@ -142,12 +142,57 @@ export class ReservaCaixa {
   }
 
   realizarCheckOut(): void {
-    this.reservaService.realizarCheckOut(this.reservaId).subscribe({
+
+    const confirmacoes: ConfirmacoesCheckOut = {
+      confirmarCheckOutAntecipado: false,
+      confirmarSaldoAberto: false
+    } 
+
+    this.executarCheckout(confirmacoes);
+  }
+
+  private executarCheckout(confirmacoes: ConfirmacoesCheckOut): void{
+  
+    this.reservaService.realizarCheckOut(this.reservaId, confirmacoes).subscribe({
       next: () => {
         this.mostrarSucesso('Check-out realizado com sucesso!')
       },
       error: (err) => {
-        this.mostrarErro(err.error?.message || err.error || 'Nao foi possivel realizar o check-out.')
+
+        const mensagem = err.error?.message;
+
+        if(err.status === 400 &&
+            mensagem === 'Confirme a realização do check-out antecipado.' &&
+            !confirmacoes.confirmarCheckOutAntecipado){
+          
+            const confirmou = window.confirm('Deseja continuar out antecipado?');
+
+            if (!confirmou) {
+              return;
+            } 
+
+            confirmacoes.confirmarCheckOutAntecipado = true;
+            this.executarCheckout(confirmacoes)
+            return;
+        
+      }
+
+        if(err.status === 409){
+          if(!confirmacoes.confirmarSaldoAberto){
+            const confirmou = window.confirm('Deseja continuar?');
+
+            if (!confirmou) {
+              return;
+            } 
+            
+            confirmacoes.confirmarSaldoAberto = true;
+
+            this.executarCheckout(confirmacoes)
+            return 
+          }
+        }
+
+        this.mostrarErro(mensagem || 'Nao foi possivel encerrar a conta.')
       }
     })
   }
