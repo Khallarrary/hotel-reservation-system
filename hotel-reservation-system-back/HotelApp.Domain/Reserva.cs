@@ -32,6 +32,9 @@ public class Reserva
         if (Status == ReservaStatus.Cancelada || outra.Status == ReservaStatus.Cancelada)
             return false;
 
+        if (Status == ReservaStatus.CheckOut || outra.Status == ReservaStatus.CheckOut)
+            return false;
+
         // Regra de sobreposição de intervalo de datas
         return CheckIn < outra.CheckOut && CheckOut > outra.CheckIn;
     }
