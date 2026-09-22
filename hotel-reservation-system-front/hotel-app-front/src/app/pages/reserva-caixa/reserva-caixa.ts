@@ -134,6 +134,7 @@ export class ReservaCaixa {
       next: () => {
         this.carregarResumo();
         this.mostrarSucesso('Caixa encerrado!')
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.mostrarErro(err.error?.message || 'Nao foi possivel encerrar a conta.')
@@ -156,6 +157,7 @@ export class ReservaCaixa {
     this.reservaService.realizarCheckOut(this.reservaId, confirmacoes).subscribe({
       next: () => {
         this.mostrarSucesso('Check-out realizado com sucesso!')
+        this.cdr.detectChanges();
       },
       error: (err) => {
 
