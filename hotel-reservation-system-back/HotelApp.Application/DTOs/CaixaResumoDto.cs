@@ -13,5 +13,6 @@ namespace HotelApp.Application.DTOs
         public decimal TotalCreditos { get; set; }
         public decimal Saldo { get; set; }
         public List<LancamentoContaDto> Lancamentos { get; set; }
+        public string StatusReserva { get; set; }
     }
 }
