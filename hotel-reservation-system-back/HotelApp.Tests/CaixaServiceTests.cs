@@ -21,41 +21,97 @@ public class CaixaServiceTests
     [Fact]
     public async Task Deve_Lancar_Erro_Quando_Saldo_For_Diferente_De_Zero_Ao_Encerrar()
     {
-        var conta = new ContaReserva(1);
+        var reserva = CriarReservaEmCheckOut(hotelId: 1);
+        var conta = new ContaReserva(reservaId: 1);
         DefinirId(conta, 1);
+        conta.MarcarComoPendente();
         var contaRepo = new ContaReservaRepositoryFake(conta);
-        var lancamentoRepo = new LancamentoContaRepositoryFake(new List<LancamentoConta>
-        {
-            new LancamentoConta(1, LancamentoTipo.Debito, "Diaria", 200),
-            new LancamentoConta(1, LancamentoTipo.Credito, "Pagamento", 100, FormaPagamento.Pix)
-        });
-        var service = CriarService(lancamentoRepo, contaRepo);
+        var lancamentoRepo = new LancamentoContaRepositoryFake(
+            new List<LancamentoConta>
+            {
+                new LancamentoConta(
+                    1,
+                    LancamentoTipo.Debito,
+                    "Diaria",
+                    200m),
+
+                new LancamentoConta(
+                    1,
+                    LancamentoTipo.Credito,
+                    "Pagamento",
+                    100m,
+                    FormaPagamento.Pix)
+            });
+        var service = CriarService(
+            lancamentoRepo,
+            contaRepo,
+            reserva: reserva);
 
         Func<Task> action = () => service.EncerrarConta(1);
 
-        await action.Should().ThrowAsync<ArgumentException>();
-        conta.Status.Should().Be(ContaStatus.Aberta);
+        await action.Should().ThrowAsync<ConflictException>();
+        conta.Status.Should().Be(ContaStatus.Pendente);
+        conta.DataEncerramento.Should().BeNull();
         contaRepo.Atualizou.Should().BeFalse();
     }
 
     [Fact]
     public async Task Deve_Encerrar_Conta_Quando_Saldo_For_Zero()
     {
+        var reserva = CriarReservaEmCheckOut(hotelId: 1);
         var conta = new ContaReserva(1);
         DefinirId(conta, 1);
+        conta.MarcarComoPendente();
         var contaRepo = new ContaReservaRepositoryFake(conta);
         var lancamentoRepo = new LancamentoContaRepositoryFake(new List<LancamentoConta>
         {
-            new LancamentoConta(1, LancamentoTipo.Debito, "Diaria", 200),
-            new LancamentoConta(1, LancamentoTipo.Credito, "Pagamento", 200, FormaPagamento.Pix)
+            new LancamentoConta(1, LancamentoTipo.Debito, "Diaria", 200m),
+            new LancamentoConta(1, LancamentoTipo.Credito, "Pagamento", 200m, FormaPagamento.Pix)
         });
-        var service = CriarService(lancamentoRepo, contaRepo);
+        var service = CriarService(lancamentoRepo, contaRepo, reserva: reserva);
 
         await service.EncerrarConta(1);
 
         conta.Status.Should().Be(ContaStatus.Encerrada);
         conta.DataEncerramento.Should().NotBeNull();
         contaRepo.Atualizou.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Deve_Bloquear_Encerramento_Manual_Quando_Conta_Estiver_Aberta()
+    {
+        var reserva = CriarReservaEmCheckOut(hotelId: 1);
+        var conta = new ContaReserva(1);
+        DefinirId(conta, 1);
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var lancamentoRepo = new LancamentoContaRepositoryFake();
+        var service = CriarService(lancamentoRepo, contaRepo, reserva: reserva);
+
+        Func<Task> action = () => service.EncerrarConta(1);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        conta.Status.Should().Be(ContaStatus.Aberta);
+        conta.DataEncerramento.Should().BeNull();
+        contaRepo.Atualizou.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Deve_Bloquear_Encerramento_Quando_Reserva_Nao_Estiver_Em_CheckOut()
+    {
+        var reserva = CriarReserva(hotelId: 1);
+        var conta = new ContaReserva(1);
+        DefinirId(conta, 1);
+        conta.MarcarComoPendente();
+        var contaRepo = new ContaReservaRepositoryFake(conta);
+        var lancamentoRepo = new LancamentoContaRepositoryFake();
+        var service = CriarService(lancamentoRepo, contaRepo, reserva: reserva);
+
+        Func<Task> action = () => service.EncerrarConta(1);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        conta.Status.Should().Be(ContaStatus.Pendente);
+        conta.DataEncerramento.Should().BeNull();
+        contaRepo.Atualizou.Should().BeFalse();
     }
 
     private static void DefinirId(ContaReserva conta, int id)
@@ -107,6 +163,14 @@ public class CaixaServiceTests
             quartoId: 1,
             hotelId,
             new DateOnly(2030, 4, 1));
+    }
+
+    private static Reserva CriarReservaEmCheckOut(int hotelId)
+    {
+        var reserva = CriarReserva(hotelId);
+        reserva.RealizarCheckIn(new DateOnly(2030, 4, 2));
+        reserva.RealizarCheckOut(new DateOnly(2030, 4, 3), false);
+        return reserva;
     }
 
     private class ContaReservaRepositoryFake : IContaReservaRepository

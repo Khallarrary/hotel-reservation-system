@@ -22,6 +22,7 @@ export interface CaixaResumo {
   totalCreditos: number;
   saldo: number;
   lancamentos: LancamentoConta[];
+  statusReserva: string;
 }
 
 export interface LancarCredito {

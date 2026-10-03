@@ -112,7 +112,7 @@ namespace HotelApp.Application.Services
 
         public async Task<CaixaResumoDto> ResumoCaixa(int reservaId) 
         {
-            var (conta, _) = await ObterContaSegura(reservaId);
+            var (conta, reserva) = await ObterContaSegura(reservaId);
 
             var lancamentos = await ListarLancamentosPorReserva(reservaId);
 
@@ -132,21 +132,32 @@ namespace HotelApp.Application.Services
                 TotalDebitos = totalDebitos,
                 TotalCreditos = totalCreditos,
                 Saldo = totalDebitos - totalCreditos,
-                Lancamentos = lancamentos
+                Lancamentos = lancamentos,
+                StatusReserva = reserva.Status.ToString()
             };
         }
 
         public async Task EncerrarConta(int reservaId)
         {
-            var (conta, _) = await ObterContaSegura(reservaId);
+            var (conta, reserva) = await ObterContaSegura(reservaId);
+
+            if (reserva.Status != ReservaStatus.CheckOut)
+            {
+                throw new ConflictException("Reserva deve estar em check-out");
+            }
+
+            if (conta.Status != ContaStatus.Pendente)
+            {
+                throw new ConflictException("Conta deve estar em pendente");
+            }
 
             var resumo = await ResumoCaixa(reservaId);
 
             var saldo = resumo.Saldo;
 
-            if(saldo != 0)
+            if(saldo != 0m)
             {
-                throw new ArgumentException("Conta com saldo diferente de zero não pode ser encerrada");
+                throw new ConflictException("Conta com saldo diferente de zero não pode ser encerrada");
             }
 
             conta.Encerrar();

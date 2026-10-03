@@ -157,6 +157,7 @@ export class ReservaCaixa {
     this.reservaService.realizarCheckOut(this.reservaId, confirmacoes).subscribe({
       next: () => {
         this.mostrarSucesso('Check-out realizado com sucesso!')
+        this.carregarResumo();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -181,7 +182,7 @@ export class ReservaCaixa {
 
         if(err.status === 409){
           if(!confirmacoes.confirmarSaldoAberto){
-            const confirmou = window.confirm('Deseja continuar?');
+            const confirmou = window.confirm('Conta com saldo em aberto. Deseja continuar?');
 
             if (!confirmou) {
               return;
