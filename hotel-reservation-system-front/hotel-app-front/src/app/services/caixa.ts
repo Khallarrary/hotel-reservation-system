@@ -57,8 +57,12 @@ export class CaixaService
     return this.http.post(`${this.apiUrl}/${reservaId}/credito`, credito);
   }
 
-  lancarDebito(reservaId: number, debito: LancarDebito) {
-    return this.http.post(`${this.apiUrl}/${reservaId}/debito`, debito);
+  lancarDebito(reservaId: number, debito: LancarDebito, chaveIdempotencia: string) {
+    return this.http.post(`${this.apiUrl}/${reservaId}/debito`, debito, {
+      headers: {
+        'Idempotency-key': chaveIdempotencia
+      }
+    });
   }
 
   encerrarConta(reservaId: number){

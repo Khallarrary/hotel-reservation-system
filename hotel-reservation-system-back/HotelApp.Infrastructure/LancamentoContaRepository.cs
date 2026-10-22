@@ -1,6 +1,8 @@
-﻿using HotelApp.Application.Interfaces;
+﻿using HotelApp.Application.Exceptions;
+using HotelApp.Application.Interfaces;
 using HotelApp.Domain;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,9 +20,17 @@ namespace HotelApp.Infrastructure
 
         public async Task AdicionarAsync(LancamentoConta lancamento)
         {
-            await _context.LancamentoConta.AddAsync(lancamento);
-            await _context.SaveChangesAsync();
-        }
+            try
+                {
+                 await _context.LancamentoConta.AddAsync(lancamento);
+                 await _context.SaveChangesAsync();
+                }
+                catch(DbUpdateException ex) when (ex.InnerException is PostgresException postgresException && postgresException.SqlState == PostgresErrorCodes.UniqueViolation && postgresException.ConstraintName == "IX_LancamentoConta_ContaReservaId_ChaveIdempotencia")
+                {
+                throw new ChaveIdempotenciaDuplicadaException("A tentativa de lançamento ja foi processada.", ex);
+                }
+       
+         }
 
         public async Task<List<LancamentoConta>> ListarPorContaReservaIdAsync(int contaReservaId)
         {
@@ -31,6 +41,11 @@ namespace HotelApp.Infrastructure
                 .ToListAsync();
         }
 
-        
+        public async Task<LancamentoConta?> ObterPorChaveIdempotenciaAsync(Guid chaveIdempotencia, int contaReservaId)
+        {
+            return await _context.LancamentoConta.AsNoTracking().FirstOrDefaultAsync(l => l.ChaveIdempotencia == chaveIdempotencia && l.ContaReservaId == contaReservaId);
+        }
+
+
     }
 }

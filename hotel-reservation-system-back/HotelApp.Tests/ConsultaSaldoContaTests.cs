@@ -87,6 +87,15 @@ public class ConsultaSaldoContaTests
 
         public Task AdicionarAsync(LancamentoConta lancamento) => Task.CompletedTask;
 
+        public Task<LancamentoConta?> ObterPorChaveIdempotenciaAsync(
+            Guid chaveIdempotencia,
+            int contaReservaId)
+        {
+            return Task.FromResult(_lancamentos.FirstOrDefault(l =>
+                l.ChaveIdempotencia == chaveIdempotencia &&
+                l.ContaReservaId == contaReservaId));
+        }
+
         public Task<List<LancamentoConta>> ListarPorContaReservaIdAsync(int contaReservaId)
         {
             ContaIdConsultada = contaReservaId;

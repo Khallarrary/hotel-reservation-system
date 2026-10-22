@@ -86,6 +86,9 @@ namespace HotelApp.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<Guid?>("ChaveIdempotencia")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("ContaReservaId")
                         .HasColumnType("integer");
 
@@ -106,6 +109,10 @@ namespace HotelApp.Infrastructure.Migrations
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ContaReservaId", "ChaveIdempotencia")
+                        .IsUnique()
+                        .HasFilter("\"ChaveIdempotencia\" IS NOT NULL");
 
                     b.ToTable("LancamentoConta");
                 });

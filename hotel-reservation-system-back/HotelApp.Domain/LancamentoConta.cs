@@ -13,12 +13,13 @@ namespace HotelApp.Domain
         public decimal Valor { get; private set; }
         public FormaPagamento? FormaPagamento { get; private set; }
         public DateTime DataLancamento { get; set; }
+        public Guid? ChaveIdempotencia { get; private set; }
 
         private LancamentoConta() 
         {
             Descricao = string.Empty;
         }
-        public LancamentoConta(int contaReservaId, LancamentoTipo tipo, string descricao, decimal valor, FormaPagamento? formaPagamento = null)
+        public LancamentoConta(int contaReservaId, LancamentoTipo tipo, string descricao, decimal valor, FormaPagamento? formaPagamento = null, Guid? chaveIdempotencia = null)
         {
             if (contaReservaId <= 0)
             {
@@ -45,12 +46,18 @@ namespace HotelApp.Domain
                 throw new ArgumentException("Débito não deve conter forma de pagamento.");
             }
 
+            if (chaveIdempotencia.HasValue && chaveIdempotencia.Value == Guid.Empty)
+            {
+                throw new ArgumentException("Chave de idempotência inválida.");
+            }
+
             ContaReservaId = contaReservaId;
             Tipo = tipo;
             Descricao = descricao.Trim();
             Valor = valor;
             FormaPagamento = formaPagamento;
             DataLancamento = DateTime.UtcNow;
+            ChaveIdempotencia = chaveIdempotencia;
         }
     }
 }

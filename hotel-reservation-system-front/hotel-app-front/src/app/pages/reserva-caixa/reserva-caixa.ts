@@ -51,6 +51,7 @@ export class ReservaCaixa {
 
   limparFormulario(): void {
     this.novoMovimento = { tipo: 'Credito', descricao: '', valor: 0, formaPagamento: 0 }
+    this.chaveIdempotenciaMovimento = null;
   }
 
   voltar(): void {
@@ -80,7 +81,13 @@ export class ReservaCaixa {
     }, 3000);
   }
 
+
+  private chaveIdempotenciaMovimento: string | null = null;
+  salvandoMovimento = false;
+
   salvarMovimento(): void {
+    if (this.salvandoMovimento) return;
+
     console.log(this.novoMovimento)
 
     const credito: LancarCredito = {
@@ -89,30 +96,38 @@ export class ReservaCaixa {
       formaPagamento: this.novoMovimento.formaPagamento
     };
 
+
     const debito: LancarDebito = {
       valor: this.novoMovimento.valor,
       descricao: this.novoMovimento.descricao,
     };
 
     if (this.novoMovimento.tipo === 'Credito') {
+      this.salvandoMovimento = true;
       this.caixaService.lancarCredito(this.reservaId, credito).subscribe({
         next: () => {
+          this.salvandoMovimento = false;
           this.carregarResumo();
           this.limparFormulario();
           this.mostrarSucesso('Credito lancado')
         },
         error: (err) => {
+          this.salvandoMovimento = false;
           this.mostrarErro(err.error?.message || 'Nao foi possivel lancar credito.')
         }
       })
     } else if (this.novoMovimento.tipo === 'Debito') {
-      this.caixaService.lancarDebito(this.reservaId, debito).subscribe({
+      this.chaveIdempotenciaMovimento ??= crypto.randomUUID();
+      this.salvandoMovimento = true;
+      this.caixaService.lancarDebito(this.reservaId, debito, this.chaveIdempotenciaMovimento).subscribe({
         next: () => {
+          this.salvandoMovimento = false;
           this.carregarResumo();
           this.limparFormulario();
           this.mostrarSucesso('Debito lancado')
         },
         error: (err) => {
+          this.salvandoMovimento = false;
           this.mostrarErro(err.error?.message || 'Nao foi possivel lancar debito.')
         }
       })
