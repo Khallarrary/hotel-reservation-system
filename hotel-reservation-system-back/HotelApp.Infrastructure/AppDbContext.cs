@@ -56,6 +56,15 @@ public class AppDbContext : DbContext
             .IsUnique()
             .HasFilter("\"ChaveIdempotencia\" IS NOT NULL");
 
+        modelBuilder.Entity<LancamentoConta>()
+            .HasIndex(r => new
+            {
+                r.ContaReservaId,
+                r.ChaveIdempotencia
+            })
+            .IsUnique()
+            .HasFilter("\"ChaveIdempotencia\" IS NOT NULL");
+
     }
 
 }

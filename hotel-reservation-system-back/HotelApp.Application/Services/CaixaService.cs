@@ -63,6 +63,21 @@ namespace HotelApp.Application.Services
 
         }
 
+        private static void ValidarMesmaSolicitacao(LancamentoConta lancamentoExistente, LancamentoTipo tipo, decimal valor, string descricao, FormaPagamento? formaDePagamento)
+        {
+            var mesmaSolicitacao =
+                lancamentoExistente.Tipo == tipo &&
+                lancamentoExistente.Valor == valor &&
+                lancamentoExistente.Descricao == descricao.Trim() &&
+                lancamentoExistente.FormaPagamento == formaDePagamento;
+
+            if (!mesmaSolicitacao)
+            {
+                throw new ConflictException(
+                    "A chave de idempotência já foi utilizada em outra solicitação.");
+            }
+        }
+
         public async Task LancarCredito(int reservaId, decimal valor, FormaPagamento formaPagamento, string descricao)
         {
             var conta = await ObterContaParaLancamento(reservaId);
@@ -79,18 +94,63 @@ namespace HotelApp.Application.Services
         }
 
 
-        public async Task LancarDebito(int reservaId, decimal valor, string descricao)
+        public async Task LancarDebito(int reservaId, decimal valor, string descricao, Guid chaveIdempotencia)
         {
+            if (chaveIdempotencia == Guid.Empty)
+            {
+                throw new ArgumentException("Chave de idempotência inválida.");
+            }
+
+
             var conta = await ObterContaParaLancamento(reservaId);
+
+
+           
+            var lancamentoExistente = await _lancamentoRepo.ObterPorChaveIdempotenciaAsync(chaveIdempotencia, conta.Id);
+
+            if(lancamentoExistente != null)
+            {
+                ValidarMesmaSolicitacao(
+                    lancamentoExistente, 
+                    LancamentoTipo.Debito, 
+                    valor, 
+                    descricao, 
+                    null);
+                return;
+            }
 
             var lancamento = new LancamentoConta(
             conta.Id,
             LancamentoTipo.Debito,
             descricao,
-            valor
+            valor,
+            null,
+            chaveIdempotencia
             );
 
-            await _lancamentoRepo.AdicionarAsync(lancamento);
+            try
+            {
+                await _lancamentoRepo.AdicionarAsync(lancamento);
+            }
+            catch (ChaveIdempotenciaDuplicadaException)
+            {
+                var lancamentoProcessado =
+                    await _lancamentoRepo.ObterPorChaveIdempotenciaAsync(
+                        chaveIdempotencia,
+                        conta.Id);
+
+                if (lancamentoProcessado == null)
+                {
+                    throw;
+                }
+
+                ValidarMesmaSolicitacao(
+                    lancamentoProcessado,
+                    LancamentoTipo.Debito,
+                    valor,
+                    descricao,
+                    null);
+            }
         }
 
         public async Task<List<LancamentoContaDto>> ListarLancamentosPorReserva(int reservaId)
@@ -98,6 +158,8 @@ namespace HotelApp.Application.Services
             var (conta, _) = await ObterContaSegura(reservaId);
 
             var lancamentos = await _lancamentoRepo.ListarPorContaReservaIdAsync(conta.Id);
+
+           
 
             return lancamentos.Select(l => new LancamentoContaDto
             {

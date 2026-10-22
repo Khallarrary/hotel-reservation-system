@@ -114,6 +114,60 @@ public class CaixaServiceTests
         contaRepo.Atualizou.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Deve_Ignorar_Debito_Repetido_Com_Mesma_Chave_E_Mesmos_Dados()
+    {
+        const int reservaId = 1;
+        const int contaId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var conta = new ContaReserva(reservaId);
+        DefinirId(conta, contaId);
+        var lancamentoExistente = new LancamentoConta(
+            contaId,
+            LancamentoTipo.Debito,
+            "Diaria",
+            200m,
+            null,
+            chaveIdempotencia);
+        var lancamentoRepo = new LancamentoContaRepositoryFake(
+            new List<LancamentoConta> { lancamentoExistente });
+        var service = CriarService(
+            lancamentoRepo,
+            new ContaReservaRepositoryFake(conta));
+
+        await service.LancarDebito(reservaId, 200m, "Diaria", chaveIdempotencia);
+
+        lancamentoRepo.QuantidadeAdicionados.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Deve_Lancar_Conflito_Quando_Chave_De_Debito_For_Reutilizada_Com_Dados_Diferentes()
+    {
+        const int reservaId = 1;
+        const int contaId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var conta = new ContaReserva(reservaId);
+        DefinirId(conta, contaId);
+        var lancamentoExistente = new LancamentoConta(
+            contaId,
+            LancamentoTipo.Debito,
+            "Diaria",
+            200m,
+            null,
+            chaveIdempotencia);
+        var lancamentoRepo = new LancamentoContaRepositoryFake(
+            new List<LancamentoConta> { lancamentoExistente });
+        var service = CriarService(
+            lancamentoRepo,
+            new ContaReservaRepositoryFake(conta));
+
+        Func<Task> action = () =>
+            service.LancarDebito(reservaId, 250m, "Diaria", chaveIdempotencia);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        lancamentoRepo.QuantidadeAdicionados.Should().Be(0);
+    }
+
     private static void DefinirId(ContaReserva conta, int id)
     {
         typeof(ContaReserva)
@@ -294,6 +348,8 @@ public class CaixaServiceTests
     {
         private readonly List<LancamentoConta> _lancamentos;
 
+        public int QuantidadeAdicionados { get; private set; }
+
         public LancamentoContaRepositoryFake()
             : this(new List<LancamentoConta>())
         {
@@ -306,8 +362,18 @@ public class CaixaServiceTests
 
         public Task AdicionarAsync(LancamentoConta lancamento)
         {
+            QuantidadeAdicionados++;
             _lancamentos.Add(lancamento);
             return Task.CompletedTask;
+        }
+
+        public Task<LancamentoConta?> ObterPorChaveIdempotenciaAsync(
+            Guid chaveIdempotencia,
+            int contaReservaId)
+        {
+            return Task.FromResult(_lancamentos.FirstOrDefault(l =>
+                l.ChaveIdempotencia == chaveIdempotencia &&
+                l.ContaReservaId == contaReservaId));
         }
 
         public Task<List<LancamentoConta>> ListarPorContaReservaIdAsync(int contaReservaId)
