@@ -168,6 +168,69 @@ public class CaixaServiceTests
         lancamentoRepo.QuantidadeAdicionados.Should().Be(0);
     }
 
+    [Fact]
+    public async Task Deve_Ignorar_Credito_Repetido_Com_Mesma_Chave_E_Mesmos_Dados()
+    {
+        const int reservaId = 1;
+        const int contaId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var conta = new ContaReserva(reservaId);
+        DefinirId(conta, contaId);
+        var lancamentoExistente = new LancamentoConta(
+            contaId,
+            LancamentoTipo.Credito,
+            "Pagamento",
+            200m,
+            FormaPagamento.Pix,
+            chaveIdempotencia);
+        var lancamentoRepo = new LancamentoContaRepositoryFake(
+            new List<LancamentoConta> { lancamentoExistente });
+        var service = CriarService(
+            lancamentoRepo,
+            new ContaReservaRepositoryFake(conta));
+
+        await service.LancarCredito(
+            reservaId,
+            200m,
+            FormaPagamento.Pix,
+            "Pagamento",
+            chaveIdempotencia);
+
+        lancamentoRepo.QuantidadeAdicionados.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Deve_Lancar_Conflito_Quando_Chave_De_Credito_For_Reutilizada_Com_Dados_Diferentes()
+    {
+        const int reservaId = 1;
+        const int contaId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var conta = new ContaReserva(reservaId);
+        DefinirId(conta, contaId);
+        var lancamentoExistente = new LancamentoConta(
+            contaId,
+            LancamentoTipo.Credito,
+            "Pagamento",
+            200m,
+            FormaPagamento.Pix,
+            chaveIdempotencia);
+        var lancamentoRepo = new LancamentoContaRepositoryFake(
+            new List<LancamentoConta> { lancamentoExistente });
+        var service = CriarService(
+            lancamentoRepo,
+            new ContaReservaRepositoryFake(conta));
+
+        Func<Task> action = () => service.LancarCredito(
+            reservaId,
+            200m,
+            FormaPagamento.Visa,
+            "Pagamento",
+            chaveIdempotencia);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        lancamentoRepo.QuantidadeAdicionados.Should().Be(0);
+    }
+
     private static void DefinirId(ContaReserva conta, int id)
     {
         typeof(ContaReserva)
