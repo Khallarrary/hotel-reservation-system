@@ -78,19 +78,60 @@ namespace HotelApp.Application.Services
             }
         }
 
-        public async Task LancarCredito(int reservaId, decimal valor, FormaPagamento formaPagamento, string descricao)
+        public async Task LancarCredito(int reservaId, decimal valor, FormaPagamento formaPagamento, string descricao, Guid chaveIdempotencia)
         {
+            if (chaveIdempotencia == Guid.Empty)
+            {
+                throw new ArgumentException("Chave de idempotência inválida.");
+            }
+
             var conta = await ObterContaParaLancamento(reservaId);
+
+            var lancamentoExistente = await _lancamentoRepo.ObterPorChaveIdempotenciaAsync(chaveIdempotencia, conta.Id);
+
+            if (lancamentoExistente != null)
+            {
+                ValidarMesmaSolicitacao(
+                    lancamentoExistente,
+                    LancamentoTipo.Credito,
+                    valor,
+                    descricao,
+                    formaPagamento);
+                return;
+            }
 
             var lancamento = new LancamentoConta(
             conta.Id,
             LancamentoTipo.Credito,
             descricao,
             valor,
-            formaPagamento
+            formaPagamento,
+            chaveIdempotencia
             );
 
-            await _lancamentoRepo.AdicionarAsync(lancamento);
+            try
+            {
+                await _lancamentoRepo.AdicionarAsync(lancamento);
+            }
+            catch (ChaveIdempotenciaDuplicadaException)
+            {
+                var lancamentoProcessado =
+                    await _lancamentoRepo.ObterPorChaveIdempotenciaAsync(
+                        chaveIdempotencia,
+                        conta.Id);
+
+                if (lancamentoProcessado == null)
+                {
+                    throw;
+                }
+
+                ValidarMesmaSolicitacao(
+                    lancamentoProcessado,
+                    LancamentoTipo.Credito,
+                    valor,
+                    descricao,
+                    formaPagamento);
+            }
         }
 
 

@@ -16,9 +16,9 @@ namespace HotelApp.Api.Controllers
 
         [Authorize]
         [HttpPost("reserva/{reservaId}/credito")]
-        public async Task<IActionResult> LancarCredito(int reservaId, [FromBody] LancarCreditoDto request)
+        public async Task<IActionResult> LancarCredito(int reservaId, [FromBody] LancarCreditoDto request, [FromHeader(Name = "Idempotency-Key")] Guid chaveIdempotencia)
         {
-            await _service.LancarCredito(reservaId, request.Valor, request.FormaPagamento, request.Descricao);
+            await _service.LancarCredito(reservaId, request.Valor, request.FormaPagamento, request.Descricao, chaveIdempotencia);
 
             return NoContent();
         }

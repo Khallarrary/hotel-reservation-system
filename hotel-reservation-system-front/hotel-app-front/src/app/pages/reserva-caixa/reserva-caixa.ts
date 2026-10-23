@@ -103,8 +103,9 @@ export class ReservaCaixa {
     };
 
     if (this.novoMovimento.tipo === 'Credito') {
+      this.chaveIdempotenciaMovimento ??= crypto.randomUUID();
       this.salvandoMovimento = true;
-      this.caixaService.lancarCredito(this.reservaId, credito).subscribe({
+      this.caixaService.lancarCredito(this.reservaId, credito, this.chaveIdempotenciaMovimento).subscribe({
         next: () => {
           this.salvandoMovimento = false;
           this.carregarResumo();
