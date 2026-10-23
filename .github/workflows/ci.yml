@@ -16,6 +16,10 @@ jobs:
   backend:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
     - name: Baixar código
       uses: actions/checkout@v4
@@ -31,8 +35,31 @@ jobs:
     - name: Compilar Backend
       run: dotnet build ./hotel-reservation-system-back/HotelApp.slnx --configuration Release --no-restore
 
-    - name: Executar Testes
-      run: dotnet test ./hotel-reservation-system-back/HotelApp.slnx --configuration Release --no-build
+    - name: Executar testes com cobertura
+      run: >
+        dotnet test ./hotel-reservation-system-back/HotelApp.slnx
+        --configuration Release
+        --no-build
+        --collect:"XPlat Code Coverage"
+        --results-directory ./coverage
+
+    - name: Gerar resumo da cobertura
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: coverage/**/coverage.cobertura.xml
+        badge: true
+        fail_below_min: false
+        format: markdown
+        hide_complexity: true
+        output: both
+        thresholds: '50 75'
+    
+    - name: Comentar cobertura no pull request
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v3
+      with:
+        header: backend-coverage
+        path: code-coverage-results.md
 
   frontend:
     runs-on: ubuntu-latest
@@ -64,8 +91,54 @@ jobs:
         path: hotel-reservation-system-front/hotel-app-front/dist/hotel-app-front/browser
         retention-days: 1
 
+  migration-check:
+    name: Validar migrations
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+
+        env:
+          POSTGRES_DB: hotelapp_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U postgres -d hotelapp_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      HOTELAPP_CONNECTION: Host=localhost;Port=5432;Database=hotelapp_ci;Username=postgres;Password=postgres
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Instalar ferramenta do Entity Framework
+        run: dotnet tool install --global dotnet-ef --version 10.0.9
+
+      - name: Restaurar dependências
+        run: dotnet restore ./hotel-reservation-system-back/HotelApp.slnx
+
+      - name: Validar migrations no PostgreSQL temporário
+        run: |
+          dotnet ef database update \
+            --project ./hotel-reservation-system-back/HotelApp.Infrastructure \
+            --startup-project ./hotel-reservation-system-back/HotelApp.Api
+
   migrate-database:
-    needs: [backend, frontend]
+    needs: [backend, frontend, migration-check]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
