@@ -10,7 +10,10 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: ci-pr-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend:
@@ -18,11 +21,12 @@ jobs:
 
     permissions:
       contents: read
-      pull-requests: write
 
     steps:
     - name: Baixar código
       uses: actions/checkout@v4
+      with:
+        persist-credentials: false
 
     - name: Configurar .NET
       uses: actions/setup-dotnet@v4 
@@ -54,12 +58,34 @@ jobs:
         output: both
         thresholds: '50 75'
     
-    - name: Comentar cobertura no pull request
-      if: github.event_name == 'pull_request'
-      uses: marocchino/sticky-pull-request-comment@v3
+    - name: Guardar resumo da cobertura
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: actions/upload-artifact@v4
       with:
-        header: backend-coverage
+        name: backend-coverage
         path: code-coverage-results.md
+
+  coverage-comment:
+    name: Comentar cobertura
+    needs: backend
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Baixar resumo da cobertura
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+
+      - name: Comentar cobertura no pull request
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: backend-coverage
+          path: code-coverage-results.md
 
   frontend:
     runs-on: ubuntu-latest
@@ -67,6 +93,8 @@ jobs:
     steps: 
     - name: Baixar código
       uses: actions/checkout@v4
+      with:
+        persist-credentials: false
 
     - name: Configurar Node.js
       uses: actions/setup-node@v4
@@ -119,6 +147,8 @@ jobs:
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Configurar .NET
         uses: actions/setup-dotnet@v4
@@ -142,9 +172,15 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Configurar .NET
         uses: actions/setup-dotnet@v4
@@ -218,9 +254,15 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Autenticar no Azure
         uses: azure/login@v2
@@ -254,6 +296,10 @@ jobs:
     needs: [backend, frontend, migrate-database]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Baixar build validado
