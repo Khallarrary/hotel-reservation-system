@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -141,10 +142,11 @@ app.UseExceptionHandler(errorApp =>
     {
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
-        context.Response.ContentType = "application/json";
+        var loggerFactory = context.RequestServices.GetRequiredService<ILoggerFactory>();
 
-        // Mapeamento de exceções para status HTTP
-        context.Response.StatusCode = exception switch
+        var logger = loggerFactory.CreateLogger("GlobalExceptionHandler");
+
+        var statusCode = exception switch
         {
             NotFoundException => StatusCodes.Status404NotFound,
             ConflictException => StatusCodes.Status409Conflict,
@@ -152,6 +154,32 @@ app.UseExceptionHandler(errorApp =>
             ForbiddenException => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError
         };
+
+        context.Response.StatusCode = statusCode;
+
+
+        context.Response.ContentType = "application/json";
+
+        if (statusCode >= 500)
+        {
+            logger.LogError(
+                exception,
+                "Erro inesperado em {Metodo} {Caminho}. Status: {StatusCode}. TraceId: {TraceId}",
+                context.Request.Method,
+                context.Request.Path,
+                statusCode,
+                context.TraceIdentifier);
+        }
+        else
+        {
+            logger.LogWarning(
+                exception,
+                "Requisicao rejeitada em {Metodo} {Caminho}. Status: {StatusCode}. TraceId: {TraceId}",
+                context.Request.Method,
+                context.Request.Path,
+                statusCode,
+                context.TraceIdentifier);
+        }
 
         // Retorno padrão de erro
         await context.Response.WriteAsJsonAsync(new
