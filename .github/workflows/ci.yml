@@ -24,12 +24,12 @@ jobs:
 
     steps:
     - name: Baixar código
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       with:
         persist-credentials: false
 
     - name: Configurar .NET
-      uses: actions/setup-dotnet@v4 
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
       with:
         dotnet-version: '10.0.x'
 
@@ -48,7 +48,7 @@ jobs:
         --results-directory ./coverage
 
     - name: Gerar resumo da cobertura
-      uses: irongut/CodeCoverageSummary@v1.3.0
+      uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95 # v1.3.0
       with:
         filename: coverage/**/coverage.cobertura.xml
         badge: true
@@ -60,7 +60,7 @@ jobs:
     
     - name: Guardar resumo da cobertura
       if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: backend-coverage
         path: code-coverage-results.md
@@ -77,12 +77,12 @@ jobs:
 
     steps:
       - name: Baixar resumo da cobertura
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: backend-coverage
 
       - name: Comentar cobertura no pull request
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3
         with:
           header: backend-coverage
           path: code-coverage-results.md
@@ -92,16 +92,19 @@ jobs:
 
     steps: 
     - name: Baixar código
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       with:
         persist-credentials: false
 
     - name: Configurar Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: '22'
         cache: 'npm'
         cache-dependency-path: hotel-reservation-system-front/hotel-app-front/package-lock.json
+
+    - name: Configurar npm
+      run: npm install --global npm@11.19.1
 
     - name: Instalar dependências
       working-directory: ./hotel-reservation-system-front/hotel-app-front
@@ -113,7 +116,7 @@ jobs:
 
     - name: Guardar build do frontend
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: frontend-build
         path: hotel-reservation-system-front/hotel-app-front/dist/hotel-app-front/browser
@@ -146,12 +149,12 @@ jobs:
 
     steps:
       - name: Baixar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
       - name: Configurar .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '10.0.x'
 
@@ -178,17 +181,17 @@ jobs:
 
     steps:
       - name: Baixar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
       - name: Configurar .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '10.0.x'
 
       - name: Autenticar no Azure
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -260,12 +263,12 @@ jobs:
 
     steps:
       - name: Baixar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
       - name: Autenticar no Azure
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -303,7 +306,7 @@ jobs:
 
     steps:
       - name: Baixar build validado
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: frontend-build
           path: frontend-build
@@ -314,7 +317,7 @@ jobs:
           zip -r ../hotelapp-front.zip .
 
       - name: Autenticar no Azure
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
