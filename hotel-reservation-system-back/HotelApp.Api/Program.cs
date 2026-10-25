@@ -11,6 +11,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,6 +141,18 @@ builder.Services
 
         };
     }
+    );
+
+builder.Services
+    .AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService("HotelApp.Api"))
+    .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation(options =>
+    {
+        options.Filter = context => !context.Request.Path.StartsWithSegments("/health");
+    })
+        .AddNpgsql()
+        .AddConsoleExporter()
     );
 
 var app = builder.Build();

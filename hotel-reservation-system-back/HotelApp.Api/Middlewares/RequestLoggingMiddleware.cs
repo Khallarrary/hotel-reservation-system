@@ -15,7 +15,11 @@ namespace HotelApp.Api.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            using var scope = _logger.BeginScope("TraceId: {TraceId}", context.TraceIdentifier);
+            var traceId =
+                Activity.Current?.TraceId.ToString()
+                ?? context.TraceIdentifier;
+
+            using var scope = _logger.BeginScope("TraceId: {TraceId}", traceId);
 
             var cronometro = Stopwatch.StartNew();
 
@@ -34,7 +38,7 @@ namespace HotelApp.Api.Middlewares
                      context.Request.Path, 
                      context.Response.StatusCode, 
                      cronometro.ElapsedMilliseconds, 
-                     context.TraceIdentifier
+                     traceId
                     );
             }
 

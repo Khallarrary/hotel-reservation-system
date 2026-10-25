@@ -1,6 +1,6 @@
 ﻿using HotelApp.Application.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace HotelApp.Api.Handlers
 {
@@ -15,6 +15,10 @@ namespace HotelApp.Api.Handlers
 
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
+            var traceId =
+                Activity.Current?.TraceId.ToString()
+                ?? httpContext.TraceIdentifier;
+
             var statusCode = exception switch
             {
                 NotFoundException => StatusCodes.Status404NotFound,
@@ -37,7 +41,7 @@ namespace HotelApp.Api.Handlers
                     httpContext.Request.Method,
                     httpContext.Request.Path,
                     statusCode,
-                    httpContext.TraceIdentifier);
+                    traceId);
             }
             else
             {
@@ -47,7 +51,7 @@ namespace HotelApp.Api.Handlers
                     httpContext.Request.Path,
                     statusCode,
                     exception.GetType().Name,
-                    httpContext.TraceIdentifier);
+                    traceId);
             }
 
             var message = statusCode >= 500
@@ -58,7 +62,7 @@ namespace HotelApp.Api.Handlers
                 new
                 {
                     message,
-                    traceId = httpContext.TraceIdentifier
+                    traceId 
                 },
             cancellationToken);
 
