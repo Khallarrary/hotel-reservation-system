@@ -13,10 +13,19 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry;
 using Npgsql;
+using OpenTelemetry.Logs;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;
+    options.ParseStateValues = true;
+    options.AddOtlpExporter();
+});
+
 
 /// <summary>
 /// Configuração do DbContext com PostgreSQL
@@ -146,13 +155,17 @@ builder.Services
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resource => resource
-        .AddService("HotelApp.Api"))
+        .AddService("HotelApp.Api")
+        .AddAttributes(new Dictionary<string, object>
+        {
+            ["deployment.environment.name"] = builder.Environment.EnvironmentName
+        }))
     .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation(options =>
     {
         options.Filter = context => !context.Request.Path.StartsWithSegments("/health");
     })
         .AddNpgsql()
-        .AddConsoleExporter()
+        .AddOtlpExporter()
     );
 
 var app = builder.Build();
