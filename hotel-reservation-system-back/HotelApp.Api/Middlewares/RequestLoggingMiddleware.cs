@@ -19,6 +19,13 @@ namespace HotelApp.Api.Middlewares
                 Activity.Current?.TraceId.ToString()
                 ?? context.TraceIdentifier;
 
+            var metodo = context.Request.Method
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty);
+            var caminho = context.Request.Path.Value?
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty) ?? string.Empty;
+
             using var scope = _logger.BeginScope("TraceId: {TraceId}", traceId);
 
             var cronometro = Stopwatch.StartNew();
@@ -34,8 +41,8 @@ namespace HotelApp.Api.Middlewares
                 _logger.LogInformation
                     (
                      "Requisicao concluida em {Metodo} {Caminho}. Status: {StatusCode}. Duracao: {DuracaoMs} ms. TraceId: {TraceId}",
-                     context.Request.Method, 
-                     context.Request.Path, 
+                     metodo,
+                     caminho,
                      context.Response.StatusCode, 
                      cronometro.ElapsedMilliseconds, 
                      traceId

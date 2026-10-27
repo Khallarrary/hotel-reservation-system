@@ -19,6 +19,13 @@ namespace HotelApp.Api.Handlers
                 Activity.Current?.TraceId.ToString()
                 ?? httpContext.TraceIdentifier;
 
+            var metodo = httpContext.Request.Method
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty);
+            var caminho = httpContext.Request.Path.Value?
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty) ?? string.Empty;
+
             var statusCode = exception switch
             {
                 NotFoundException => StatusCodes.Status404NotFound,
@@ -38,8 +45,8 @@ namespace HotelApp.Api.Handlers
                 _logger.LogError(
                     exception,
                     "Erro inesperado em {Metodo} {Caminho}. Status: {StatusCode}. TraceId: {TraceId}",
-                    httpContext.Request.Method,
-                    httpContext.Request.Path,
+                    metodo,
+                    caminho,
                     statusCode,
                     traceId);
             }
@@ -47,8 +54,8 @@ namespace HotelApp.Api.Handlers
             {
                 _logger.LogWarning(
                     "Requisicao rejeitada em {Metodo} {Caminho}. Status: {StatusCode}. Tipo: {TipoErro}. TraceId: {TraceId}",
-                    httpContext.Request.Method,
-                    httpContext.Request.Path,
+                    metodo,
+                    caminho,
                     statusCode,
                     exception.GetType().Name,
                     traceId);
