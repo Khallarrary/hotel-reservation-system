@@ -1,22 +1,38 @@
 using HotelApp.Api.Contextos;
-using HotelApp.Application.Exceptions;
+using HotelApp.Api.Handlers;
+using HotelApp.Api.Middlewares;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using HotelApp.Domain;
 using HotelApp.Infrastructure;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Npgsql;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 /// <summary>
 /// Configuração do DbContext com PostgreSQL
 /// </summary>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>(
+        name: "postgresql",
+        tags: ["ready"]);
 
 /// <summary>
 /// Injeção de dependência (DI)
@@ -64,7 +80,34 @@ builder.Services.AddSingleton<IRelogioHotel, RelogioHotel>();
 /// <summary>
 /// Adiciona suporte a controllers (API)
 /// </summary>
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var traceId =
+                Activity.Current?.TraceId.ToString()
+                ?? context.HttpContext.TraceIdentifier;
+
+            var errors = context.ModelState
+                .Where(entry => entry.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value!.Errors
+                        .Select(error => error.ErrorMessage)
+                        .ToArray());
+
+            return new BadRequestObjectResult(new
+            {
+                message = "Dados de entrada invalidos.",
+                traceId,
+                errors
+            });
+        };
+    });
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 /// <summary>
 /// Configuração do Swagger (documentação da API)
@@ -129,36 +172,51 @@ builder.Services
     }
     );
 
+builder.Services
+    .AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService("HotelApp.Api")
+        .AddAttributes(new Dictionary<string, object>
+        {
+            ["deployment.environment.name"] = builder.Environment.EnvironmentName
+        }))
+    .WithLogging(logging => logging.AddOtlpExporter(), options =>
+    {
+        options.IncludeFormattedMessage = true;
+        options.IncludeScopes = true;
+        options.ParseStateValues = true;
+    })
+    .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation(options =>
+    {
+        options.Filter = context => !context.Request.Path.StartsWithSegments("/health");
+    })
+        .AddNpgsql()
+        .AddOtlpExporter()
+    );
+
 var app = builder.Build();
 
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 /// <summary>
 /// Middleware global para tratamento de exceções
 /// Centraliza erros e retorna respostas padronizadas para o cliente
 /// </summary>
-app.UseExceptionHandler(errorApp =>
+app.UseExceptionHandler();
+app.UseStatusCodePages(async statusCodeContext =>
 {
-    errorApp.Run(async context =>
-    {
-        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    var httpContext = statusCodeContext.HttpContext;
+    var traceId =
+        Activity.Current?.TraceId.ToString()
+        ?? httpContext.TraceIdentifier;
 
-        context.Response.ContentType = "application/json";
-
-        // Mapeamento de exceções para status HTTP
-        context.Response.StatusCode = exception switch
+    await httpContext.Response.WriteAsJsonAsync(
+        new
         {
-            NotFoundException => StatusCodes.Status404NotFound,
-            ConflictException => StatusCodes.Status409Conflict,
-            ArgumentException => StatusCodes.Status400BadRequest,
-            ForbiddenException => StatusCodes.Status403Forbidden,
-            _ => StatusCodes.Status500InternalServerError
-        };
-
-        // Retorno padrão de erro
-        await context.Response.WriteAsJsonAsync(new
-        {
-            message = exception?.Message
-        });
-    });
+            message = "A requisicao nao pode ser concluida.",
+            traceId
+        },
+        httpContext.RequestAborted);
 });
 
 /// <summary>
@@ -178,15 +236,32 @@ app.MapGet("/", () => Results.Redirect("/swagger"));
 /// <summary>
 /// Middleware padrão do pipeline HTTP
 /// </summary>
-app.UseHttpsRedirection();
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/health"),
+    branch => branch.Use(async (context, next) =>
+    {
+        using var scope = SuppressInstrumentationScope.Begin();
+        await next(context);
+    }));
+
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/health"),
+    branch => branch.UseHttpsRedirection());
 
 app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseAuthorization();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = healthCheck => healthCheck.Tags.Contains("ready")
+});
 /// <summary>
 /// Mapeamento dos endpoints dos controllers
 /// </summary>
