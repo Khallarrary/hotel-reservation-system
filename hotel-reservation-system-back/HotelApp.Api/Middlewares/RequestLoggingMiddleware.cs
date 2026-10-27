@@ -38,8 +38,16 @@ namespace HotelApp.Api.Middlewares
             {
                 cronometro.Stop();
 
-                _logger.LogInformation
+                var logLevel = context.Response.StatusCode switch
+                {
+                    >= StatusCodes.Status500InternalServerError => LogLevel.Error,
+                    >= StatusCodes.Status400BadRequest => LogLevel.Warning,
+                    _ => LogLevel.Information
+                };
+
+                _logger.Log
                     (
+                     logLevel,
                      "Requisicao concluida em {Metodo} {Caminho}. Status: {StatusCode}. Duracao: {DuracaoMs} ms. TraceId: {TraceId}",
                      metodo,
                      caminho,

@@ -4,6 +4,7 @@ using HotelApp.Api.Middlewares;
 using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using HotelApp.Domain;
 using HotelApp.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -14,17 +15,11 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Npgsql;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Logging.AddOpenTelemetry(options =>
-{
-    options.IncludeFormattedMessage = true;
-    options.IncludeScopes = true;
-    options.ParseStateValues = true;
-    options.AddOtlpExporter();
-});
 
 
 /// <summary>
@@ -85,7 +80,32 @@ builder.Services.AddSingleton<IRelogioHotel, RelogioHotel>();
 /// <summary>
 /// Adiciona suporte a controllers (API)
 /// </summary>
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var traceId =
+                Activity.Current?.TraceId.ToString()
+                ?? context.HttpContext.TraceIdentifier;
+
+            var errors = context.ModelState
+                .Where(entry => entry.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value!.Errors
+                        .Select(error => error.ErrorMessage)
+                        .ToArray());
+
+            return new BadRequestObjectResult(new
+            {
+                message = "Dados de entrada invalidos.",
+                traceId,
+                errors
+            });
+        };
+    });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -160,6 +180,12 @@ builder.Services
         {
             ["deployment.environment.name"] = builder.Environment.EnvironmentName
         }))
+    .WithLogging(logging => logging.AddOtlpExporter(), options =>
+    {
+        options.IncludeFormattedMessage = true;
+        options.IncludeScopes = true;
+        options.ParseStateValues = true;
+    })
     .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation(options =>
     {
         options.Filter = context => !context.Request.Path.StartsWithSegments("/health");
@@ -177,6 +203,21 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 /// Centraliza erros e retorna respostas padronizadas para o cliente
 /// </summary>
 app.UseExceptionHandler();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var httpContext = statusCodeContext.HttpContext;
+    var traceId =
+        Activity.Current?.TraceId.ToString()
+        ?? httpContext.TraceIdentifier;
+
+    await httpContext.Response.WriteAsJsonAsync(
+        new
+        {
+            message = "A requisicao nao pode ser concluida.",
+            traceId
+        },
+        httpContext.RequestAborted);
+});
 
 /// <summary>
 /// Swagger disponível apenas em ambiente de desenvolvimento
@@ -195,7 +236,17 @@ app.MapGet("/", () => Results.Redirect("/swagger"));
 /// <summary>
 /// Middleware padrão do pipeline HTTP
 /// </summary>
-app.UseHttpsRedirection();
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/health"),
+    branch => branch.Use(async (context, next) =>
+    {
+        using var scope = SuppressInstrumentationScope.Begin();
+        await next(context);
+    }));
+
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/health"),
+    branch => branch.UseHttpsRedirection());
 
 app.UseCors("Frontend");
 
