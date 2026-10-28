@@ -261,12 +261,12 @@ app.UseAuthorization();
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).DisableHttpMetrics(); ;
 
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = healthCheck => healthCheck.Tags.Contains("ready")
-});
+}).DisableHttpMetrics(); ;
 /// <summary>
 /// Mapeamento dos endpoints dos controllers
 /// </summary>
