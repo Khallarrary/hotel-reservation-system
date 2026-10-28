@@ -18,6 +18,7 @@ using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using System.Diagnostics;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -186,6 +187,10 @@ builder.Services
         options.IncludeScopes = true;
         options.ParseStateValues = true;
     })
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddOtlpExporter())
     .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation(options =>
     {
         options.Filter = context => !context.Request.Path.StartsWithSegments("/health");
@@ -256,12 +261,12 @@ app.UseAuthorization();
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).DisableHttpMetrics(); ;
 
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = healthCheck => healthCheck.Tags.Contains("ready")
-});
+}).DisableHttpMetrics(); ;
 /// <summary>
 /// Mapeamento dos endpoints dos controllers
 /// </summary>
