@@ -18,6 +18,7 @@ using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using System.Diagnostics;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -186,6 +187,10 @@ builder.Services
         options.IncludeScopes = true;
         options.ParseStateValues = true;
     })
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddOtlpExporter())
     .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation(options =>
     {
         options.Filter = context => !context.Request.Path.StartsWithSegments("/health");
