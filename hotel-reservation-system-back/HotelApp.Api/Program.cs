@@ -5,13 +5,11 @@ using HotelApp.Application.Interfaces;
 using HotelApp.Application.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
-using HotelApp.Domain;
 using HotelApp.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Npgsql;
@@ -19,6 +17,9 @@ using OpenTelemetry;
 using OpenTelemetry.Logs;
 using System.Diagnostics;
 using OpenTelemetry.Metrics;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,7 +60,7 @@ builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<HotelService>();
 
 
-builder.Services.AddScoped<IUsuarioRepository, 
+builder.Services.AddScoped<IUsuarioRepository,
 UsuarioRepository>();
 builder.Services.AddScoped<ISenhaHasher, SenhaHasher>();
 builder.Services.AddScoped<UsuarioService>();
@@ -173,6 +174,95 @@ builder.Services
     }
     );
 
+
+var demoHotelId =
+    builder.Configuration.GetValue<int>("RateLimiting:DemoHotelId");
+
+var demoHotelPermitLimit =
+    builder.Configuration.GetValue<int>("RateLimiting:DemoHotelPermitLimit");
+
+var demoHotelWindowSeconds =
+    builder.Configuration.GetValue<int>("RateLimiting:DemoHotelWindowSeconds");
+
+
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter =
+        PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        {
+            var hotelId =
+                httpContext.User.FindFirst("hotelId")?.Value;
+
+            var demoHotelIdTexto =
+                demoHotelId.ToString(CultureInfo.InvariantCulture);
+
+            if (demoHotelId <= 0 || hotelId != demoHotelIdTexto)
+            {
+                return RateLimitPartition.GetNoLimiter(
+                    partitionKey: "hotel-sem-limite");
+            }
+
+            return RateLimitPartition.GetSlidingWindowLimiter(
+                partitionKey: $"demo-hotel:{hotelId}",
+                factory: _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = demoHotelPermitLimit,
+                    Window = TimeSpan.FromSeconds(
+                        demoHotelWindowSeconds),
+                    SegmentsPerWindow = 6,
+                    QueueLimit = 0,
+                    QueueProcessingOrder =
+                        QueueProcessingOrder.OldestFirst,
+                    AutoReplenishment = true
+                });
+        });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+
+
+        if (context.Lease.TryGetMetadata(
+                MetadataName.RetryAfter,
+                out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                Math.Ceiling(retryAfter.TotalSeconds).
+                ToString(CultureInfo.InvariantCulture);
+        }
+
+        var traceId = Activity.Current?.TraceId.ToString()
+            ?? context.HttpContext.TraceIdentifier;
+
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new
+            {
+                message = "Limite de requisicoes excedido. Tente novamente mais tarde.",
+                traceId
+            },
+            cancellationToken);
+    };
+
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey:
+                httpContext.Connection.RemoteIpAddress?.ToString()
+                ?? "ip-desconhecido",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                AutoReplenishment = true
+            }
+            )
+        );
+}
+);
+
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resource => resource
@@ -253,9 +343,11 @@ app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/health"),
     branch => branch.UseHttpsRedirection());
 
+app.UseRouting();
 app.UseCors("Frontend");
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions
