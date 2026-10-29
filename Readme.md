@@ -217,7 +217,9 @@ docker build -t hotelapp-api:dev .
 
 As configurações de banco e JWT devem ser fornecidas ao container por variáveis de ambiente. Nenhuma credencial de execução é versionada no repositório.
 
-Em produção, as integrações e proteções também são configuradas por variáveis de ambiente, incluindo `OTEL_EXPORTER_OTLP_*`, `RateLimiting__DemoHotelId`, `RateLimiting__DemoHotelPermitLimit` e `RateLimiting__DemoHotelWindowSeconds`.
+Em produção, as integrações e proteções também são configuradas por variáveis de ambiente, incluindo `ASPNETCORE_FORWARDEDHEADERS_ENABLED`, `OTEL_EXPORTER_OTLP_*`, `RateLimiting__DemoHotelId`, `RateLimiting__DemoHotelPermitLimit` e `RateLimiting__DemoHotelWindowSeconds`.
+
+Os limitadores mantêm seus contadores em memória e a implantação atual opera com uma única instância da API. Antes de habilitar escala horizontal, o controle deverá ser movido para uma camada compartilhada, como gateway ou armazenamento distribuído.
 
 ## Próximos passos
 

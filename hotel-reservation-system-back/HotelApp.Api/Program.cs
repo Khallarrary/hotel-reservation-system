@@ -148,7 +148,8 @@ builder.Services.AddCors(options =>
         policy => policy
             .WithOrigins(origensPermitidas)
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .WithExposedHeaders("Retry-After"));
 });
 
 var chave = builder.Configuration["Jwt:Key"];
@@ -184,6 +185,23 @@ var demoHotelPermitLimit =
 var demoHotelWindowSeconds =
     builder.Configuration.GetValue<int>("RateLimiting:DemoHotelWindowSeconds");
 
+if (demoHotelPermitLimit <= 0)
+{
+    throw new InvalidOperationException(
+        "RateLimiting:DemoHotelPermitLimit deve ser maior que zero.");
+}
+
+if (demoHotelWindowSeconds <= 0)
+{
+    throw new InvalidOperationException(
+        "RateLimiting:DemoHotelWindowSeconds deve ser maior que zero.");
+}
+
+if (builder.Environment.IsProduction() && demoHotelId <= 0)
+{
+    throw new InvalidOperationException(
+        "RateLimiting:DemoHotelId deve ser maior que zero em produção.");
+}
 
 
 builder.Services.AddRateLimiter(options =>
@@ -191,6 +209,12 @@ builder.Services.AddRateLimiter(options =>
     options.GlobalLimiter =
         PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         {
+            if (httpContext.Request.Path.StartsWithSegments("/health"))
+            {
+                return RateLimitPartition.GetNoLimiter(
+                    partitionKey: "health-check");
+            }
+
             var hotelId =
                 httpContext.User.FindFirst("hotelId")?.Value;
 
@@ -246,14 +270,15 @@ builder.Services.AddRateLimiter(options =>
     };
 
     options.AddPolicy("login", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
+        RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey:
                 httpContext.Connection.RemoteIpAddress?.ToString()
                 ?? "ip-desconhecido",
-            factory: _ => new FixedWindowRateLimiterOptions
+            factory: _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 5,
                 Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
                 QueueLimit = 0,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 AutoReplenishment = true
