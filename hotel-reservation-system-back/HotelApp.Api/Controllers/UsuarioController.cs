@@ -2,6 +2,7 @@
 using HotelApp.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -31,7 +32,7 @@ namespace HotelApp.Api.Controllers
             return StatusCode(201);
         }
 
-       
+        [EnableRateLimiting("login")]
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginUsuarioDto request)
         {

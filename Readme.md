@@ -5,6 +5,8 @@
 ![Angular](https://img.shields.io/badge/Angular-21-DD0031)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1)
 ![Azure](https://img.shields.io/badge/Azure-Deploy-0078D4)
+![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Observability-425CC7)
+![Grafana](https://img.shields.io/badge/Grafana_Cloud-Dashboard-F46800)
 
 Sistema web para operação de pequenas pousadas e hotéis, desenvolvido com **ASP.NET Core**, **Angular** e **PostgreSQL**.
 
@@ -17,7 +19,15 @@ O projeto começou como uma aplicação de estudos e evoluiu para uma base de pr
 - **Aplicação:** [hotelapp-front-demo-3567.azurewebsites.net](https://hotelapp-front-demo-3567.azurewebsites.net)
 - **API base (consumida pelo frontend):** `https://hotelapp-api-demo-8066.azurewebsites.net`
 
-O ambiente online é destinado à validação técnica e pode receber alterações durante o desenvolvimento. A documentação Swagger fica disponível somente no ambiente local.
+### Acesso de demonstração
+
+| Perfil | E-mail | Senha |
+| --- | --- | --- |
+| Operador | `operador.demo@hotelapp.com` | `1234` |
+
+O ambiente é compartilhado e destinado exclusivamente à avaliação técnica. Os dados podem ser alterados por outros visitantes; não informe dados pessoais ou informações reais. A conta pública pertence a um hotel isolado e possui limite de requisições próprio. A documentação Swagger fica disponível somente no ambiente local.
+
+![Mapa de reservas e detalhes da hospedagem](docs/images/reservation-map.png)
 
 ## Funcionalidades
 
@@ -25,6 +35,7 @@ O ambiente online é destinado à validação técnica e pode receber alteraçõ
 
 - mapa de reservas em formato de timeline por quarto e período;
 - criação de reservas com validação de datas e conflitos de ocupação;
+- criação idempotente de reservas, com proteção contra requisições repetidas e conflitos de concorrência;
 - criação da reserva e de sua conta financeira na mesma transação;
 - fluxo de status `Pendente`, `CheckIn`, `CheckOut` e `Cancelada`;
 - reservas canceladas preservadas no histórico, removidas do mapa e desconsideradas em novos conflitos;
@@ -43,9 +54,11 @@ O ambiente online é destinado à validação técnica e pode receber alteraçõ
 
 - conta criada automaticamente junto com a reserva;
 - lançamentos de crédito e débito;
+- lançamentos financeiros idempotentes por chave de requisição;
 - formas de pagamento para créditos;
 - cálculo de débitos, créditos e saldo;
 - histórico de lançamentos;
+- bloqueio de movimentações financeiras em reservas canceladas;
 - encerramento permitido somente com saldo zerado;
 - bloqueio de novos lançamentos em contas encerradas.
 
@@ -58,13 +71,32 @@ O ambiente online é destinado à validação técnica e pode receber alteraçõ
 - cadastro, edição, ativação e desativação de usuários;
 - proteção contra alteração indevida do próprio perfil ou desativação do próprio usuário;
 - Angular Guard para rotas protegidas e interceptor para envio do token;
-- chave JWT mantida fora do repositório por User Secrets e configurações seguras do Azure.
+- chave JWT mantida fora do repositório por User Secrets e configurações seguras do Azure;
+- rate limiting no login, particionado por IP, com limite de 5 tentativas por minuto;
+- limite compartilhado de 60 requisições por minuto para o Hotel Demo, sem afetar os demais hotéis;
+- respostas `HTTP 429` com `Retry-After`, mensagem padronizada e `traceId` para diagnóstico.
 
 ## Multi-hotel
 
 A aplicação utiliza uma arquitetura **multi-tenant compartilhada**, na qual os registros possuem um `HotelId` e o hotel atual é identificado por uma claim no JWT.
 
 Esse contexto é aplicado nas consultas de usuários, quartos, reservas e contas para impedir acesso cruzado entre hotéis. O perfil `Master` administra a criação dos hotéis e seus primeiros gestores, enquanto `Gestor` e `Operador` permanecem vinculados a um único hotel.
+
+## Observabilidade
+
+A API é instrumentada com **OpenTelemetry** e envia métricas, traces e logs via OTLP para o **Grafana Cloud**. O dashboard operacional permite filtrar os dados por ambiente e acompanha:
+
+- requisições por segundo e por rota;
+- latência p95;
+- taxa de respostas 5xx;
+- memória do processo;
+- exceções por segundo;
+- fila do thread pool;
+- ambientes `Development` e `Production` por resource attributes.
+
+Os logs e as respostas de erro incluem `traceId`, facilitando a correlação com os traces distribuídos. A API também expõe health checks separados de liveness e readiness, mantidos fora das métricas HTTP operacionais e dos limites do Hotel Demo.
+
+![Dashboard de observabilidade da API no Grafana Cloud](docs/images/grafana-observability.png)
 
 ## Arquitetura
 
@@ -91,6 +123,8 @@ Entre as decisões aplicadas estão Repository Pattern, injeção de dependênci
 - Entity Framework Core;
 - PostgreSQL com Npgsql;
 - autenticação JWT Bearer;
+- rate limiting nativo do ASP.NET Core;
+- OpenTelemetry para métricas, traces e logs;
 - Swagger / OpenAPI;
 - xUnit e FluentAssertions.
 
@@ -109,6 +143,7 @@ Entre as decisões aplicadas estão Repository Pattern, injeção de dependênci
 - Azure Container Registry;
 - Azure App Service para API e frontend;
 - Azure Database for PostgreSQL Flexible Server;
+- Grafana Cloud para observabilidade;
 - autenticação do pipeline no Azure por OpenID Connect.
 
 ## Qualidade e entrega
@@ -120,7 +155,7 @@ O workflow do GitHub Actions é executado em pushes e pull requests para a `main
 3. após merge na `main`, publica uma nova imagem da API no ACR;
 4. atualiza a API e o frontend hospedados no Azure.
 
-A suíte atual possui **41 testes automatizados**. A branch principal também utiliza proteção para impedir merge quando as verificações obrigatórias falham.
+A suíte atual possui **64 testes automatizados** de domínio e serviços. A branch principal também utiliza proteção para impedir merge quando as verificações obrigatórias falham.
 
 ## Como executar localmente
 
@@ -182,16 +217,22 @@ docker build -t hotelapp-api:dev .
 
 As configurações de banco e JWT devem ser fornecidas ao container por variáveis de ambiente. Nenhuma credencial de execução é versionada no repositório.
 
+Em produção, as integrações e proteções também são configuradas por variáveis de ambiente, incluindo `ASPNETCORE_FORWARDEDHEADERS_ENABLED`, `OTEL_EXPORTER_OTLP_*`, `RateLimiting__DemoHotelId`, `RateLimiting__DemoHotelPermitLimit` e `RateLimiting__DemoHotelWindowSeconds`.
+
+Os limitadores mantêm seus contadores em memória e a implantação atual opera com uma única instância da API. Antes de habilitar escala horizontal, o controle deverá ser movido para uma camada compartilhada, como gateway ou armazenamento distribuído.
+
 ## Próximos passos
 
-- garantir idempotência e proteção contra concorrência na criação de reservas;
-- bloquear movimentações financeiras em reservas canceladas;
+- criar testes E2E da API cobrindo os principais fluxos de ponta a ponta;
+- configurar alertas e documentar o runbook de observabilidade;
 - criar tarifário por categoria de quarto;
 - implementar rotina de diárias;
 - permitir edição de reservas;
 - criar cadastro de hóspedes e vínculo com reservas;
-- desenvolver dashboard operacional;
-- evoluir o módulo de solicitações de hóspedes.
+- desenvolver dashboard de indicadores do negócio;
+- evoluir o módulo de solicitações de hóspedes;
+- avaliar a próxima etapa de infraestrutura na AWS;
+- explorar recursos de IA aplicados à operação hoteleira.
 
 ## Objetivo do projeto
 
