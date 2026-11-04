@@ -20,6 +20,7 @@ using OpenTelemetry.Metrics;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using System.Globalization;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -372,6 +373,24 @@ app.UseRouting();
 app.UseCors("Frontend");
 
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    var hotelId = context.User.FindFirst("hotelId")?.Value;
+    var metricsTags = context.Features.Get<IHttpMetricsTagsFeature>();
+
+    if (metricsTags is not null &&
+        !string.IsNullOrWhiteSpace(hotelId))
+    {
+        metricsTags.Tags.Add(
+            new KeyValuePair<string, object?>(
+                "hotel_id",
+                hotelId));
+    }
+
+    await next(context);
+});
+
 app.UseRateLimiter();
 app.UseAuthorization();
 
