@@ -47,6 +47,46 @@ namespace HotelApp.Infrastructure.Migrations
                     b.ToTable("ContaReserva");
                 });
 
+            modelBuilder.Entity("HotelApp.Domain.Hospede", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Documento")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<int>("HotelId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TipoDocumento")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HotelId", "TipoDocumento", "Documento")
+                        .IsUnique();
+
+                    b.ToTable("Hospedes");
+                });
+
             modelBuilder.Entity("HotelApp.Domain.Hotel", b =>
                 {
                     b.Property<int>("Id")
@@ -220,6 +260,15 @@ namespace HotelApp.Infrastructure.Migrations
                     b.HasIndex("HotelId");
 
                     b.ToTable("Usuario");
+                });
+
+            modelBuilder.Entity("HotelApp.Domain.Hospede", b =>
+                {
+                    b.HasOne("HotelApp.Domain.Hotel", null)
+                        .WithMany()
+                        .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("HotelApp.Domain.Quarto", b =>
