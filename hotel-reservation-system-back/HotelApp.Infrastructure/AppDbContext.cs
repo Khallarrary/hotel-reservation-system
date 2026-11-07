@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet <LancamentoConta> LancamentoConta { get; set; }
     public DbSet <Usuario> Usuario { get; set; }
     public DbSet <Hotel> Hoteis { get; set; }
+    public DbSet<Hospede> Hospedes { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -65,6 +66,35 @@ public class AppDbContext : DbContext
             .IsUnique()
             .HasFilter("\"ChaveIdempotencia\" IS NOT NULL");
 
+        modelBuilder.Entity<Hospede>(entity =>
+        {
+            entity.Property(hospede => hospede.Nome)
+            .HasMaxLength(150)
+            .IsRequired();
+
+            entity.Property(hospede => hospede.Documento)
+            .HasMaxLength(30)
+            .IsRequired();
+
+            entity.Property(hospede => hospede.Email)
+            .HasMaxLength(254);
+
+            entity.Property(hospede => hospede.Telefone)
+            .HasMaxLength(20);
+
+            entity.HasIndex(hospede => new
+            {
+                hospede.HotelId,
+                hospede.TipoDocumento,
+                hospede.Documento
+            }).IsUnique();
+
+            entity.HasOne<Hotel>()
+            .WithMany()
+            .HasForeignKey(hospede => hospede.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        });
     }
 
 }
