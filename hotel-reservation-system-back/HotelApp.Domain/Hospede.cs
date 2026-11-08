@@ -23,38 +23,16 @@ namespace HotelApp.Domain
         public Hospede(int hotelId, string nome, TipoDocumento tipoDocumento, string documento, string? email, string? telefone)
         {
             if (hotelId <= 0) 
-            { 
-                throw new ArgumentNullException("Hotel inválido."); 
+            {
+                throw new ArgumentException("Hotel inválido.");
             }
 
             if (string.IsNullOrWhiteSpace(nome)) 
             { 
-                throw new ArgumentNullException("Nome do hóspede é obrigatório."); 
+                throw new ArgumentException("Nome do hóspede é obrigatório."); 
             }
-
-            if (!Enum.IsDefined(tipoDocumento))
-            {
-                throw new ArgumentException("Tipo de documento inválido.");
-            }
-
-            if (string.IsNullOrWhiteSpace(documento)) 
-            { 
-                throw new ArgumentNullException("Documento é obrigatório."); 
-            }
-
-            var documentoNormalizado = new string(
-           documento
-               .Where(char.IsLetterOrDigit)
-               .ToArray())
-           .ToUpperInvariant();
-
-            if (tipoDocumento == TipoDocumento.CPF &&
-                (documentoNormalizado.Length != 11 ||
-                 documentoNormalizado.Any(char.IsLetter)))
-            {
-                throw new ArgumentException("CPF inválido.");
-            }
-
+                      
+            var documentoNormalizado = NormalizarDocumento(tipoDocumento, documento);
 
             HotelId = hotelId;
             Nome = nome.Trim();
@@ -74,35 +52,11 @@ namespace HotelApp.Domain
         {
             if (string.IsNullOrWhiteSpace(nome))
             {
-                throw new ArgumentException(
-                    "Nome do hóspede é obrigatório.");
+                throw new ArgumentException("Nome do hóspede é obrigatório.");
             }
-
-            if (!Enum.IsDefined(tipoDocumento))
-            {
-                throw new ArgumentException(
-                    "Tipo de documento inválido.");
-            }
-
-            if (string.IsNullOrWhiteSpace(documento))
-            {
-                throw new ArgumentException(
-                    "Documento é obrigatório.");
-            }
-
-            var documentoNormalizado = new string(
-                documento
-                    .Where(char.IsLetterOrDigit)
-                    .ToArray())
-                .ToUpperInvariant();
-
-            if (tipoDocumento == TipoDocumento.CPF &&
-                (documentoNormalizado.Length != 11 ||
-                 documentoNormalizado.Any(char.IsLetter)))
-            {
-                throw new ArgumentException("CPF inválido.");
-            }
-
+           
+            var documentoNormalizado = NormalizarDocumento(tipoDocumento, documento);
+                       
             Nome = nome.Trim();
             TipoDocumento = tipoDocumento;
             Documento = documentoNormalizado;
@@ -115,6 +69,34 @@ namespace HotelApp.Domain
                 ? null
                 : new string(
                     telefone.Where(char.IsDigit).ToArray());
+        }
+
+        public static string NormalizarDocumento(TipoDocumento tipoDocumento, string documento)
+        {
+            if (!Enum.IsDefined(tipoDocumento))
+            {
+                throw new ArgumentException("Tipo de documento inválido.");
+            }
+
+            if (string.IsNullOrWhiteSpace(documento))
+            {
+                throw new ArgumentException("Documento é obrigatório.");
+            }
+
+            var documentoNormalizado = new string(documento.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+
+
+            if (documentoNormalizado.Length == 0)
+            {
+                throw new ArgumentException("Documento inválido.");
+            }
+
+            if (tipoDocumento == TipoDocumento.CPF &&(documentoNormalizado.Length != 11 || documentoNormalizado.Any(char.IsLetter)))
+            {
+                throw new ArgumentException("CPF inválido.");
+            }
+
+            return documentoNormalizado;
         }
 
 
