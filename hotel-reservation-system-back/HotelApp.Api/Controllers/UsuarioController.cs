@@ -26,8 +26,7 @@ namespace HotelApp.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CriarUsuarioAsync([FromBody] CriarUsuarioDto request)
         {
-            await _service.CriarUsuario
-                 (request.Nome, request.Email, request.Senha, request.Perfil);
+            await _service.CriarUsuario(request.Nome, request.Email, request.Senha, request.Perfil);
 
             return StatusCode(201);
         }
