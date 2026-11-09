@@ -71,6 +71,25 @@ public class HospedeServiceTests
     }
 
     [Fact]
+    public async Task Criar_Com_Cpf_Malformado_Deve_Lancar_ArgumentException()
+    {
+        var repository = new HospedeRepositoryFake();
+        var service = CriarService(repository: repository);
+
+        Func<Task> action = () => service.Criar(
+            "Jose da Silva",
+            "CPF",
+            "123.456.789-0A",
+            null,
+            null);
+
+        await action.Should()
+            .ThrowAsync<ArgumentException>()
+            .WithMessage("*CPF inválido*");
+        repository.Adicionado.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Criar_Quando_Hotel_Nao_Existe_Deve_Lancar_NotFoundException()
     {
         var repository = new HospedeRepositoryFake();
