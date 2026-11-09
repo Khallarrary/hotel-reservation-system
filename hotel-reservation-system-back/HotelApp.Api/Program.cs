@@ -60,6 +60,9 @@ builder.Services.AddScoped<QuartoService>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<HotelService>();
 
+builder.Services.AddScoped<IHospedeRepository, HospedeRepository>();
+builder.Services.AddScoped<HospedeService>();
+
 
 builder.Services.AddScoped<IUsuarioRepository,
 UsuarioRepository>();
