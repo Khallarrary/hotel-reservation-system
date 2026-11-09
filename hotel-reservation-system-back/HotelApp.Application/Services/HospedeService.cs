@@ -36,17 +36,7 @@ namespace HotelApp.Application.Services
                 throw new ArgumentException("Tipo de documento inválido.");
             }
 
-            var hotel = await _hotelRepository.ObterPorIdAsync(hotelId.Value);
-
-            if (hotel is null)
-            {
-                throw new NotFoundException("Hotel não encontrado.");
-            }
-
-            if (!hotel.Ativo)
-            {
-                throw new ForbiddenException("Hotel inativo.");
-            }
+            await ValidarHotelAtivoAsync(hotelId.Value);
 
             var hospede = new Hospede(hotelId.Value, nome, tipoDocumentoConvertido, documento, email, telefone);
 
@@ -87,6 +77,8 @@ namespace HotelApp.Application.Services
                 throw new ArgumentException("Tipo de documento inválido.");
             }
 
+            await ValidarHotelAtivoAsync(hotelId.Value);
+
             var documentoNormalizado = Hospede.NormalizarDocumento(tipoDocumentoConvertido, documento);
 
             var hospede = await _repository.ObterPorDocumentoAsync(tipoDocumentoConvertido, documentoNormalizado, hotelId.Value);
@@ -119,6 +111,8 @@ namespace HotelApp.Application.Services
                 throw new ForbiddenException("Hotel não encontrado.");
             }
 
+            await ValidarHotelAtivoAsync(hotelId.Value);
+
             var hospede = await _repository.ObterPorIdAsync(id, hotelId.Value);
 
             if (hospede is null)
@@ -149,6 +143,22 @@ namespace HotelApp.Application.Services
             hospede.AtualizarDados(nome, tipoDocumentoConvertido, documento, email, telefone);
 
             await _repository.AtualizarAsync(hospede);
+        }
+
+
+        private async Task ValidarHotelAtivoAsync(int hotelId)
+        {
+            var hotel = await _hotelRepository.ObterPorIdAsync(hotelId);
+
+            if (hotel is null)
+            {
+                throw new NotFoundException("Hotel não encontrado.");
+            }
+
+            if (!hotel.Ativo)
+            {
+                throw new ForbiddenException("Hotel inativo.");
+            }
         }
     }
 }

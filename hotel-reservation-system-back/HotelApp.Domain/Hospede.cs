@@ -32,20 +32,33 @@ namespace HotelApp.Domain
                 throw new ArgumentException("Nome do hóspede é obrigatório."); 
             }
                       
-            var documentoNormalizado = NormalizarDocumento(tipoDocumento, documento);
+            var nomeNormalizado = nome.Trim();
+
+            var documentoNormalizado =
+                NormalizarDocumento(tipoDocumento, documento);
+
+            var emailNormalizado = string.IsNullOrWhiteSpace(email)
+                ? null
+                : email.Trim().ToLowerInvariant();
+
+            var telefoneNormalizado = string.IsNullOrWhiteSpace(telefone)
+                ? null
+                : new string(telefone.Where(char.IsDigit).ToArray());
+
+            ValidarLimites(
+                nomeNormalizado,
+                documentoNormalizado,
+                emailNormalizado,
+                telefoneNormalizado);
+
 
             HotelId = hotelId;
-            Nome = nome.Trim();
+            Nome = nomeNormalizado;
             TipoDocumento = tipoDocumento;
             Documento = documentoNormalizado;
-            Email = string.IsNullOrWhiteSpace(email)
-            ? null
-            : email.Trim().ToLowerInvariant();
-            Telefone = string.IsNullOrWhiteSpace(telefone)
-            ? null
-            : new string(telefone.Where(char.IsDigit).ToArray());
+            Email = emailNormalizado;
+            Telefone = telefoneNormalizado;
 
-            
         }
 
         public void AtualizarDados(string nome, TipoDocumento tipoDocumento, string documento, string? email, string? telefone)
@@ -54,21 +67,32 @@ namespace HotelApp.Domain
             {
                 throw new ArgumentException("Nome do hóspede é obrigatório.");
             }
-           
-            var documentoNormalizado = NormalizarDocumento(tipoDocumento, documento);
-                       
-            Nome = nome.Trim();
-            TipoDocumento = tipoDocumento;
-            Documento = documentoNormalizado;
 
-            Email = string.IsNullOrWhiteSpace(email)
+            var nomeNormalizado = nome.Trim();
+
+            var documentoNormalizado =
+                NormalizarDocumento(tipoDocumento, documento);
+
+            var emailNormalizado = string.IsNullOrWhiteSpace(email)
                 ? null
                 : email.Trim().ToLowerInvariant();
 
-            Telefone = string.IsNullOrWhiteSpace(telefone)
+            var telefoneNormalizado = string.IsNullOrWhiteSpace(telefone)
                 ? null
-                : new string(
-                    telefone.Where(char.IsDigit).ToArray());
+                : new string(telefone.Where(char.IsDigit).ToArray());
+
+            ValidarLimites(
+                nomeNormalizado,
+                documentoNormalizado,
+                emailNormalizado,
+                telefoneNormalizado);
+
+
+            Nome = nomeNormalizado;
+            TipoDocumento = tipoDocumento;
+            Documento = documentoNormalizado;
+            Email = emailNormalizado;
+            Telefone = telefoneNormalizado;
         }
 
         public static string NormalizarDocumento(TipoDocumento tipoDocumento, string documento)
@@ -98,6 +122,34 @@ namespace HotelApp.Domain
 
             return documentoNormalizado;
         }
+
+        private static void ValidarLimites(string nome, string documento, string? email, string? telefone)
+        {
+            if (nome.Length > 150)
+            {
+                throw new ArgumentException(
+                    "Nome deve possuir no máximo 150 caracteres.");
+            }
+
+            if (documento.Length > 30)
+            {
+                throw new ArgumentException(
+                    "Documento deve possuir no máximo 30 caracteres.");
+            }
+
+            if (email?.Length > 254)
+            {
+                throw new ArgumentException(
+                    "E-mail deve possuir no máximo 254 caracteres.");
+            }
+
+            if (telefone?.Length > 20)
+            {
+                throw new ArgumentException(
+                    "Telefone deve possuir no máximo 20 caracteres.");
+            }
+        }
+
 
 
     }
