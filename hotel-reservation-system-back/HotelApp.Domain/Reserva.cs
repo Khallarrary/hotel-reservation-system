@@ -195,4 +195,57 @@ public class Reserva
 
         return _hospedes.Any(reservaHospede => reservaHospede.HospedeId == hospedeId);
     }
+
+    public void DefinirTitular(int hospedeId)
+    {
+        if(hospedeId <= 0)
+        {
+            throw new ArgumentException("Id de hospede inválido.");
+        }
+
+        var novoTitular = _hospedes.FirstOrDefault(item => item.HospedeId == hospedeId);
+
+        if (novoTitular is null)
+        {
+            throw new ArgumentException("Hóspede não faz parte da reserva.");
+        }
+
+        if (novoTitular.Titular)
+        {
+            return;
+        }
+
+        var titularAtual = _hospedes.FirstOrDefault(item => item.Titular);
+
+        if (titularAtual is null)
+        {
+            throw new InvalidOperationException("A reserva não possui um hóspede titular.");
+        }
+
+        titularAtual.RemoverTitular();
+        novoTitular.MarcarComoTitular();
+
+     }
+
+    public void RemoverHospede(int hospedeId)
+    {
+        if (hospedeId <= 0)
+        {
+            throw new ArgumentException("Id de hospede inválido.");
+        }
+
+        var hospede = _hospedes.FirstOrDefault(item => item.HospedeId == hospedeId);
+
+        if (hospede is null)
+        {
+            throw new ArgumentException("Hóspede não faz parte da reserva.");
+        }
+
+        if (hospede.Titular)
+        {
+            throw new ArgumentException("Não é possivel remover hospede titular.");
+        }
+
+        _hospedes.Remove(hospede);
+    }
 }

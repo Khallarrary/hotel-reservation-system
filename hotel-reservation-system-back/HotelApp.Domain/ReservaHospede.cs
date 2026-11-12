@@ -45,7 +45,6 @@ namespace HotelApp.Domain
             {
                 Titular = false;
             }
-
         }
     }
 }
