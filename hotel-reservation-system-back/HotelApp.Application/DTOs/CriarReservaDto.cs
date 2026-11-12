@@ -10,5 +10,7 @@ namespace HotelApp.Application.DTOs
         public DateTime CheckOut { get; set; }
         public string NomeDoHospede { get; set; }
         public string NumeroDoQuarto { get; set; }
+
+        public List<CriarReservaHospedeDto> Hospedes { get; set; } = [];
     }
 }

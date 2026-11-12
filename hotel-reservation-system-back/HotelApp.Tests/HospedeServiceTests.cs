@@ -530,6 +530,8 @@ public class HospedeServiceTests
             Task.FromResult(new List<Hotel>());
 
         public Task AtualizarAsync(Hotel hotel) => Task.CompletedTask;
+
+
     }
 
     private sealed class HospedeRepositoryFake : IHospedeRepository
@@ -588,6 +590,17 @@ public class HospedeServiceTests
         {
             Atualizado = hospede;
             return Task.CompletedTask;
+        }
+
+        public Task<List<Hospede>> ObterPorIdsAsync(IReadOnlyCollection<int> hospedeIds, int hotelId)
+        {
+            var encontrados = _hospedes
+                .Where(hospede =>
+                    hospede.HotelId == hotelId &&
+                    hospedeIds.Contains(hospede.Id))
+                .ToList();
+
+            return Task.FromResult(encontrados);
         }
     }
 }

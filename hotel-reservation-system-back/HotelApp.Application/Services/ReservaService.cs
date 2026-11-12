@@ -18,10 +18,11 @@ public class ReservaService
     private readonly IConsultaSaldoConta _consultaSaldo;
     private readonly IHotelRepository _hotelRepositoy;
     private readonly IRelogioHotel _relogioHotel;
+    private readonly IHospedeRepository _hospedeRepo;
 
 
 
-    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao, IConsultaSaldoConta consultaSaldo, IRelogioHotel relogioHotel, IHotelRepository hotelRepo)
+    public ReservaService(IReservaRepository repo, IQuartoRepository quartoRepo, IContaReservaRepository contaRepo, IHotelContexto hotelContexto, ITransacao transacao, IConsultaSaldoConta consultaSaldo, IRelogioHotel relogioHotel, IHotelRepository hotelRepo, IHospedeRepository hospedeRepo)
     {
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _quartoRepo = quartoRepo ?? throw new ArgumentNullException(nameof(quartoRepo));
@@ -31,6 +32,7 @@ public class ReservaService
         _consultaSaldo = consultaSaldo;
         _relogioHotel = relogioHotel;
         _hotelRepositoy = hotelRepo;
+        _hospedeRepo = hospedeRepo ?? throw new ArgumentNullException(nameof(hospedeRepo));
     }
 
 
@@ -452,5 +454,7 @@ public class ReservaService
 
         return dataAtual;
     }
+
+   
 }
 

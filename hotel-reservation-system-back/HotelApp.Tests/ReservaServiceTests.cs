@@ -28,7 +28,8 @@ public class ReservaServiceTests
             transacao,
             new ConsultaSaldoContaFake(0m),
             new RelogioHotelFake(DataAtual),
-            new HotelRepositoryFake(hotelId));
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake());
 
         await service.CriarReserva(
             new DateTime(2030, 4, 2),
@@ -341,7 +342,8 @@ public class ReservaServiceTests
             transacao ?? new TransacaoFake(),
             consultaSaldo,
             new RelogioHotelFake(dataAtual ?? DataAtual),
-            new HotelRepositoryFake(hotelId));
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake());
     }
 
     private static ReservaService CriarServiceParaCriacao(
@@ -359,7 +361,8 @@ public class ReservaServiceTests
             transacao,
             new ConsultaSaldoContaFake(0m),
             new RelogioHotelFake(DataAtual),
-            new HotelRepositoryFake(hotelId));
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake());
     }
 
     private static Reserva CriarReserva(int reservaId, int hotelId)
@@ -439,6 +442,46 @@ public class ReservaServiceTests
             Task.FromResult(new List<Hotel>());
 
         public Task AtualizarAsync(Hotel hotel) => Task.CompletedTask;
+    }
+
+    private class HospedeRepositoryFake : IHospedeRepository
+    {
+        private readonly List<Hospede> _hospedes;
+
+        public HospedeRepositoryFake(params Hospede[] hospedes)
+        {
+            _hospedes = hospedes.ToList();
+        }
+
+        public Task AdicionarAsync(Hospede hospede) => Task.CompletedTask;
+
+        public Task<Hospede?> ObterPorIdAsync(int id, int hotelId) =>
+            Task.FromResult(
+                _hospedes.FirstOrDefault(hospede =>
+                    hospede.Id == id &&
+                    hospede.HotelId == hotelId));
+
+        public Task<Hospede?> ObterPorDocumentoAsync(
+            TipoDocumento tipoDocumento,
+            string documentoNormalizado,
+            int hotelId) =>
+            Task.FromResult(
+                _hospedes.FirstOrDefault(hospede =>
+                    hospede.TipoDocumento == tipoDocumento &&
+                    hospede.Documento == documentoNormalizado &&
+                    hospede.HotelId == hotelId));
+
+        public Task AtualizarAsync(Hospede hospede) => Task.CompletedTask;
+
+        public Task<List<Hospede>> ObterPorIdsAsync(
+            IReadOnlyCollection<int> hospedeIds,
+            int hotelId) =>
+            Task.FromResult(
+                _hospedes
+                    .Where(hospede =>
+                        hospede.HotelId == hotelId &&
+                        hospedeIds.Contains(hospede.Id))
+                    .ToList());
     }
 
     private class ConsultaSaldoContaFake : IConsultaSaldoConta
