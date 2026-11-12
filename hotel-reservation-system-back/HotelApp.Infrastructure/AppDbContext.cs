@@ -1,6 +1,8 @@
 ﻿namespace HotelApp.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using HotelApp.Domain;
+
+
 public class AppDbContext : DbContext
 {
     public DbSet <Reserva> Reservas { get; set; }
@@ -10,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet <Usuario> Usuario { get; set; }
     public DbSet <Hotel> Hoteis { get; set; }
     public DbSet<Hospede> Hospedes { get; set; }
+    public DbSet<ReservaHospede> ReservaHospedes { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -95,6 +98,30 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         });
+
+        modelBuilder.Entity<ReservaHospede>(entity =>
+        {
+            entity.HasKey(reservaHospede => new {reservaHospede.ReservaId, reservaHospede.HospedeId});
+
+            entity.HasOne<Reserva>()
+            .WithMany(reserva => reserva.Hospedes)
+            .HasForeignKey(reservaHospede => reservaHospede.ReservaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<Hospede>()
+            .WithMany()
+            .HasForeignKey(reservaHospede => reservaHospede.HospedeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Hotel>()
+            .WithMany()
+            .HasForeignKey(reservaHospede => reservaHospede.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Reserva>()
+        .Navigation(reserva => reserva.Hospedes)
+        .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 
 }
