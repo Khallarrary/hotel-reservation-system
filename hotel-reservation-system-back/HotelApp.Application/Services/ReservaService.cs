@@ -8,10 +8,6 @@ using System.Runtime.InteropServices.Marshalling;
 using System.Globalization;
 
 
-/// <summary>
-/// Serviço responsável por orquestrar as operações relacionadas a reservas.
-/// Aplica regras de aplicação e coordena acesso aos repositórios.
-/// </summary>
 public class ReservaService
 {
     private readonly IReservaRepository _repo;
@@ -38,9 +34,6 @@ public class ReservaService
     }
 
 
-    /// <summary>
-    /// Retorna todas as reservas cadastradas.
-    /// </summary>
     public async Task<List<ReservaDto>> ListarReservas()
     {
         var hotelId = _hotelContexto.ObterHotelId();
@@ -78,11 +71,6 @@ public class ReservaService
         }
     }
 
-    /// <summary>
-    /// Cria uma nova reserva validando:
-    /// - Existência do quarto
-    /// - Conflito de datas com reservas existentes
-    /// </summary>
     public async Task CriarReserva(DateTime checkIn, DateTime checkOut, string nome, int quartoId, Guid chaveIdempotencia)
     {
         checkIn = DateTime.SpecifyKind(checkIn, DateTimeKind.Utc);
@@ -95,7 +83,6 @@ public class ReservaService
             throw new ForbiddenException("Hotel não encontrado");
         }
 
-        // Validação básica de entrada
         if (string.IsNullOrWhiteSpace(nome))
         {
             throw new ArgumentException("Nome do Hospede é obrigatorio.");
@@ -111,7 +98,6 @@ public class ReservaService
             throw new ArgumentException("Chave de idempotência inválida.");
         }
 
-        // Verifica se o quarto existe
         var quarto = await _quartoRepo.ObterPorIdAsync(quartoId, hotelId.Value);
 
         if (quarto == null)
@@ -170,6 +156,7 @@ public class ReservaService
 
         }
 
+        // As verificações antecipam conflitos; as restrições do banco resolvem corridas entre requisições.
         try
         {
             await _transacao.ExecutarAsync(async () =>

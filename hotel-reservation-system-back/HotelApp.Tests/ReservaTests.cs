@@ -9,7 +9,6 @@ public class ReservaTests
     [Fact]
     public void Deve_Conflitar_Quando_Datas_Se_Sobrepoem()
     {
-        // Arrange
         var reservaExistente = new Reserva(
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
@@ -28,17 +27,14 @@ public class ReservaTests
             DataAtual
         );
 
-        // Act
         var resultado = novaReserva.ConflitaCom(reservaExistente);
 
-        // Assert
         resultado.Should().BeTrue();
     }
 
     [Fact]
     public void Nao_Deve_Conflitar_Quando_Datas_Nao_Se_Sobrepoem()
     {
-        // Arrange
         var reservaExistente = new Reserva(
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
@@ -57,10 +53,8 @@ public class ReservaTests
             DataAtual
         );
 
-        // Act
         var resultado = novaReserva.ConflitaCom(reservaExistente);
 
-        // Assert
         resultado.Should().BeFalse();
     }
 
