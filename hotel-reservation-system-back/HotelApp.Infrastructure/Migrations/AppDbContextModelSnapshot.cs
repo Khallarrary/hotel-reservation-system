@@ -223,6 +223,29 @@ namespace HotelApp.Infrastructure.Migrations
                     b.ToTable("Reservas");
                 });
 
+            modelBuilder.Entity("HotelApp.Domain.ReservaHospede", b =>
+                {
+                    b.Property<int>("ReservaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HospedeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HotelId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Titular")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("ReservaId", "HospedeId");
+
+                    b.HasIndex("HospedeId");
+
+                    b.HasIndex("HotelId");
+
+                    b.ToTable("ReservaHospedes");
+                });
+
             modelBuilder.Entity("HotelApp.Domain.Usuario", b =>
                 {
                     b.Property<int>("Id")
@@ -289,12 +312,38 @@ namespace HotelApp.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("HotelApp.Domain.ReservaHospede", b =>
+                {
+                    b.HasOne("HotelApp.Domain.Hospede", null)
+                        .WithMany()
+                        .HasForeignKey("HospedeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HotelApp.Domain.Hotel", null)
+                        .WithMany()
+                        .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HotelApp.Domain.Reserva", null)
+                        .WithMany("Hospedes")
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("HotelApp.Domain.Usuario", b =>
                 {
                     b.HasOne("HotelApp.Domain.Hotel", null)
                         .WithMany()
                         .HasForeignKey("HotelId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("HotelApp.Domain.Reserva", b =>
+                {
+                    b.Navigation("Hospedes");
                 });
 #pragma warning restore 612, 618
         }

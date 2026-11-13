@@ -9,7 +9,6 @@ public class ReservaTests
     [Fact]
     public void Deve_Conflitar_Quando_Datas_Se_Sobrepoem()
     {
-        // Arrange
         var reservaExistente = new Reserva(
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
@@ -28,17 +27,14 @@ public class ReservaTests
             DataAtual
         );
 
-        // Act
         var resultado = novaReserva.ConflitaCom(reservaExistente);
 
-        // Assert
         resultado.Should().BeTrue();
     }
 
     [Fact]
     public void Nao_Deve_Conflitar_Quando_Datas_Nao_Se_Sobrepoem()
     {
-        // Arrange
         var reservaExistente = new Reserva(
             new DateTime(2030, 4, 10),
             new DateTime(2030, 4, 15),
@@ -57,10 +53,8 @@ public class ReservaTests
             DataAtual
         );
 
-        // Act
         var resultado = novaReserva.ConflitaCom(reservaExistente);
 
-        // Assert
         resultado.Should().BeFalse();
     }
 
@@ -297,5 +291,292 @@ public class ReservaTests
 
     }
 
-    
+    private static Reserva CriarReserva(int hotelId = 1)
+    {
+        return new Reserva(
+            new DateTime(2030, 4, 10),
+            new DateTime(2030, 4, 12),
+            "Titular legado",
+            1,
+            hotelId,
+            DataAtual);
+    }
+
+    private static Hospede CriarHospede(
+        int id,
+        int hotelId = 1)
+    {
+        var hospede = new Hospede(
+            hotelId,
+            $"Hospede {id}",
+            TipoDocumento.CPF,
+            id.ToString("D11"),
+            null,
+            null);
+
+        typeof(Hospede)
+            .GetProperty(nameof(Hospede.Id))!
+            .SetValue(hospede, id);
+
+        return hospede;
+    }
+
+
+    [Fact]
+    public void Deve_Adicionar_Primeiro_Hospede_Como_Titular()
+    {
+        var reserva = CriarReserva();
+        var hospede = CriarHospede(10);
+
+        reserva.AdicionarHospede(hospede, true);
+
+        reserva.Hospedes.Should().ContainSingle();
+
+        var vinculo = reserva.Hospedes.Single();
+
+        vinculo.HospedeId.Should().Be(10);
+        vinculo.HotelId.Should().Be(1);
+        vinculo.Titular.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Nao_Deve_Adicionar_Primeiro_Hospede_Como_Acompanhante()
+    {
+        var reserva = CriarReserva();
+        var hospede = CriarHospede(10);
+
+        Action action = () =>
+            reserva.AdicionarHospede(hospede, false);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Deve_Adicionar_Acompanhante_Depois_Do_Titular()
+    {
+        var reserva = CriarReserva();
+        var titular = CriarHospede(10);
+        var acompanhante = CriarHospede(20);
+
+        reserva.AdicionarHospede(titular, true);
+        reserva.AdicionarHospede(acompanhante, false);
+
+        reserva.Hospedes.Should().HaveCount(2);
+        reserva.Hospedes.Count(item => item.Titular)
+            .Should().Be(1);
+
+        reserva.Hospedes.Should().Contain(item =>
+            item.HospedeId == 20 &&
+            !item.Titular);
+    }
+
+    [Fact]
+    public void Nao_Deve_Adicionar_Hospede_Nulo()
+    {
+        var reserva = CriarReserva();
+
+        Action action = () =>
+            reserva.AdicionarHospede(null!, true);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Nao_Deve_Adicionar_Hospede_Duplicado()
+    {
+        var reserva = CriarReserva();
+        var hospede = CriarHospede(10);
+        reserva.AdicionarHospede(hospede, true);
+
+        Action action = () =>
+            reserva.AdicionarHospede(hospede, false);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().ContainSingle();
+        reserva.Hospedes.Single().Titular.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Nao_Deve_Adicionar_Hospede_De_Outro_Hotel()
+    {
+        var reserva = CriarReserva(hotelId: 1);
+        var hospede = CriarHospede(10, hotelId: 2);
+
+        Action action = () =>
+            reserva.AdicionarHospede(hospede, true);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Nao_Deve_Adicionar_Segundo_Titular()
+    {
+        var reserva = CriarReserva();
+        var titular = CriarHospede(10);
+        var segundoTitular = CriarHospede(20);
+        reserva.AdicionarHospede(titular, true);
+
+        Action action = () =>
+            reserva.AdicionarHospede(segundoTitular, true);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().ContainSingle();
+        reserva.Hospedes.Single().HospedeId.Should().Be(10);
+    }
+
+    [Fact]
+    public void PossuiHospede_Deve_Retornar_True_Para_Participante()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+
+        var resultado = reserva.PossuiHospede(10);
+
+        resultado.Should().BeTrue();
+    }
+
+    [Fact]
+    public void PossuiHospede_Deve_Retornar_False_Para_Nao_Participante()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+
+        var resultado = reserva.PossuiHospede(20);
+
+        resultado.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void PossuiHospede_Deve_Rejeitar_Id_Invalido(int hospedeId)
+    {
+        var reserva = CriarReserva();
+
+        Action action = () => reserva.PossuiHospede(hospedeId);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Deve_Trocar_Hospede_Titular()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+        reserva.AdicionarHospede(CriarHospede(20), false);
+
+        reserva.DefinirTitular(20);
+
+        reserva.Hospedes.Count(item => item.Titular)
+            .Should().Be(1);
+        reserva.Hospedes.Single(item => item.Titular)
+            .HospedeId.Should().Be(20);
+        reserva.Hospedes.Single(item => item.HospedeId == 10)
+            .Titular.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Definir_Titular_Atual_Novamente_Nao_Deve_Alterar_Colecao()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+        reserva.AdicionarHospede(CriarHospede(20), false);
+
+        reserva.DefinirTitular(10);
+
+        reserva.Hospedes.Should().HaveCount(2);
+        reserva.Hospedes.Count(item => item.Titular)
+            .Should().Be(1);
+        reserva.Hospedes.Single(item => item.Titular)
+            .HospedeId.Should().Be(10);
+    }
+
+    [Fact]
+    public void Nao_Deve_Definir_Titular_Que_Nao_Pertence_A_Reserva()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+
+        Action action = () => reserva.DefinirTitular(20);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Single(item => item.Titular)
+            .HospedeId.Should().Be(10);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void DefinirTitular_Deve_Rejeitar_Id_Invalido(int hospedeId)
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+
+        Action action = () => reserva.DefinirTitular(hospedeId);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Single().Titular.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Deve_Remover_Acompanhante()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+        reserva.AdicionarHospede(CriarHospede(20), false);
+
+        reserva.RemoverHospede(20);
+
+        reserva.Hospedes.Should().ContainSingle();
+        reserva.PossuiHospede(20).Should().BeFalse();
+        reserva.Hospedes.Single().HospedeId.Should().Be(10);
+        reserva.Hospedes.Single().Titular.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Nao_Deve_Remover_Hospede_Titular()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+        reserva.AdicionarHospede(CriarHospede(20), false);
+
+        Action action = () => reserva.RemoverHospede(10);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().HaveCount(2);
+        reserva.Hospedes.Single(item => item.Titular)
+            .HospedeId.Should().Be(10);
+    }
+
+    [Fact]
+    public void Nao_Deve_Remover_Hospede_Que_Nao_Pertence_A_Reserva()
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+
+        Action action = () => reserva.RemoverHospede(20);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().ContainSingle();
+        reserva.Hospedes.Single().HospedeId.Should().Be(10);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void RemoverHospede_Deve_Rejeitar_Id_Invalido(int hospedeId)
+    {
+        var reserva = CriarReserva();
+        reserva.AdicionarHospede(CriarHospede(10), true);
+
+        Action action = () => reserva.RemoverHospede(hospedeId);
+
+        action.Should().Throw<ArgumentException>();
+        reserva.Hospedes.Should().ContainSingle();
+    }
+
+
 }
