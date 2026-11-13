@@ -58,13 +58,26 @@ public class ReservaService
         }).ToList();
     }
 
-    private static void ValidarMesmaSolicitacao(Reserva reservaExistente, DateTime checkIn, DateTime checkOut, string nome, int quartoId)
+    private static void ValidarMesmaSolicitacao(Reserva reservaExistente, DateTime checkIn, DateTime checkOut, IReadOnlyCollection<CriarReservaHospedeDto> hospedesSolicitados, int quartoId)
     {
+
+        var hospedesExistentes = reservaExistente.Hospedes
+            .Select(item => (item.HospedeId, item.Titular))
+            .OrderBy(item => item.HospedeId)
+            .ToList();
+
+        var hospedesRecebidos = hospedesSolicitados
+            .Select(item => (item.HospedeId, item.Titular))
+            .OrderBy(item => item.HospedeId)
+            .ToList();
+
+        var mesmosHospedes = hospedesExistentes.SequenceEqual(hospedesRecebidos);
+
         var mesmaSolicitacao =
             reservaExistente.CheckIn == checkIn &&
             reservaExistente.CheckOut == checkOut &&
             reservaExistente.QuartoId == quartoId &&
-            reservaExistente.NomeDoHospede == nome.Trim();
+            mesmosHospedes;
 
         if (!mesmaSolicitacao)
         {
@@ -73,7 +86,7 @@ public class ReservaService
         }
     }
 
-    public async Task CriarReserva(DateTime checkIn, DateTime checkOut, string nome, int quartoId, Guid chaveIdempotencia)
+    public async Task CriarReserva(DateTime checkIn, DateTime checkOut, IReadOnlyCollection<CriarReservaHospedeDto>? hospedesSolicitados, int quartoId, Guid chaveIdempotencia)
     {
         checkIn = DateTime.SpecifyKind(checkIn, DateTimeKind.Utc);
         checkOut = DateTime.SpecifyKind(checkOut, DateTimeKind.Utc);
@@ -83,11 +96,6 @@ public class ReservaService
         if (!hotelId.HasValue)
         {
             throw new ForbiddenException("Hotel não encontrado");
-        }
-
-        if (string.IsNullOrWhiteSpace(nome))
-        {
-            throw new ArgumentException("Nome do Hospede é obrigatorio.");
         }
 
         if (quartoId <= 0)
@@ -108,6 +116,16 @@ public class ReservaService
 
         }
 
+        var solicitacoesHospedes = hospedesSolicitados?.ToList() ?? [];
+
+        var hospedesEncontrados = await ObterHospedesValidos(solicitacoesHospedes, hotelId.Value);
+
+        var titularId = solicitacoesHospedes.Single(item => item.Titular).HospedeId;
+
+        var hospedesPorId = hospedesEncontrados.ToDictionary(hospede => hospede.Id);
+
+        var titular = hospedesPorId[titularId];
+
         var reservaExistente =
         await _repo.ObterPorChaveIdempotenciaAsync(
             chaveIdempotencia,
@@ -119,7 +137,7 @@ public class ReservaService
                 reservaExistente,
                 checkIn,
                 checkOut,
-                nome,
+                solicitacoesHospedes,
                 quartoId);
 
             return;
@@ -127,9 +145,20 @@ public class ReservaService
 
         var dataAtual = await ObterDataAtualHotel(hotelId.Value);
 
-        var nova = new Reserva(checkIn, checkOut, nome, quartoId, hotelId.Value, dataAtual, chaveIdempotencia);
+        var nova = new Reserva(checkIn, checkOut, titular.Nome, quartoId, hotelId.Value, dataAtual, chaveIdempotencia);
 
         var reservas = await _repo.ObterReservasPorQuartoAsync(quartoId, hotelId.Value) ?? new List<Reserva>();
+
+        nova.AdicionarHospede(titular, true);
+
+        foreach (var solicitacao in solicitacoesHospedes
+            .Where(item => !item.Titular))
+        {
+            var acompanhante =
+                hospedesPorId[solicitacao.HospedeId];
+
+            nova.AdicionarHospede(acompanhante, false);
+        }
 
         foreach (var reserva in reservas)
         {
@@ -140,12 +169,23 @@ public class ReservaService
 
             if (reserva.ChaveIdempotencia == chaveIdempotencia)
             {
+                var reservaComHospedes =
+                    await _repo.ObterPorChaveIdempotenciaAsync(
+                        chaveIdempotencia,
+                        hotelId.Value);
+
+                if (reservaComHospedes is null)
+                {
+                    throw new ConflictException(
+                        "Não foi possível validar a solicitação já processada.");
+                }
+
                 ValidarMesmaSolicitacao(
-                reserva,
-                checkIn,
-                checkOut,
-                nome,
-                quartoId);
+                    reservaComHospedes,
+                    checkIn,
+                    checkOut,
+                    solicitacoesHospedes,
+                    quartoId);
 
                 return;
             }
@@ -185,7 +225,7 @@ public class ReservaService
                 reservaProcessada,
                 checkIn,
                 checkOut,
-                nome,
+                solicitacoesHospedes,
                 quartoId);
         }
         catch (ConflitoPeriodoReservaException)
@@ -204,14 +244,14 @@ public class ReservaService
                 reservaProcessada,
                 checkIn,
                 checkOut,
-                nome,
+                solicitacoesHospedes,
                 quartoId);
 
 
         }
     }
 
-    public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, string nome, string numeroDoQuarto, Guid chaveIdempotencia)
+    public async Task CriarReservaPorNumero(DateTime checkIn, DateTime checkOut, IReadOnlyCollection<CriarReservaHospedeDto>? hospedesSolicitados, string numeroDoQuarto, Guid chaveIdempotencia)
     {
 
         var hotelId = _hotelContexto.ObterHotelId();
@@ -229,7 +269,7 @@ public class ReservaService
             throw new NotFoundException("Quarto nao existe");
         }
 
-        await CriarReserva(checkIn, checkOut, nome, quarto.Id, chaveIdempotencia);
+        await CriarReserva(checkIn, checkOut, hospedesSolicitados, quarto.Id, chaveIdempotencia);
     }
 
     public async Task DeletarReserva(int id)
@@ -453,6 +493,44 @@ public class ReservaService
         var dataAtual = _relogioHotel.ObterDataAtual(hotel.FusoHorario);
 
         return dataAtual;
+    }
+
+    private async Task<List<Hospede>> ObterHospedesValidos(IReadOnlyCollection<CriarReservaHospedeDto>? hospedesSolicitados, int hotelId)
+    {
+        if (hospedesSolicitados is null || hospedesSolicitados.Count == 0)
+        {
+            throw new ArgumentException("Informe ao menos um hóspede.");
+        }
+
+        if (hospedesSolicitados.Any(item => item is null || item.HospedeId <= 0))
+        {
+            throw new ArgumentException("Id de hóspede inválido.");
+        }
+
+        var hospedeIds = hospedesSolicitados.Select(item => item.HospedeId).ToList();
+
+        var possuiDuplicidade = hospedeIds.Distinct().Count() != hospedeIds.Count;
+
+        if (possuiDuplicidade)
+        {
+            throw new ArgumentException("Não é permitido repetir o mesmo hóspede na reserva.");
+        }
+
+        var quantidadeTitularesInvalida = hospedesSolicitados.Count(item => item.Titular) != 1;
+
+        if (quantidadeTitularesInvalida)
+        {
+            throw new ArgumentException("A reserva deve possuir exatamente um hóspede titular.");
+        }
+
+        var hospedesEncontrados = await _hospedeRepo.ObterPorIdsAsync(hospedeIds, hotelId);
+
+        if (hospedesEncontrados.Count != hospedeIds.Count)
+        {
+            throw new NotFoundException("Um ou mais hóspedes não foram encontrados.");
+        }
+
+        return hospedesEncontrados;
     }
 }
 

@@ -130,7 +130,8 @@ namespace HotelApp.Infrastructure
 
         public async Task<Reserva?> ObterPorChaveIdempotenciaAsync(Guid chaveIdempotencia, int hotelId)
         {
-            return await _context.Reservas.AsNoTracking().FirstOrDefaultAsync(r => r.ChaveIdempotencia == chaveIdempotencia && r.HotelId == hotelId);
+            return await _context.Reservas.AsNoTracking().Include(reserva => reserva.Hospedes)
+                .FirstOrDefaultAsync(reserva => reserva.ChaveIdempotencia == chaveIdempotencia && reserva.HotelId == hotelId);
         }
 
     }
