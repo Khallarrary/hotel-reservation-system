@@ -454,7 +454,5 @@ public class ReservaService
 
         return dataAtual;
     }
-
-   
 }
 

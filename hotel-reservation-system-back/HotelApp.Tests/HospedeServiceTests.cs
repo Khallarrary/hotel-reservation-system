@@ -530,8 +530,6 @@ public class HospedeServiceTests
             Task.FromResult(new List<Hotel>());
 
         public Task AtualizarAsync(Hotel hotel) => Task.CompletedTask;
-
-
     }
 
     private sealed class HospedeRepositoryFake : IHospedeRepository
