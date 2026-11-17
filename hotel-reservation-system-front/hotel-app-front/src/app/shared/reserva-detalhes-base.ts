@@ -16,7 +16,17 @@ export abstract class ReservaDetalhesBase {
   protected abstract recarregarDados(): void;
 
   exibirDetalhesReserva(reserva: Reserva): void {
-    this.reservaSelecionada = reserva;
+    this.limparMensagens();
+
+    this.reservaService.obterPorId(reserva.id).subscribe({
+      next: (detalhes) => {
+        this.reservaSelecionada = detalhes;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.mostrarErro(err.error?.message || 'Erro ao carregar os detalhes da reserva');
+      }
+    });
   }
 
   fecharDetalhesReserva(): void {

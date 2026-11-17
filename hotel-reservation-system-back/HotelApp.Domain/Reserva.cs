@@ -16,16 +16,16 @@ public class Reserva
         Status = ReservaStatus.Confirmada;
     }
 
-    /// <summary>
-    /// Verifica se esta reserva entra em conflito com outra reserva do mesmo quarto.
-    /// Duas reservas conflitam quando há sobreposição de datas.
-    /// </summary>
+    private readonly List<ReservaHospede> _hospedes = [];
+
+    public IReadOnlyCollection<ReservaHospede> Hospedes =>
+    _hospedes.AsReadOnly();
+
     public bool ConflitaCom(Reserva outra)
     {
         if (outra is null)
             throw new ArgumentNullException(nameof(outra));
 
-        // Reservas de quartos diferentes nunca entram em conflito
         if (QuartoId != outra.QuartoId)
             return false;
 
@@ -35,17 +35,10 @@ public class Reserva
         if (Status == ReservaStatus.CheckOut || outra.Status == ReservaStatus.CheckOut)
             return false;
 
-        // Regra de sobreposição de intervalo de datas
+        // O check-out encerra o intervalo, permitindo outra entrada no mesmo instante.
         return CheckIn < outra.CheckOut && CheckOut > outra.CheckIn;
     }
 
-    /// <summary>
-    /// Cria uma nova reserva validando regras de negócio:
-    /// - Check-out deve ser maior que check-in
-    /// - Check-in não pode estar no passado
-    /// - Nome do hóspede deve ser válido
-    /// - Quarto deve ser válido
-    /// </summary>
     public Reserva(DateTime checkIn, DateTime checkOut, string nomeDoHospede, int quartoId, int hotelId, DateOnly dataAtual, Guid? chaveIdempotencia = null)
     {
         if (checkOut <= checkIn)
@@ -53,17 +46,16 @@ public class Reserva
             throw new ArgumentException("Data de check-out deve ser superior a data de in   ");
         }
 
-        // Evita reservas com datas já expiradas
         if (DateOnly.FromDateTime(checkIn) < dataAtual)
         {
             throw new ArgumentException("A data de check-in não pode estar no passado.");
-        }   
+        }
 
         if (string.IsNullOrWhiteSpace(nomeDoHospede))
         {
             throw new ArgumentException("Reserva deve conter um nome valido");
         }
-        
+
         if (quartoId <= 0)
         {
             throw new ArgumentException("Reserva deve conter um quarto valido");
@@ -88,7 +80,7 @@ public class Reserva
         CheckOut = checkOut;
         NomeDoHospede = nomeDoHospede.Trim();
         QuartoId = quartoId;
-        HotelId =  hotelId;
+        HotelId = hotelId;
         ChaveIdempotencia = chaveIdempotencia;
 
 
@@ -114,8 +106,8 @@ public class Reserva
             throw new ArgumentException("Não é possivel realizar check-in em reservas passadas. Troque a data da reserva");
         }
 
-       Status = ReservaStatus.CheckIn;
-       
+        Status = ReservaStatus.CheckIn;
+
     }
 
     public void RealizarCheckOut(DateOnly dataAtual, bool checkOutAntecipadoConfirmado)
@@ -144,7 +136,103 @@ public class Reserva
             throw new ArgumentException("Não é possivel cancelar reserva com esse status");
         }
 
-        
+
         Status = ReservaStatus.Cancelada;
+    }
+
+    public void AdicionarHospede(Hospede hospede, bool titular)
+    {
+        if (hospede == null)
+        {
+            throw new ArgumentException("Não é possivel reservar sem hospede");
+        }
+
+        if (hospede.HotelId != HotelId)
+        {
+            throw new ArgumentException("Hospede deve pertencer ao mesmo HotelId");
+        }
+
+        if (PossuiHospede(hospede.Id))
+        {
+            throw new ArgumentException("Hóspede já foi adicionado à reserva.");
+        }
+
+        if (_hospedes.Count == 0 && !titular)
+        {
+            throw new ArgumentException("O primeiro hóspede deve ser o titular.");
+        }
+
+        if (titular && _hospedes.Any(item => item.Titular))
+        {
+            throw new ArgumentException("A reserva já possui um hóspede titular.");
+        }
+
+        ReservaHospede reservaHospede = new ReservaHospede(hospede.Id, hospede.HotelId, titular);
+
+        _hospedes.Add(reservaHospede);
+    }
+
+
+    public bool PossuiHospede(int hospedeId)
+    {
+        if (hospedeId <= 0)
+        {
+            throw new ArgumentException("Id de hóspede inválido.");
+        }
+
+        return _hospedes.Any(reservaHospede => reservaHospede.HospedeId == hospedeId);
+    }
+
+    public void DefinirTitular(int hospedeId)
+    {
+        if(hospedeId <= 0)
+        {
+            throw new ArgumentException("Id de hospede inválido.");
+        }
+
+        var novoTitular = _hospedes.FirstOrDefault(item => item.HospedeId == hospedeId);
+
+        if (novoTitular is null)
+        {
+            throw new ArgumentException("Hóspede não faz parte da reserva.");
+        }
+
+        if (novoTitular.Titular)
+        {
+            return;
+        }
+
+        var titularAtual = _hospedes.FirstOrDefault(item => item.Titular);
+
+        if (titularAtual is null)
+        {
+            throw new InvalidOperationException("A reserva não possui um hóspede titular.");
+        }
+
+        titularAtual.RemoverTitular();
+        novoTitular.MarcarComoTitular();
+
+     }
+
+    public void RemoverHospede(int hospedeId)
+    {
+        if (hospedeId <= 0)
+        {
+            throw new ArgumentException("Id de hospede inválido.");
+        }
+
+        var hospede = _hospedes.FirstOrDefault(item => item.HospedeId == hospedeId);
+
+        if (hospede is null)
+        {
+            throw new ArgumentException("Hóspede não faz parte da reserva.");
+        }
+
+        if (hospede.Titular)
+        {
+            throw new ArgumentException("Não é possivel remover hospede titular.");
+        }
+
+        _hospedes.Remove(hospede);
     }
 }

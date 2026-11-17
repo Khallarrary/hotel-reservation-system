@@ -19,13 +19,13 @@ namespace HotelApp.Api.Controllers
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CriarReserva(
-            [FromBody] ReservaDto request,
+            [FromBody] CriarReservaPorIdDto request,
             [FromHeader(Name = "Idempotency-Key")] Guid chaveIdempotencia)
         {
             await _service.CriarReserva(
                 request.CheckIn,
                 request.CheckOut,
-                request.NomeDoHospede,
+                request.Hospedes,
                 request.QuartoId,
                 chaveIdempotencia
                 );
@@ -42,7 +42,7 @@ namespace HotelApp.Api.Controllers
             await _service.CriarReservaPorNumero(
                 request.CheckIn,
                 request.CheckOut,
-                request.NomeDoHospede,
+                request.Hospedes,
                 request.NumeroDoQuarto,
                 chaveIdempotencia
                 );
@@ -58,6 +58,15 @@ namespace HotelApp.Api.Controllers
 
 
             return Ok(reservas);
+        }
+
+        [Authorize]
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<ReservaDto>> GetPorId(int id)
+        {
+            var reserva = await _service.ObterReservaPorId(id);
+
+            return Ok(reserva);
         }
 
         [Authorize]

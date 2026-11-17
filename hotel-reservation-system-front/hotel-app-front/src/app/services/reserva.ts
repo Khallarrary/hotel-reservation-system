@@ -11,6 +11,17 @@ export interface Reserva {
   quartoId: number;
   numeroQuarto: string;
   status: string;
+  hospedes?: ReservaHospedeDetalhe[];
+}
+
+export interface ReservaHospedeDetalhe {
+  id: number;
+  nome: string;
+  tipoDocumento: string;
+  documento: string;
+  email: string | null;
+  telefone: string | null;
+  titular: boolean;
 }
 
 export interface ReservaPaginada {
@@ -28,16 +39,21 @@ export interface ReservaConsulta {
   reservaId?: number | null;
 }
 
-export interface ReservaPorNumero{
-  checkIn: string;
-  checkOut: string;
-  nomeDoHospede: string;
-  numeroDoQuarto: string;
-}
-
 export interface ConfirmacoesCheckOut{
   confirmarCheckOutAntecipado: boolean;
   confirmarSaldoAberto: boolean;
+}
+
+export interface ReservaHospedePayload {
+  hospedeId: number;
+  titular: boolean;
+}
+
+export interface ReservaPorNumero {
+  checkIn: string;
+  checkOut: string;
+  numeroDoQuarto: string;
+  hospedes: ReservaHospedePayload[];
 }
 
 @Injectable({
@@ -52,6 +68,10 @@ export class ReservaService {
 
 listar(): Observable<Reserva[]> {
     return this.http.get<Reserva[]>(this.apiUrl);
+}
+
+obterPorId(id: number): Observable<Reserva> {
+  return this.http.get<Reserva>(`${this.apiUrl}/${id}`);
 }
 
 criar(reserva: Reserva, chaveIdempotencia: string) {

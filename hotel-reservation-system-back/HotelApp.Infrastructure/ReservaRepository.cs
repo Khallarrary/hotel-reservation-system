@@ -63,7 +63,9 @@ namespace HotelApp.Infrastructure
 
         public async Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId)
         {
-            return await _context.Reservas.FirstOrDefaultAsync(r => r.Id == id && r.HotelId == hotelId);
+            return await _context.Reservas
+                .Include(reserva => reserva.Hospedes)
+                .FirstOrDefaultAsync(r => r.Id == id && r.HotelId == hotelId);
         }
 
         public async Task AtualizarReservaAsync(Reserva reserva)
@@ -130,7 +132,8 @@ namespace HotelApp.Infrastructure
 
         public async Task<Reserva?> ObterPorChaveIdempotenciaAsync(Guid chaveIdempotencia, int hotelId)
         {
-            return await _context.Reservas.AsNoTracking().FirstOrDefaultAsync(r => r.ChaveIdempotencia == chaveIdempotencia && r.HotelId == hotelId);
+            return await _context.Reservas.AsNoTracking().Include(reserva => reserva.Hospedes)
+                .FirstOrDefaultAsync(reserva => reserva.ChaveIdempotencia == chaveIdempotencia && reserva.HotelId == hotelId);
         }
 
     }

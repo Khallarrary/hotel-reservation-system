@@ -14,5 +14,7 @@ namespace HotelApp.Application.Interfaces
         Task<Hospede?> ObterPorDocumentoAsync(TipoDocumento tipoDocumento, string documentoNormalizado, int hotelId);
 
         Task AtualizarAsync(Hospede hospede);
+
+        Task<List<Hospede>> ObterPorIdsAsync(IReadOnlyCollection<int> hospedeIds, int hotelId);
     }
 }

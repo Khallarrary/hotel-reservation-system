@@ -15,6 +15,15 @@ import {
   reservaEstaNaTimeline
 } from '../../shared/reserva-timeline';
 
+import {
+  BuscarHospede,
+  CriarHospede,
+  Hospede,
+  HospedeService
+} from '../../services/hospede';
+
+
+
 @Component({
   selector: 'app-reservas',
   standalone: true,
@@ -32,7 +41,7 @@ export class ReservasComponent extends ReservaDetalhesBase implements OnInit
 
   constructor(reservaService: ReservaService, private quartoService: QuartoService,
   cdr: ChangeDetectorRef, router: Router, private route: ActivatedRoute,
-  private authService: Auth){
+  private authService: Auth, private hospedeService: HospedeService){
     super(reservaService, router, cdr);
   }
 
@@ -167,7 +176,7 @@ criarReserva() {
 novaReservaPorNumero: ReservaPorNumero = {
   checkIn: '',
   checkOut: '',
-  nomeDoHospede: '',
+  hospedes: [],
   numeroDoQuarto: ''
 };
 
@@ -180,10 +189,21 @@ criarReservaPorNumero() {
 
   this.limparMensagens()
 
-  if(!this.novaReservaPorNumero.nomeDoHospede.trim()){
-    this.mostrarErro("Nome é obrigatório")
-    return
+  if (this.hospedesSelecionados.length === 0) {
+    this.mostrarErro('Adicione ao menos um hóspede.');
+    return;
   }
+
+  if (this.titularId === null) {
+    this.mostrarErro('Defina o hóspede titular.');
+    return;
+  }
+
+  this.novaReservaPorNumero.hospedes = this.hospedesSelecionados.map(hospede => ({
+    hospedeId: hospede.id,
+    titular: hospede.id === this.titularId
+  }));
+
 
   if(!this.novaReservaPorNumero.checkIn.trim()){
     this.mostrarErro("Dia do check-in é obrigatório")
@@ -217,9 +237,10 @@ criarReservaPorNumero() {
       this.novaReservaPorNumero = {
         checkIn: '',
         checkOut: '',
-        nomeDoHospede: '',
+        hospedes: [],
         numeroDoQuarto: ''
       };
+      this.limparHospedesReserva();
       this.salvando = false;
       this.cdr.detectChanges();
       this.chaveIdempotenciaReservaPorNumero = null;
@@ -262,9 +283,10 @@ alterarFormularioReserva() {
     this.novaReservaPorNumero = {
       checkIn: '',
       checkOut: '',
-      nomeDoHospede: '',
+      hospedes: [],
       numeroDoQuarto: ''
     };
+    this.limparHospedesReserva();
   }
 }
 
@@ -295,5 +317,145 @@ criarQuarto() {
     }
   });
 }
+
+
+buscarHospede(){
+  this.limparMensagens();
+
+  if(!this.buscaHospede.documento.trim()){
+     this.mostrarErro('Informe o documento do hóspede.');
+    return;
+  }
+
+  this.buscandoHospede = true;
+  this.hospedeEncontrado = null;
+  this.mostrarCadastroHospede = false
+
+  this.hospedeService.obterPorDocumento(this.buscaHospede).subscribe({
+    next: (hospede) => {
+      this.hospedeEncontrado = hospede;
+      this.buscandoHospede = false;
+    },
+    error: (err) => {
+      this.buscandoHospede = false
+
+      if(err.status === 404){
+        this.novoHospede = {
+          nome: '',
+          tipoDocumento: this.buscaHospede.tipoDocumento,
+          documento: this.buscaHospede.documento,
+          email: null,
+          telefone: null
+        };
+
+        this.mostrarCadastroHospede = true;
+        return
+      }
+      this.mostrarErro(err.error?.message || 'Erro ao buscar hóspede.')
+    }
+  })
+
+}
+
+adicionarHospede(hospede: Hospede) {
+  if (this.hospedesSelecionados.some(item => item.id === hospede.id)) {
+    this.mostrarErro('Este hóspede já foi adicionado à reserva.');
+    return;
+  }
+
+  this.hospedesSelecionados = [...this.hospedesSelecionados, hospede];
+  this.titularId ??= hospede.id;
+  this.hospedeEncontrado = null;
+  this.buscaHospede.documento = '';
+  this.limparMensagens();
+}
+
+removerHospede(hospedeId: number) {
+  this.hospedesSelecionados = this.hospedesSelecionados
+    .filter(hospede => hospede.id !== hospedeId);
+
+  if (this.titularId === hospedeId) {
+    this.titularId = this.hospedesSelecionados[0]?.id ?? null;
+  }
+}
+
+criarHospede() {
+  this.limparMensagens();
+
+  if (!this.novoHospede.nome.trim()) {
+    this.mostrarErro('Informe o nome do hóspede.');
+    return;
+  }
+
+  if (this.salvandoHospede) {
+    return;
+  }
+
+  this.salvandoHospede = true;
+
+  this.hospedeService.criar(this.novoHospede).subscribe({
+    next: (hospede) => {
+      this.salvandoHospede = false;
+      this.mostrarCadastroHospede = false;
+      this.adicionarHospede(hospede);
+    },
+    error: (err) => {
+      this.salvandoHospede = false;
+      this.mostrarErro(err.error?.message || 'Erro ao cadastrar hóspede.');
+    }
+  });
+}
+
+cancelarCadastroHospede() {
+  this.mostrarCadastroHospede = false;
+  this.novoHospede = {
+    nome: '',
+    tipoDocumento: 'CPF',
+    documento: '',
+    email: null,
+    telefone: null
+  };
+}
+
+private limparHospedesReserva() {
+  this.buscaHospede = {
+    tipoDocumento: 'CPF',
+    documento: ''
+  };
+  this.novoHospede = {
+    nome: '',
+    tipoDocumento: 'CPF',
+    documento: '',
+    email: null,
+    telefone: null
+  };
+  this.hospedeEncontrado = null;
+  this.hospedesSelecionados = [];
+  this.titularId = null;
+  this.mostrarCadastroHospede = false;
+  this.buscandoHospede = false;
+  this.salvandoHospede = false;
+}
+
+buscaHospede: BuscarHospede = {
+  tipoDocumento: 'CPF',
+  documento: ''
+};
+
+novoHospede: CriarHospede = {
+  nome: '',
+  tipoDocumento: 'CPF',
+  documento: '',
+  email: null,
+  telefone: null
+};
+
+hospedeEncontrado: Hospede | null = null;
+hospedesSelecionados: Hospede[] = [];
+titularId: number | null = null;
+
+buscandoHospede = false;
+mostrarCadastroHospede = false;
+salvandoHospede = false;
 
 };

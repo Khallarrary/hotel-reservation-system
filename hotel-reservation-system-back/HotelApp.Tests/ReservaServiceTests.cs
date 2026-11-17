@@ -20,6 +20,8 @@ public class ReservaServiceTests
         var reservaRepo = new ReservaRepositoryFake(reservaIdGerado);
         var contaRepo = new ContaReservaRepositoryFake();
         var transacao = new TransacaoFake();
+        var titular = CriarHospede(1, hotelId);
+        var acompanhante = CriarHospede(2, hotelId, "Acompanhante Teste", "98765432100");
         var service = new ReservaService(
             reservaRepo,
             new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
@@ -28,19 +30,129 @@ public class ReservaServiceTests
             transacao,
             new ConsultaSaldoContaFake(0m),
             new RelogioHotelFake(DataAtual),
-            new HotelRepositoryFake(hotelId));
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake(titular, acompanhante));
 
         await service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            [
+                new CriarReservaHospedeDto { HospedeId = 1, Titular = true },
+                new CriarReservaHospedeDto { HospedeId = 2, Titular = false }
+            ],
             quartoId,
             Guid.NewGuid());
 
         transacao.QuantidadeExecucoes.Should().Be(1);
         reservaRepo.ReservaAdicionada.Should().NotBeNull();
+        reservaRepo.ReservaAdicionada!.NomeDoHospede.Should().Be(titular.Nome);
+        reservaRepo.ReservaAdicionada.Hospedes.Should().HaveCount(2);
+        reservaRepo.ReservaAdicionada.Hospedes.Should().ContainSingle(item => item.Titular);
+        reservaRepo.ReservaAdicionada.Hospedes.Select(item => item.HospedeId)
+            .Should().BeEquivalentTo([1, 2]);
         contaRepo.ContaAdicionada.Should().NotBeNull();
         contaRepo.ContaAdicionada!.ReservaId.Should().Be(reservaIdGerado);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Criar_Reserva_Sem_Hospedes()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            new ReservaRepositoryFake(25),
+            new ContaReservaRepositoryFake(),
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            [],
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().ThrowAsync<ArgumentException>();
+        transacao.QuantidadeExecucoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Criar_Reserva_Com_Hospede_Duplicado()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            new ReservaRepositoryFake(25),
+            new ContaReservaRepositoryFake(),
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            [
+                new CriarReservaHospedeDto { HospedeId = 1, Titular = true },
+                new CriarReservaHospedeDto { HospedeId = 1, Titular = false }
+            ],
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().ThrowAsync<ArgumentException>();
+        transacao.QuantidadeExecucoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Criar_Reserva_Sem_Exatamente_Um_Titular()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var transacao = new TransacaoFake();
+        var service = CriarServiceParaCriacao(
+            new ReservaRepositoryFake(25),
+            new ContaReservaRepositoryFake(),
+            transacao,
+            hotelId,
+            quartoId);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            [new CriarReservaHospedeDto { HospedeId = 1, Titular = false }],
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().ThrowAsync<ArgumentException>();
+        transacao.QuantidadeExecucoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Criar_Reserva_Com_Hospede_De_Outro_Hotel()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var transacao = new TransacaoFake();
+        var hospedeOutroHotel = CriarHospede(2, hotelId: 2);
+        var service = CriarServiceParaCriacao(
+            new ReservaRepositoryFake(25),
+            new ContaReservaRepositoryFake(),
+            transacao,
+            hotelId,
+            quartoId,
+            new HospedeRepositoryFake(hospedeOutroHotel));
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            [new CriarReservaHospedeDto { HospedeId = 2, Titular = true }],
+            quartoId,
+            Guid.NewGuid());
+
+        await action.Should().ThrowAsync<NotFoundException>();
+        transacao.QuantidadeExecucoes.Should().Be(0);
     }
 
     [Fact]
@@ -62,14 +174,14 @@ public class ReservaServiceTests
         await service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
             quartoId,
             chaveIdempotencia);
 
         await service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
             quartoId,
             chaveIdempotencia);
 
@@ -96,14 +208,101 @@ public class ReservaServiceTests
         await service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
+            quartoId,
+            chaveIdempotencia);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 4),
+            CriarHospedesSolicitados(),
+            quartoId,
+            chaveIdempotencia);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Reutilizar_Mesma_Chave_Com_Hospedes_Diferentes()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var reservaRepo = new ReservaRepositoryFake(25);
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var hospedeRepo = new HospedeRepositoryFake(
+            CriarHospede(1, hotelId),
+            CriarHospede(2, hotelId, "Acompanhante Teste", "98765432100"));
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId,
+            hospedeRepo);
+
+        await service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            CriarHospedesSolicitados(),
             quartoId,
             chaveIdempotencia);
 
         Func<Task> action = () => service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Outro Hospede",
+            [
+                new CriarReservaHospedeDto { HospedeId = 1, Titular = true },
+                new CriarReservaHospedeDto { HospedeId = 2, Titular = false }
+            ],
+            quartoId,
+            chaveIdempotencia);
+
+        await action.Should().ThrowAsync<ConflictException>();
+        transacao.QuantidadeExecucoes.Should().Be(1);
+        contaRepo.QuantidadeAdicoes.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Nao_Deve_Reutilizar_Mesma_Chave_Com_Titular_Diferente()
+    {
+        const int hotelId = 1;
+        const int quartoId = 10;
+        var chaveIdempotencia = Guid.NewGuid();
+        var reservaRepo = new ReservaRepositoryFake(25);
+        var contaRepo = new ContaReservaRepositoryFake();
+        var transacao = new TransacaoFake();
+        var hospedeRepo = new HospedeRepositoryFake(
+            CriarHospede(1, hotelId),
+            CriarHospede(2, hotelId, "Acompanhante Teste", "98765432100"));
+        var service = CriarServiceParaCriacao(
+            reservaRepo,
+            contaRepo,
+            transacao,
+            hotelId,
+            quartoId,
+            hospedeRepo);
+
+        await service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            [
+                new CriarReservaHospedeDto { HospedeId = 1, Titular = true },
+                new CriarReservaHospedeDto { HospedeId = 2, Titular = false }
+            ],
+            quartoId,
+            chaveIdempotencia);
+
+        Func<Task> action = () => service.CriarReserva(
+            new DateTime(2030, 4, 2),
+            new DateTime(2030, 4, 3),
+            [
+                new CriarReservaHospedeDto { HospedeId = 1, Titular = false },
+                new CriarReservaHospedeDto { HospedeId = 2, Titular = true }
+            ],
             quartoId,
             chaveIdempotencia);
 
@@ -130,7 +329,7 @@ public class ReservaServiceTests
         Func<Task> action = () => service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
             quartoId,
             Guid.Empty);
 
@@ -160,7 +359,7 @@ public class ReservaServiceTests
         Func<Task> action = () => service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
             quartoId,
             Guid.NewGuid());
 
@@ -190,7 +389,7 @@ public class ReservaServiceTests
         Func<Task> action = () => service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
             quartoId,
             Guid.NewGuid());
 
@@ -221,13 +420,57 @@ public class ReservaServiceTests
         Func<Task> action = () => service.CriarReserva(
             new DateTime(2030, 4, 2),
             new DateTime(2030, 4, 3),
-            "Hospede Teste",
+            CriarHospedesSolicitados(),
             quartoId,
             Guid.NewGuid());
 
         await action.Should().NotThrowAsync();
         transacao.QuantidadeExecucoes.Should().Be(1);
         contaRepo.QuantidadeAdicoes.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Deve_Obter_Detalhes_Da_Reserva_Com_Hospedes()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        const int quartoId = 10;
+        var titular = CriarHospede(
+            1,
+            hotelId,
+            "Maria Titular",
+            "12345678909",
+            "maria@email.com",
+            "11999999999");
+        var acompanhante = CriarHospede(
+            2,
+            hotelId,
+            "Ana Acompanhante",
+            "98765432100");
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.AdicionarHospede(titular, true);
+        reserva.AdicionarHospede(acompanhante, false);
+
+        var service = new ReservaService(
+            new ReservaRepositoryFake(reservaId, reserva),
+            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
+            new ContaReservaRepositoryFake(),
+            new HotelContextoFake(hotelId),
+            new TransacaoFake(),
+            new ConsultaSaldoContaFake(0m),
+            new RelogioHotelFake(DataAtual),
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake(titular, acompanhante));
+
+        var resultado = await service.ObterReservaPorId(reservaId);
+
+        resultado.NumeroQuarto.Should().Be("101");
+        resultado.Hospedes.Should().HaveCount(2);
+        resultado.Hospedes[0].Titular.Should().BeTrue();
+        resultado.Hospedes[0].Nome.Should().Be("Maria Titular");
+        resultado.Hospedes[0].Email.Should().Be("maria@email.com");
+        resultado.Hospedes[0].Telefone.Should().Be("11999999999");
+        resultado.Hospedes[1].Nome.Should().Be("Ana Acompanhante");
     }
 
     [Fact]
@@ -341,7 +584,8 @@ public class ReservaServiceTests
             transacao ?? new TransacaoFake(),
             consultaSaldo,
             new RelogioHotelFake(dataAtual ?? DataAtual),
-            new HotelRepositoryFake(hotelId));
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake());
     }
 
     private static ReservaService CriarServiceParaCriacao(
@@ -349,7 +593,8 @@ public class ReservaServiceTests
         ContaReservaRepositoryFake contaRepo,
         TransacaoFake transacao,
         int hotelId,
-        int quartoId)
+        int quartoId,
+        HospedeRepositoryFake? hospedeRepo = null)
     {
         return new ReservaService(
             reservaRepo,
@@ -359,7 +604,40 @@ public class ReservaServiceTests
             transacao,
             new ConsultaSaldoContaFake(0m),
             new RelogioHotelFake(DataAtual),
-            new HotelRepositoryFake(hotelId));
+            new HotelRepositoryFake(hotelId),
+            hospedeRepo ?? new HospedeRepositoryFake(CriarHospede(1, hotelId)));
+    }
+
+    private static IReadOnlyCollection<CriarReservaHospedeDto> CriarHospedesSolicitados() =>
+    [
+        new CriarReservaHospedeDto
+        {
+            HospedeId = 1,
+            Titular = true
+        }
+    ];
+
+    private static Hospede CriarHospede(
+        int hospedeId,
+        int hotelId,
+        string nome = "Hospede Teste",
+        string documento = "12345678909",
+        string? email = null,
+        string? telefone = null)
+    {
+        var hospede = new Hospede(
+            hotelId,
+            nome,
+            TipoDocumento.CPF,
+            documento,
+            email,
+            telefone);
+
+        typeof(Hospede)
+            .GetProperty(nameof(Hospede.Id))!
+            .SetValue(hospede, hospedeId);
+
+        return hospede;
     }
 
     private static Reserva CriarReserva(int reservaId, int hotelId)
@@ -439,6 +717,46 @@ public class ReservaServiceTests
             Task.FromResult(new List<Hotel>());
 
         public Task AtualizarAsync(Hotel hotel) => Task.CompletedTask;
+    }
+
+    private class HospedeRepositoryFake : IHospedeRepository
+    {
+        private readonly List<Hospede> _hospedes;
+
+        public HospedeRepositoryFake(params Hospede[] hospedes)
+        {
+            _hospedes = hospedes.ToList();
+        }
+
+        public Task AdicionarAsync(Hospede hospede) => Task.CompletedTask;
+
+        public Task<Hospede?> ObterPorIdAsync(int id, int hotelId) =>
+            Task.FromResult(
+                _hospedes.FirstOrDefault(hospede =>
+                    hospede.Id == id &&
+                    hospede.HotelId == hotelId));
+
+        public Task<Hospede?> ObterPorDocumentoAsync(
+            TipoDocumento tipoDocumento,
+            string documentoNormalizado,
+            int hotelId) =>
+            Task.FromResult(
+                _hospedes.FirstOrDefault(hospede =>
+                    hospede.TipoDocumento == tipoDocumento &&
+                    hospede.Documento == documentoNormalizado &&
+                    hospede.HotelId == hotelId));
+
+        public Task AtualizarAsync(Hospede hospede) => Task.CompletedTask;
+
+        public Task<List<Hospede>> ObterPorIdsAsync(
+            IReadOnlyCollection<int> hospedeIds,
+            int hotelId) =>
+            Task.FromResult(
+                _hospedes
+                    .Where(hospede =>
+                        hospede.HotelId == hotelId &&
+                        hospedeIds.Contains(hospede.Id))
+                    .ToList());
     }
 
     private class ConsultaSaldoContaFake : IConsultaSaldoConta

@@ -41,6 +41,12 @@
   <div *ngIf="mostrarFormReserva" class="form-card form-card-reserva">
     <div class="card-header">
       <h3>Nova Reserva</h3>
+      <button
+        type="button"
+        class="form-close"
+        aria-label="Fechar criação de reserva"
+        title="Fechar"
+        (click)="alterarFormularioReserva()">&times;</button>
     </div>
 
     <div *ngIf="mensagemSucesso" class="toast toast-sucesso">
@@ -52,25 +58,149 @@
     </div>
 
     <form class="form-grid form-grid-reserva">
-      <input
-        type="text"
-        [(ngModel)]="novaReservaPorNumero.nomeDoHospede"
-        placeholder="Nome do hospede"
-        name="nomeDoHospede">
-      <input
-        type="text"
-        [(ngModel)]="novaReservaPorNumero.numeroDoQuarto"
-        placeholder="Numero do quarto"
-        name="numeroDoQuarto">
-      <input
-        type="date"
-        [(ngModel)]="novaReservaPorNumero.checkIn"
-        name="checkIn">
-      <input
-        type="date"
-        [(ngModel)]="novaReservaPorNumero.checkOut"
-        name="checkOut">
-      <button type="button" class="btn-secondary" (click)="criarReservaPorNumero()" [disabled]="salvando">{{ salvando ? 'Salvando...' : 'Salvar' }}</button>
+      <div class="hospede-busca">
+        <label class="form-field">
+          <span>Tipo de documento</span>
+          <select
+            [(ngModel)]="buscaHospede.tipoDocumento"
+            name="tipoDocumentoBusca">
+            <option value="CPF">CPF</option>
+            <option value="Passaporte">Passaporte</option>
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span>Documento</span>
+          <input
+            type="text"
+            [(ngModel)]="buscaHospede.documento"
+            name="documentoBusca">
+        </label>
+
+        <button
+          type="button"
+          class="btn-secondary btn-buscar-hospede"
+          (click)="buscarHospede()"
+          [disabled]="buscandoHospede">
+          {{ buscandoHospede ? 'Buscando...' : 'Buscar hóspede' }}
+        </button>
+      </div>
+
+      <div *ngIf="hospedeEncontrado" class="hospede-resultado">
+        <div class="hospede-identidade">
+          <strong>{{ hospedeEncontrado.nome }}</strong>
+          <span>{{ hospedeEncontrado.tipoDocumento }} {{ hospedeEncontrado.documento }}</span>
+        </div>
+        <button
+          type="button"
+          class="btn-secondary btn-adicionar-hospede"
+          (click)="adicionarHospede(hospedeEncontrado)">
+          Adicionar
+        </button>
+      </div>
+
+      <section *ngIf="mostrarCadastroHospede" class="hospede-cadastro">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Novo hóspede</span>
+            <strong>{{ novoHospede.tipoDocumento }} {{ novoHospede.documento }}</strong>
+          </div>
+          <button
+            type="button"
+            class="btn-nav"
+            (click)="cancelarCadastroHospede()">
+            Cancelar
+          </button>
+        </div>
+
+        <div class="cadastro-grid">
+          <label class="form-field cadastro-nome">
+            <span>Nome</span>
+            <input type="text" [(ngModel)]="novoHospede.nome" name="novoHospedeNome">
+          </label>
+          <label class="form-field">
+            <span>E-mail</span>
+            <input type="email" [(ngModel)]="novoHospede.email" name="novoHospedeEmail">
+          </label>
+          <label class="form-field">
+            <span>Telefone</span>
+            <input type="tel" [(ngModel)]="novoHospede.telefone" name="novoHospedeTelefone">
+          </label>
+          <button
+            type="button"
+            class="btn-secondary btn-cadastrar-hospede"
+            (click)="criarHospede()"
+            [disabled]="salvandoHospede">
+            {{ salvandoHospede ? 'Cadastrando...' : 'Cadastrar e adicionar' }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="hospedesSelecionados.length > 0" class="hospedes-selecionados">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Hóspedes da reserva</span>
+            <strong>{{ hospedesSelecionados.length }} selecionado(s)</strong>
+          </div>
+        </div>
+
+        <div class="hospede-lista">
+          <div
+            *ngFor="let hospede of hospedesSelecionados"
+            class="hospede-item"
+            [class.hospede-item-titular]="titularId === hospede.id">
+            <label class="titular-control">
+              <input
+                type="radio"
+                name="titularReserva"
+                [value]="hospede.id"
+                [(ngModel)]="titularId">
+              <span>Titular</span>
+            </label>
+            <div class="hospede-item-identidade">
+              <strong>{{ hospede.nome }}</strong>
+              <span>{{ hospede.tipoDocumento }} {{ hospede.documento }}</span>
+            </div>
+            <button
+              type="button"
+              class="form-close hospede-remover"
+              title="Remover hóspede"
+              [attr.aria-label]="'Remover ' + hospede.nome"
+              (click)="removerHospede(hospede.id)">&times;</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="reserva-dados">
+        <label class="form-field">
+          <span>Quarto</span>
+          <input
+            type="text"
+            [(ngModel)]="novaReservaPorNumero.numeroDoQuarto"
+            name="numeroDoQuarto">
+        </label>
+        <label class="form-field">
+          <span>Check-in</span>
+          <input
+            type="date"
+            [(ngModel)]="novaReservaPorNumero.checkIn"
+            name="checkIn">
+        </label>
+        <label class="form-field">
+          <span>Check-out</span>
+          <input
+            type="date"
+            [(ngModel)]="novaReservaPorNumero.checkOut"
+            name="checkOut">
+        </label>
+        <button
+          type="button"
+          class="btn-secondary btn-salvar-reserva"
+          (click)="criarReservaPorNumero()"
+          [disabled]="salvando">
+          {{ salvando ? 'Salvando...' : 'Salvar reserva' }}
+        </button>
+      </div>
     </form>
   </div>
 

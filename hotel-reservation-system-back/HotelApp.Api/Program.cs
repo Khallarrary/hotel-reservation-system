@@ -25,9 +25,6 @@ using Microsoft.AspNetCore.Http.Features;
 var builder = WebApplication.CreateBuilder(args);
 
 
-/// <summary>
-/// Configuração do DbContext com PostgreSQL
-/// </summary>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -37,10 +34,6 @@ builder.Services
         name: "postgresql",
         tags: ["ready"]);
 
-/// <summary>
-/// Injeção de dependência (DI)
-/// Repositórios e Services
-/// </summary>
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<ReservaService>();
 
@@ -83,9 +76,6 @@ builder.Services.AddSingleton<IRelogioHotel, RelogioHotel>();
 
 
 
-/// <summary>
-/// Adiciona suporte a controllers (API)
-/// </summary>
 builder.Services
     .AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -115,9 +105,6 @@ builder.Services
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-/// <summary>
-/// Configuração do Swagger (documentação da API)
-/// </summary>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -208,6 +195,7 @@ if (builder.Environment.IsProduction() && demoHotelId <= 0)
 }
 
 
+// O limitador global protege apenas o hotel de demonstração; o login tem uma política própria por IP.
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter =
@@ -322,10 +310,6 @@ var app = builder.Build();
 
 
 app.UseMiddleware<RequestLoggingMiddleware>();
-/// <summary>
-/// Middleware global para tratamento de exceções
-/// Centraliza erros e retorna respostas padronizadas para o cliente
-/// </summary>
 app.UseExceptionHandler();
 app.UseStatusCodePages(async statusCodeContext =>
 {
@@ -343,23 +327,15 @@ app.UseStatusCodePages(async statusCodeContext =>
         httpContext.RequestAborted);
 });
 
-/// <summary>
-/// Swagger disponível apenas em ambiente de desenvolvimento
-/// </summary>
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-/// <summary>
-/// Redireciona a rota raiz para o Swagger
-/// </summary>
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
-/// <summary>
-/// Middleware padrão do pipeline HTTP
-/// </summary>
+// Evita que as sondas de saúde produzam a própria telemetria que alimenta o monitoramento.
 app.UseWhen(
     context => context.Request.Path.StartsWithSegments("/health"),
     branch => branch.Use(async (context, next) =>
@@ -377,6 +353,7 @@ app.UseCors("Frontend");
 
 app.UseAuthentication();
 
+// hotel_id permite filtrar por tenant; IDs de usuário ou reserva causariam alta cardinalidade.
 app.Use(async (context, next) =>
 {
     var hotelId = context.User.FindFirst("hotelId")?.Value;
@@ -406,9 +383,6 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = healthCheck => healthCheck.Tags.Contains("ready")
 }).DisableHttpMetrics(); ;
-/// <summary>
-/// Mapeamento dos endpoints dos controllers
-/// </summary>
 app.MapControllers();
 
 app.Run();

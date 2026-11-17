@@ -38,5 +38,10 @@ namespace HotelApp.Infrastructure
             _context.Hospedes.Update(hospede);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<Hospede>> ObterPorIdsAsync(IReadOnlyCollection<int> hospedeIds,int hotelId)
+        {
+            return await _context.Hospedes.AsNoTracking().Where(h => h.HotelId == hotelId && hospedeIds.Contains(h.Id)).ToListAsync();
+        }
     }
 }

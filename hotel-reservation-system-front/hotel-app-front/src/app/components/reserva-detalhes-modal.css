@@ -10,7 +10,10 @@
 }
 
 .modal-reserva {
-  width: min(520px, 100%);
+  width: min(620px, 100%);
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);
@@ -100,6 +103,136 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   padding: 1.5rem 1.5rem 1.25rem;
+  overflow-y: auto;
+}
+
+.reserva-hospedes {
+  grid-column: 1 / -1;
+  border-block: 1px solid var(--gray-200);
+}
+
+.hospedes-header,
+.hospede-resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hospedes-header {
+  padding: 0.8rem 0.25rem;
+}
+
+.hospedes-header > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.hospedes-header span,
+.hospede-dados span {
+  color: var(--navy-700);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.hospedes-header small {
+  color: var(--navy-700);
+  font-size: 0.75rem;
+}
+
+.hospede-item + .hospede-item {
+  border-top: 1px solid var(--gray-200);
+}
+
+.hospede-resumo {
+  width: 100%;
+  padding: 0.75rem 0.25rem;
+  background: transparent;
+  color: var(--navy-900);
+  text-align: left;
+  transition: var(--transition);
+}
+
+.hospede-resumo:hover,
+.hospede-resumo-aberto {
+  background: var(--gray-100);
+}
+
+.hospede-avatar {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy-900);
+  color: var(--gold-400);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hospede-identidade {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.hospede-identidade > span:last-child {
+  color: var(--navy-700);
+  font-size: 0.78rem;
+}
+
+.hospede-nome {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.hospede-nome small {
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: #fff7d6;
+  color: #7a4c00;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.hospede-seta {
+  flex: 0 0 auto;
+  font-size: 1.6rem;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.hospede-resumo-aberto .hospede-seta {
+  transform: rotate(90deg);
+}
+
+.hospede-dados {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0.2rem 0.25rem 0.9rem 3.85rem;
+}
+
+.hospede-dados > div {
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.hospede-dados strong {
+  overflow-wrap: anywhere;
+  font-size: 0.86rem;
+}
+
+.hospedes-vazio {
+  margin: 0;
+  padding: 0.85rem 0.25rem;
+  color: var(--navy-700);
+  font-size: 0.86rem;
 }
 
 .modal-field {
@@ -220,5 +353,14 @@
   .modal-body,
   .modal-actions {
     grid-template-columns: 1fr;
+  }
+
+  .hospede-dados {
+    grid-template-columns: 1fr;
+    padding-left: 3.85rem;
+  }
+
+  .hospedes-header small {
+    display: none;
   }
 }
