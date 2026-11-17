@@ -430,6 +430,50 @@ public class ReservaServiceTests
     }
 
     [Fact]
+    public async Task Deve_Obter_Detalhes_Da_Reserva_Com_Hospedes()
+    {
+        const int hotelId = 1;
+        const int reservaId = 25;
+        const int quartoId = 10;
+        var titular = CriarHospede(
+            1,
+            hotelId,
+            "Maria Titular",
+            "12345678909",
+            "maria@email.com",
+            "11999999999");
+        var acompanhante = CriarHospede(
+            2,
+            hotelId,
+            "Ana Acompanhante",
+            "98765432100");
+        var reserva = CriarReserva(reservaId, hotelId);
+        reserva.AdicionarHospede(titular, true);
+        reserva.AdicionarHospede(acompanhante, false);
+
+        var service = new ReservaService(
+            new ReservaRepositoryFake(reservaId, reserva),
+            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
+            new ContaReservaRepositoryFake(),
+            new HotelContextoFake(hotelId),
+            new TransacaoFake(),
+            new ConsultaSaldoContaFake(0m),
+            new RelogioHotelFake(DataAtual),
+            new HotelRepositoryFake(hotelId),
+            new HospedeRepositoryFake(titular, acompanhante));
+
+        var resultado = await service.ObterReservaPorId(reservaId);
+
+        resultado.NumeroQuarto.Should().Be("101");
+        resultado.Hospedes.Should().HaveCount(2);
+        resultado.Hospedes[0].Titular.Should().BeTrue();
+        resultado.Hospedes[0].Nome.Should().Be("Maria Titular");
+        resultado.Hospedes[0].Email.Should().Be("maria@email.com");
+        resultado.Hospedes[0].Telefone.Should().Be("11999999999");
+        resultado.Hospedes[1].Nome.Should().Be("Ana Acompanhante");
+    }
+
+    [Fact]
     public async Task Deve_Cancelar_Reserva_E_Encerrar_Conta_Quando_Saldo_Estiver_Zerado()
     {
         const int hotelId = 1;
@@ -577,15 +621,17 @@ public class ReservaServiceTests
         int hospedeId,
         int hotelId,
         string nome = "Hospede Teste",
-        string documento = "12345678909")
+        string documento = "12345678909",
+        string? email = null,
+        string? telefone = null)
     {
         var hospede = new Hospede(
             hotelId,
             nome,
             TipoDocumento.CPF,
             documento,
-            null,
-            null);
+            email,
+            telefone);
 
         typeof(Hospede)
             .GetProperty(nameof(Hospede.Id))!

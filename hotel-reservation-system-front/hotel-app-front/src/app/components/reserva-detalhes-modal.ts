@@ -2,7 +2,7 @@
 import { Component, EventEmitter, Input, Output} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Reserva } from '../services/reserva';
+import { Reserva, ReservaHospedeDetalhe } from '../services/reserva';
 
 
 @Component({
@@ -21,10 +21,42 @@ export class ReservaDetalhes {
     @Output() checkin = new EventEmitter<void>();
     @Output() caixa = new EventEmitter<void>();
     mensagemAcaoPrincipal = '';
-    
-    
+    hospedeSelecionadoId: number | null = null;
+
+    alternarHospede(hospedeId: number): void {
+        this.hospedeSelecionadoId = this.hospedeSelecionadoId === hospedeId
+            ? null
+            : hospedeId;
+    }
+
+    hospedeEstaAberto(hospedeId: number): boolean {
+        return this.hospedeSelecionadoId === hospedeId;
+    }
+
+    formatarDocumento(hospede: ReservaHospedeDetalhe): string {
+        if (hospede.tipoDocumento === 'CPF' && hospede.documento.length === 11) {
+            return hospede.documento.replace(
+                /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+                '$1.$2.$3-$4');
+        }
+
+        return hospede.documento;
+    }
+
+    formatarTelefone(telefone: string | null): string {
+        if (!telefone) {
+            return 'Não informado';
+        }
+
+        if (telefone.length === 11) {
+            return telefone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        }
+
+        return telefone;
+    }
 
     aoFechar(): void{
+        this.hospedeSelecionadoId = null;
         this.fechar.emit();
 
     }

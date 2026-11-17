@@ -63,7 +63,9 @@ namespace HotelApp.Infrastructure
 
         public async Task<Reserva?> ObterReservaPorIdAsync(int id, int hotelId)
         {
-            return await _context.Reservas.FirstOrDefaultAsync(r => r.Id == id && r.HotelId == hotelId);
+            return await _context.Reservas
+                .Include(reserva => reserva.Hospedes)
+                .FirstOrDefaultAsync(r => r.Id == id && r.HotelId == hotelId);
         }
 
         public async Task AtualizarReservaAsync(Reserva reserva)

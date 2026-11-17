@@ -21,10 +21,51 @@
       </div>
 
       <div class="modal-body">
-        <div class="modal-field modal-field-full">
-          <span>Hospede</span>
-          <strong>{{ reserva.nomeDoHospede }}</strong>
-        </div>
+        <section class="reserva-hospedes">
+          <div class="hospedes-header">
+            <div>
+              <span>Hóspedes</span>
+              <strong>{{ reserva.hospedes?.length || 0 }} na reserva</strong>
+            </div>
+            <small>Clique para ver os dados</small>
+          </div>
+
+          <div *ngIf="reserva.hospedes?.length; else semHospedes" class="hospedes-lista">
+            <div *ngFor="let hospede of reserva.hospedes" class="hospede-item">
+              <button
+                type="button"
+                class="hospede-resumo"
+                [class.hospede-resumo-aberto]="hospedeEstaAberto(hospede.id)"
+                [attr.aria-expanded]="hospedeEstaAberto(hospede.id)"
+                (click)="alternarHospede(hospede.id)">
+                <span class="hospede-avatar">{{ hospede.nome.charAt(0) }}</span>
+                <span class="hospede-identidade">
+                  <span class="hospede-nome">
+                    <strong>{{ hospede.nome }}</strong>
+                    <small *ngIf="hospede.titular">Titular</small>
+                  </span>
+                  <span>{{ hospede.tipoDocumento }} {{ formatarDocumento(hospede) }}</span>
+                </span>
+                <span class="hospede-seta" aria-hidden="true">&rsaquo;</span>
+              </button>
+
+              <div *ngIf="hospedeEstaAberto(hospede.id)" class="hospede-dados">
+                <div>
+                  <span>E-mail</span>
+                  <strong>{{ hospede.email || 'Não informado' }}</strong>
+                </div>
+                <div>
+                  <span>Telefone</span>
+                  <strong>{{ formatarTelefone(hospede.telefone) }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #semHospedes>
+            <p class="hospedes-vazio">Nenhum hóspede vinculado a esta reserva.</p>
+          </ng-template>
+        </section>
 
         <div class="modal-field">
           <span>Check-in</span>
@@ -37,8 +78,8 @@
         </div>
 
         <div class="modal-field">
-          <span>Quarto ID</span>
-          <strong>{{ reserva.quartoId }}</strong>
+          <span>Quarto</span>
+          <strong>{{ reserva.numeroQuarto || reserva.quartoId }}</strong>
         </div>
 
         <div class="modal-field">

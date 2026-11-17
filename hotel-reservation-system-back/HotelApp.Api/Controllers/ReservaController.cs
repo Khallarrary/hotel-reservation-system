@@ -61,6 +61,15 @@ namespace HotelApp.Api.Controllers
         }
 
         [Authorize]
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<ReservaDto>> GetPorId(int id)
+        {
+            var reserva = await _service.ObterReservaPorId(id);
+
+            return Ok(reserva);
+        }
+
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletarReserva(int id)
         {

@@ -13,5 +13,6 @@ namespace HotelApp.Application.DTOs
         public int QuartoId { get; set; }
         public string NumeroQuarto { get; set; } = string.Empty;
         public string Status { get; set; }
+        public List<ReservaHospedeDto> Hospedes { get; set; } = [];
     }
 }

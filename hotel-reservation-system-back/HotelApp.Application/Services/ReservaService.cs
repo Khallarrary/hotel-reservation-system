@@ -58,6 +58,70 @@ public class ReservaService
         }).ToList();
     }
 
+    public async Task<ReservaDto> ObterReservaPorId(int id)
+    {
+        if (id <= 0)
+        {
+            throw new ArgumentException("Id da reserva inválido.");
+        }
+
+        var hotelId = _hotelContexto.ObterHotelId();
+
+        if (!hotelId.HasValue)
+        {
+            throw new ForbiddenException("Hotel não encontrado");
+        }
+
+        var reserva = await _repo.ObterReservaPorIdAsync(id, hotelId.Value);
+
+        if (reserva is null)
+        {
+            throw new NotFoundException("Reserva não encontrada.");
+        }
+
+        var hospedeIds = reserva.Hospedes
+            .Select(item => item.HospedeId)
+            .ToList();
+
+        var hospedes = hospedeIds.Count == 0
+            ? []
+            : await _hospedeRepo.ObterPorIdsAsync(hospedeIds, hotelId.Value);
+
+        var hospedesPorId = hospedes.ToDictionary(hospede => hospede.Id);
+        var quarto = await _quartoRepo.ObterPorIdAsync(reserva.QuartoId, hotelId.Value);
+
+        return new ReservaDto
+        {
+            Id = reserva.Id,
+            CheckIn = reserva.CheckIn,
+            CheckOut = reserva.CheckOut,
+            NomeDoHospede = reserva.NomeDoHospede,
+            QuartoId = reserva.QuartoId,
+            NumeroQuarto = quarto?.Numero ?? string.Empty,
+            Status = reserva.Status.ToString(),
+            Hospedes = reserva.Hospedes
+                .Where(item => hospedesPorId.ContainsKey(item.HospedeId))
+                .Select(item =>
+                {
+                    var hospede = hospedesPorId[item.HospedeId];
+
+                    return new ReservaHospedeDto
+                    {
+                        Id = hospede.Id,
+                        Nome = hospede.Nome,
+                        TipoDocumento = hospede.TipoDocumento.ToString(),
+                        Documento = hospede.Documento,
+                        Email = hospede.Email,
+                        Telefone = hospede.Telefone,
+                        Titular = item.Titular
+                    };
+                })
+                .OrderByDescending(hospede => hospede.Titular)
+                .ThenBy(hospede => hospede.Nome)
+                .ToList()
+        };
+    }
+
     private static void ValidarMesmaSolicitacao(Reserva reservaExistente, DateTime checkIn, DateTime checkOut, IReadOnlyCollection<CriarReservaHospedeDto> hospedesSolicitados, int quartoId)
     {
 
