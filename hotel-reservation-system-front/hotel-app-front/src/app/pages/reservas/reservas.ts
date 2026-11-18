@@ -335,6 +335,7 @@ buscarHospede(){
     next: (hospede) => {
       this.hospedeEncontrado = hospede;
       this.buscandoHospede = false;
+      this.cdr.detectChanges();
     },
     error: (err) => {
       this.buscandoHospede = false
@@ -347,7 +348,7 @@ buscarHospede(){
           email: null,
           telefone: null
         };
-
+        this.cdr.detectChanges();
         this.mostrarCadastroHospede = true;
         return
       }
