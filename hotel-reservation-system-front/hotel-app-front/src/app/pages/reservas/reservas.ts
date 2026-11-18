@@ -348,8 +348,9 @@ buscarHospede(){
           email: null,
           telefone: null
         };
-        this.cdr.detectChanges();
+        
         this.mostrarCadastroHospede = true;
+        this.cdr.detectChanges();
         return
       }
       this.mostrarErro(err.error?.message || 'Erro ao buscar hóspede.')
