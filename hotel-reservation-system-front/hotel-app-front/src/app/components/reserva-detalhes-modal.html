@@ -49,15 +49,96 @@
                 <span class="hospede-seta" aria-hidden="true">&rsaquo;</span>
               </button>
 
-              <div *ngIf="hospedeEstaAberto(hospede.id)" class="hospede-dados">
-                <div>
-                  <span>E-mail</span>
-                  <strong>{{ hospede.email || 'Não informado' }}</strong>
-                </div>
-                <div>
-                  <span>Telefone</span>
-                  <strong>{{ formatarTelefone(hospede.telefone) }}</strong>
-                </div>
+              <div
+                *ngIf="hospedeEstaAberto(hospede.id)"
+                class="hospede-dados"
+                [class.hospede-dados-edicao]="hospedeEmEdicaoId === hospede.id">
+                <ng-container *ngIf="hospedeEmEdicaoId !== hospede.id">
+                  <div>
+                    <span>E-mail</span>
+                    <strong>{{ hospede.email || 'Não informado' }}</strong>
+                  </div>
+
+                  <div>
+                    <span>Telefone</span>
+                    <strong>{{ formatarTelefone(hospede.telefone) }}</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btn-editar-hospede"
+                    (click)="iniciarEdicao(hospede)">
+                    Editar dados
+                  </button>
+                </ng-container>
+
+                <ng-container *ngIf="hospedeEmEdicaoId === hospede.id">
+                  <form
+                    *ngIf="dadosHospedeEmEdicao as dados"
+                    class="hospede-edicao"
+                    (ngSubmit)="salvarEdicao(hospede)">
+                    <label>
+                      Nome
+                      <input
+                        type="text"
+                        name="nomeHospedeEdicao"
+                        [(ngModel)]="dados.nome">
+                    </label>
+
+                    <label>
+                      Tipo de documento
+                      <select
+                        name="tipoDocumentoHospedeEdicao"
+                        [(ngModel)]="dados.tipoDocumento">
+                        <option value="CPF">CPF</option>
+                        <option value="Passaporte">Passaporte</option>
+                      </select>
+                    </label>
+
+                    <label>
+                      Documento
+                      <input
+                        type="text"
+                        name="documentoHospedeEdicao"
+                        [(ngModel)]="dados.documento">
+                    </label>
+
+                    <label>
+                      E-mail
+                      <input
+                        type="email"
+                        name="emailHospedeEdicao"
+                        [(ngModel)]="dados.email">
+                    </label>
+
+                    <label>
+                      Telefone
+                      <input
+                        type="tel"
+                        name="telefoneHospedeEdicao"
+                        [(ngModel)]="dados.telefone">
+                    </label>
+
+                    <p *ngIf="erroEdicaoHospede" class="hospede-edicao-erro">
+                      {{ erroEdicaoHospede }}
+                    </p>
+
+                    <div class="hospede-edicao-acoes">
+                      <button
+                        type="button"
+                        (click)="cancelarEdicao()"
+                        [disabled]="salvandoHospede">
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="submit"
+                        [disabled]="salvandoHospede">
+                        {{ salvandoHospede ? 'Salvando...' : 'Salvar alterações' }}
+                      </button>
+                    </div>
+                  </form>
+                </ng-container>
               </div>
             </div>
           </div>
