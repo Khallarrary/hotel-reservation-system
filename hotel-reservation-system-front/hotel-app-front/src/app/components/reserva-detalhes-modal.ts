@@ -3,6 +3,8 @@ import { Component, EventEmitter, Input, Output} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Reserva, ReservaHospedeDetalhe } from '../services/reserva';
+import { AtualizarHospede, HospedeService} from '../services/hospede';
+import { finalize, switchMap } from 'rxjs';
 
 
 @Component({
@@ -14,6 +16,13 @@ import { Reserva, ReservaHospedeDetalhe } from '../services/reserva';
 })
 
 export class ReservaDetalhes {
+
+    constructor(private hospedeService: HospedeService) {}
+
+    hospedeEmEdicaoId: number | null = null;
+    dadosHospedeEmEdicao: AtualizarHospede | null = null;
+    salvandoHospede = false;
+    erroEdicaoHospede = '';
 
     @Input() reserva: Reserva | null = null
     @Output() fechar = new EventEmitter<void>();
@@ -57,6 +66,7 @@ export class ReservaDetalhes {
 
     aoFechar(): void{
         this.hospedeSelecionadoId = null;
+        this.cancelarEdicao();
         this.fechar.emit();
 
     }
@@ -137,5 +147,70 @@ export class ReservaDetalhes {
         const dia = String(hoje.getDate()).padStart(2, '0');
 
         return `${ano}-${mes}-${dia}`;
+    }
+
+    iniciarEdicao(hospede: ReservaHospedeDetalhe): void {
+        this.hospedeEmEdicaoId = hospede.id;
+
+        this.dadosHospedeEmEdicao = {
+            nome: hospede.nome,
+            tipoDocumento: hospede.tipoDocumento,
+            documento: hospede.documento,
+            email: hospede.email,
+            telefone: hospede.telefone
+        };
+
+        this.erroEdicaoHospede = '';
+    }
+
+    cancelarEdicao(): void {
+    this.hospedeEmEdicaoId = null;
+    this.dadosHospedeEmEdicao = null;
+    this.erroEdicaoHospede = '';
+    }
+
+    salvarEdicao(hospede: ReservaHospedeDetalhe): void {
+        const dados = this.dadosHospedeEmEdicao;
+
+        if(!dados || this.hospedeEmEdicaoId !== hospede.id){
+            return;
+        }
+
+        if(!dados.nome.trim()) {
+            this.erroEdicaoHospede = "Informe o nome do hóspede.";
+            return;
+        }
+
+        if (!dados.documento.trim()) {
+            this.erroEdicaoHospede = 'Informe o documento do hóspede.';
+            return;
+        }
+
+        if (this.salvandoHospede) {
+            return;
+        }
+
+        this.salvandoHospede = true;
+        this.erroEdicaoHospede = '';
+
+        this.hospedeService.atualizar(hospede.id, dados)
+        .pipe(
+            switchMap(() =>
+                this.hospedeService.obterPorDocumento({
+                    tipoDocumento: dados.tipoDocumento,
+                    documento: dados.documento
+                })),
+            finalize(() => {
+                this.salvandoHospede = false;
+            })
+        ).subscribe({
+            next: hospedeAtualizado => {
+                Object.assign(hospede, hospedeAtualizado);
+                this.cancelarEdicao();
+            },
+            error: err => {
+                this.erroEdicaoHospede = err.error?.message || 'Não foi possivel atualizar o hospede';
+            }
+        })
     }
 }

@@ -10,7 +10,7 @@
 }
 
 .modal-reserva {
-  width: min(620px, 100%);
+  width: min(760px, 100%);
   max-height: calc(100vh - 2rem);
   display: flex;
   flex-direction: column;
@@ -212,9 +212,15 @@
 
 .hospede-dados {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 1fr) auto;
+  align-items: end;
   gap: 0.75rem;
   padding: 0.2rem 0.25rem 0.9rem 3.85rem;
+}
+
+.hospede-dados-edicao {
+  grid-template-columns: 1fr;
+  padding-left: 0.25rem;
 }
 
 .hospede-dados > div {
@@ -226,6 +232,119 @@
 .hospede-dados strong {
   overflow-wrap: anywhere;
   font-size: 0.86rem;
+}
+
+.btn-editar-hospede {
+  min-height: 38px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.45rem;
+  background: var(--white);
+  color: var(--navy-900);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.btn-editar-hospede:hover {
+  border-color: var(--gold-400);
+  background: #fffaf0;
+  color: #7a4c00;
+}
+
+.hospede-edicao {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.8rem;
+  width: 100%;
+  padding-top: 0.25rem;
+}
+
+.hospede-edicao label {
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--navy-700);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.hospede-edicao label:first-child {
+  grid-column: 1 / -1;
+}
+
+.hospede-edicao input,
+.hospede-edicao select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.45rem;
+  background: var(--white);
+  color: var(--navy-900);
+  font: inherit;
+  font-weight: 500;
+  outline: none;
+  transition: var(--transition);
+}
+
+.hospede-edicao input:focus,
+.hospede-edicao select:focus {
+  border-color: var(--gold-400);
+  box-shadow: 0 0 0 3px rgba(240, 184, 0, 0.14);
+}
+
+.hospede-edicao-erro {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.45rem;
+  background: #fff1f1;
+  color: #9f1d1d;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hospede-edicao-acoes {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-top: 0.15rem;
+}
+
+.hospede-edicao-acoes button {
+  min-height: 40px;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  transition: var(--transition);
+}
+
+.hospede-edicao-acoes button:first-child {
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  color: var(--navy-900);
+}
+
+.hospede-edicao-acoes button:last-child {
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: var(--navy-900);
+}
+
+.hospede-edicao-acoes button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.hospede-edicao-acoes button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .hospedes-vazio {
@@ -358,6 +477,29 @@
   .hospede-dados {
     grid-template-columns: 1fr;
     padding-left: 3.85rem;
+  }
+
+  .hospede-dados-edicao {
+    padding-left: 0.25rem;
+  }
+
+  .btn-editar-hospede {
+    width: 100%;
+  }
+
+  .hospede-edicao {
+    grid-template-columns: 1fr;
+  }
+
+  .hospede-edicao label:first-child,
+  .hospede-edicao-erro,
+  .hospede-edicao-acoes {
+    grid-column: 1;
+  }
+
+  .hospede-edicao-acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .hospedes-header small {
