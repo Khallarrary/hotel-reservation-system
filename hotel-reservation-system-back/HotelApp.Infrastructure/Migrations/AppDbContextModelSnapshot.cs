@@ -22,6 +22,48 @@ namespace HotelApp.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("HotelApp.Domain.CategoriaQuarto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("CapacidadeFisica")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("HotelId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LimiteComercial")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HotelId", "Nome")
+                        .IsUnique();
+
+                    b.ToTable("CategoriaQuartos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CategoriaQuartos_CapacidadeFisica", "\"CapacidadeFisica\" > 0");
+
+                            t.HasCheckConstraint("CK_CategoriaQuartos_LimiteComercial", "\"LimiteComercial\" > 0 AND \"LimiteComercial\" <= \"CapacidadeFisica\"");
+                        });
+                });
+
             modelBuilder.Entity("HotelApp.Domain.ContaReserva", b =>
                 {
                     b.Property<int>("Id")
@@ -283,6 +325,15 @@ namespace HotelApp.Infrastructure.Migrations
                     b.HasIndex("HotelId");
 
                     b.ToTable("Usuario");
+                });
+
+            modelBuilder.Entity("HotelApp.Domain.CategoriaQuarto", b =>
+                {
+                    b.HasOne("HotelApp.Domain.Hotel", null)
+                        .WithMany()
+                        .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("HotelApp.Domain.Hospede", b =>
