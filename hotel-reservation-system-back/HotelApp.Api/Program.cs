@@ -57,6 +57,7 @@ builder.Services.AddScoped<IHospedeRepository, HospedeRepository>();
 builder.Services.AddScoped<HospedeService>();
 
 builder.Services.AddScoped<ICategoriaQuartoRepository, CategoriaQuartoRepository>();
+builder.Services.AddScoped<CategoriaQuartoService>();
 
 builder.Services.AddScoped<IUsuarioRepository,
 UsuarioRepository>();
