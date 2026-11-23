@@ -95,7 +95,7 @@ namespace HotelApp.Application.Services
             }
 
             var categoria = await _repo.ObterPorIdAsync(categoriaId, hotelId.Value);
-
+            
             if (categoria == null)
             {
                 throw new NotFoundException("Categoria não encontrada.");
@@ -103,7 +103,7 @@ namespace HotelApp.Application.Services
 
             categoria.AtualizarDados(nome, descricao, capacidadeFisica, limiteComercial);
 
-            var jaExiste = await _repo.ExisteNomeAsync(categoria.Nome, hotelId.Value, categoria.HotelId);
+            var jaExiste = await _repo.ExisteNomeAsync(categoria.Nome, hotelId.Value, categoria.Id);
 
             if (jaExiste)
             {
