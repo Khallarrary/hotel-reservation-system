@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { ReservaService, Reserva, ReservaPorNumero } from '../../services/reserva';
 import { QuartoService } from '../../services/quarto';
 import { ReservaDetalhes } from '../../components/reserva-detalhes-modal'
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
-import { Auth } from '../../services/auth';
 import { ReservaDetalhesBase } from '../../shared/reserva-detalhes-base';
 import {
   calcularDuracaoNaTimeline,
@@ -40,8 +39,7 @@ export class ReservasComponent extends ReservaDetalhesBase implements OnInit
   
 
   constructor(reservaService: ReservaService, private quartoService: QuartoService,
-  cdr: ChangeDetectorRef, router: Router, private route: ActivatedRoute,
-  private authService: Auth, private hospedeService: HospedeService){
+  cdr: ChangeDetectorRef, router: Router, private hospedeService: HospedeService){
     super(reservaService, router, cdr);
   }
 
@@ -53,22 +51,7 @@ export class ReservasComponent extends ReservaDetalhesBase implements OnInit
     this.inicioTimeLine.setHours(0, 0, 0, 0);
     this.gerarDias();
     this.carregarQuartos();
-
-    this.route.queryParamMap.subscribe(params => {
-      if (params.get('acao') === 'novo-quarto') {
-        if (this.authService.ehGestor()) {
-          this.mostrarForm = true;
-        }
-
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { acao: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true
-        });
-      }
-    });
-    }
+  }
 
 
   gerarDias() {
@@ -263,16 +246,7 @@ getOffset(reserva: any): number {
   return calcularOffsetNaTimeline(reserva, this.dias);
 }
 
-mostrarForm: boolean = false;
 mostrarFormReserva: boolean = false;
-
-alterarFormularioQuarto() {
-  this.mostrarForm = !this.mostrarForm;
-
-  if(!this.mostrarForm){
-    this.novoQuarto = { numero: '', tipo: ''};
-  }
-}
 
 alterarFormularioReserva() {
   this.mostrarFormReserva = !this.mostrarFormReserva;
@@ -289,35 +263,6 @@ alterarFormularioReserva() {
     this.limparHospedesReserva();
   }
 }
-
-novoQuarto = {
-  numero: '',
-  tipo: ''
-};
-
-criarQuarto() {
-
-  if (!this.novoQuarto.numero.trim() || !this.novoQuarto.tipo.trim()) {
-  alert('Preencha número e tipo do quarto.');
-  return;
-}
-
-  this.quartoService.criar(this.novoQuarto).subscribe({
-    next: () => {
-      alert('Quarto criado!');
-      this.carregarQuartos();
-      this.mostrarForm = false;
-      this.novoQuarto = { numero: '', tipo: '' };
-      
-    },
-    error: (err) => {
-      console.log(err);
-      console.log(err.error);
-      this.mostrarErro(err.erros?.message || 'Erro ao criar quarto');
-    }
-  });
-}
-
 
 buscarHospede(){
   this.limparMensagens();

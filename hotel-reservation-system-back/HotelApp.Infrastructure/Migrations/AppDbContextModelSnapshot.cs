@@ -207,6 +207,12 @@ namespace HotelApp.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("CategoriaQuartoId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("HotelId")
                         .HasColumnType("integer");
 
@@ -214,11 +220,9 @@ namespace HotelApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("HotelId", "CategoriaQuartoId");
 
                     b.HasIndex("HotelId", "Numero")
                         .IsUnique();
@@ -350,6 +354,13 @@ namespace HotelApp.Infrastructure.Migrations
                     b.HasOne("HotelApp.Domain.Hotel", null)
                         .WithMany()
                         .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HotelApp.Domain.CategoriaQuarto", null)
+                        .WithMany()
+                        .HasForeignKey("HotelId", "CategoriaQuartoId")
+                        .HasPrincipalKey("HotelId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

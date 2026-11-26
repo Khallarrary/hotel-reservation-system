@@ -40,6 +40,22 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Quarto>()
+            .HasOne<CategoriaQuarto>()
+            .WithMany()
+            .HasForeignKey(q => new 
+            { 
+                q.HotelId, 
+                q.CategoriaQuartoId 
+            })
+            .HasPrincipalKey(c => new 
+            { 
+                c.HotelId,
+                c.Id
+                
+            })
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Quarto>()
             .HasOne<Hotel>()
             .WithMany()
             .HasForeignKey(q => q.HotelId)

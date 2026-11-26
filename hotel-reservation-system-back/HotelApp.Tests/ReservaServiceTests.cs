@@ -24,7 +24,7 @@ public class ReservaServiceTests
         var acompanhante = CriarHospede(2, hotelId, "Acompanhante Teste", "98765432100");
         var service = new ReservaService(
             reservaRepo,
-            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
+            new QuartoRepositoryFake(new Quarto("101", categoriaQuartoId: 1, hotelId: hotelId), quartoId),
             contaRepo,
             new HotelContextoFake(hotelId),
             transacao,
@@ -453,7 +453,7 @@ public class ReservaServiceTests
 
         var service = new ReservaService(
             new ReservaRepositoryFake(reservaId, reserva),
-            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
+            new QuartoRepositoryFake(new Quarto("101", categoriaQuartoId: 1, hotelId: hotelId), quartoId),
             new ContaReservaRepositoryFake(),
             new HotelContextoFake(hotelId),
             new TransacaoFake(),
@@ -578,7 +578,7 @@ public class ReservaServiceTests
     {
         return new ReservaService(
             reservaRepo,
-            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), 10),
+            new QuartoRepositoryFake(new Quarto("101", categoriaQuartoId: 1, hotelId: hotelId), 10),
             contaRepo ?? new ContaReservaRepositoryFake(),
             new HotelContextoFake(hotelId),
             transacao ?? new TransacaoFake(),
@@ -598,7 +598,7 @@ public class ReservaServiceTests
     {
         return new ReservaService(
             reservaRepo,
-            new QuartoRepositoryFake(new Quarto("101", "Luxo", hotelId), quartoId),
+            new QuartoRepositoryFake(new Quarto("101", categoriaQuartoId: 1, hotelId: hotelId), quartoId),
             contaRepo,
             new HotelContextoFake(hotelId),
             transacao,
@@ -888,6 +888,8 @@ public class ReservaServiceTests
         public Task RemoverAsync(int quartoId, int hotelId) => Task.CompletedTask;
 
         public Task AdicionarAsync(Quarto quarto) => Task.CompletedTask;
+
+        public Task SalvarAlteracoesAsync() => Task.CompletedTask;
 
         public Task<bool> ExisteNumeroAsync(string numero, int hotelId) =>
             Task.FromResult(false);

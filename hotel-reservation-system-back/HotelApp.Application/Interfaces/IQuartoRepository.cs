@@ -11,6 +11,7 @@ namespace HotelApp.Application.Interfaces
         Task<List<Quarto>> ObterTodosAsync(int hotelId);
         Task RemoverAsync(int quartoId, int hotelId);
         Task AdicionarAsync(Quarto quarto);
+        Task SalvarAlteracoesAsync();
         Task<bool> ExisteNumeroAsync(string numero, int hotelId);
         Task<Quarto?> ObterPorNumeroAsync(string numero, int hotelId);
         Task<List<Quarto>> ObterPorIdsAsync(List<int> ids, int hotelId);
