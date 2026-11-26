@@ -26,6 +26,14 @@ export interface CriarHospede {
   telefone?: string | null;
 }
 
+export interface AtualizarHospede {
+  nome: string;
+  tipoDocumento: string;
+  documento: string;
+  email: string | null;
+  telefone: string | null;
+}
+
 
 @Injectable({
   providedIn: 'root',
@@ -45,6 +53,10 @@ export class HospedeService {
       this.apiUrl,
       dados
     );
+  }
+
+  atualizar(id: number, dados: AtualizarHospede): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, dados)
   }
 
 }
