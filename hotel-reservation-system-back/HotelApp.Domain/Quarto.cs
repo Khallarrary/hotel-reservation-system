@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration.Assemblies;
 using System.Text;
 
 namespace HotelApp.Domain
@@ -8,12 +9,13 @@ namespace HotelApp.Domain
     {
         public int Id { get; private set; }
         public string Numero { get; private set; }
-        public string Tipo { get; private set; }
+        public int CategoriaQuartoId { get; private set; }
         public int HotelId { get; private set; }
+        public bool Ativo { get; private set; }
 
 
         private Quarto() { }
-        public Quarto(string numero, string tipo, int hotelId) 
+        public Quarto(string numero, int categoriaQuartoId, int hotelId) 
         { 
            
 
@@ -22,20 +24,47 @@ namespace HotelApp.Domain
                 throw new ArgumentException("O quarto deve conter um numero");
             }
 
-            Numero = numero;
+            Numero = numero.Trim();
 
-            if (string.IsNullOrWhiteSpace(tipo))
+            if (categoriaQuartoId < 1)
             {
-                throw new ArgumentException("O quarto deve conter um tipo");
+                throw new ArgumentException("O quarto deve conter uma categoria.");
             }
 
-            if(hotelId < 1) 
+            if (hotelId < 1) 
             {
                 throw new ArgumentException("O quarto deve conter um hotel");
             }
 
-            Tipo = tipo;
+            Ativo = true;
+            CategoriaQuartoId = categoriaQuartoId;
             HotelId = hotelId;
+        }
+
+        public void Ativar()
+        {
+            Ativo = true;
+        }
+
+        public void Desativar()
+        {
+            Ativo = false;
+        }
+
+        public void Atualizar(string numero, int categoriaQuartoId)
+        {
+            if (string.IsNullOrWhiteSpace(numero))
+            {
+                throw new ArgumentException("O quarto deve conter um numero");
+            }
+                       
+            if (categoriaQuartoId < 1)
+            {
+                throw new ArgumentException("O quarto deve conter uma categoria.");
+            }
+
+            Numero = numero.Trim();
+            CategoriaQuartoId = categoriaQuartoId;
         }
     }
 }

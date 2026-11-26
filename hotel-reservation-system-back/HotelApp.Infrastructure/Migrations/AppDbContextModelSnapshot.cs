@@ -22,6 +22,48 @@ namespace HotelApp.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("HotelApp.Domain.CategoriaQuarto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("CapacidadeFisica")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("HotelId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LimiteComercial")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HotelId", "Nome")
+                        .IsUnique();
+
+                    b.ToTable("CategoriaQuartos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CategoriaQuartos_CapacidadeFisica", "\"CapacidadeFisica\" > 0");
+
+                            t.HasCheckConstraint("CK_CategoriaQuartos_LimiteComercial", "\"LimiteComercial\" > 0 AND \"LimiteComercial\" <= \"CapacidadeFisica\"");
+                        });
+                });
+
             modelBuilder.Entity("HotelApp.Domain.ContaReserva", b =>
                 {
                     b.Property<int>("Id")
@@ -165,6 +207,12 @@ namespace HotelApp.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("CategoriaQuartoId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("HotelId")
                         .HasColumnType("integer");
 
@@ -172,11 +220,9 @@ namespace HotelApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("HotelId", "CategoriaQuartoId");
 
                     b.HasIndex("HotelId", "Numero")
                         .IsUnique();
@@ -285,6 +331,15 @@ namespace HotelApp.Infrastructure.Migrations
                     b.ToTable("Usuario");
                 });
 
+            modelBuilder.Entity("HotelApp.Domain.CategoriaQuarto", b =>
+                {
+                    b.HasOne("HotelApp.Domain.Hotel", null)
+                        .WithMany()
+                        .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("HotelApp.Domain.Hospede", b =>
                 {
                     b.HasOne("HotelApp.Domain.Hotel", null)
@@ -299,6 +354,13 @@ namespace HotelApp.Infrastructure.Migrations
                     b.HasOne("HotelApp.Domain.Hotel", null)
                         .WithMany()
                         .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HotelApp.Domain.CategoriaQuarto", null)
+                        .WithMany()
+                        .HasForeignKey("HotelId", "CategoriaQuartoId")
+                        .HasPrincipalKey("HotelId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

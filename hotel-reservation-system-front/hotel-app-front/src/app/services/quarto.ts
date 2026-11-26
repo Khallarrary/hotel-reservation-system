@@ -3,6 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface DadosQuarto {
+  numero: string;
+  categoriaQuartoId: number;
+}
+
+export interface QuartoGestao extends DadosQuarto {
+  id: number;
+  ativo: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,8 +27,15 @@ export class QuartoService {
     return this.http.get<any[]>(this.apiUrl);
   }
 
-  criar(quarto: any) {
-    
-  return this.http.post(this.apiUrl, quarto);
-}
+  listarParaGestao(): Observable<QuartoGestao[]> {
+    return this.http.get<QuartoGestao[]>(`${this.apiUrl}/gestao`);
+  }
+
+  criar(quarto: DadosQuarto): Observable<void> {
+    return this.http.post<void>(this.apiUrl, quarto);
+  }
+
+  atualizar(id: number, quarto: DadosQuarto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, quarto);
+  }
 }

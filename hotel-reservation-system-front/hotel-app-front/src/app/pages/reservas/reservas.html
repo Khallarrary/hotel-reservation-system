@@ -26,18 +26,6 @@
     (caixa)="abrirCaixa()">
 </reserva-detalhes-modal>
 
-  <div *ngIf="mostrarForm" class="form-card">
-    <div class="card-header">
-      <h3>Novo Quarto</h3>
-      <button type="button" class="form-close" aria-label="Fechar cadastro de quarto" title="Fechar" (click)="alterarFormularioQuarto()">&times;</button>
-    </div>
-    <form class="form-grid">
-      <input type="text" [(ngModel)]="novoQuarto.numero" placeholder="Numero do quarto" name="numero">
-      <input type="text" [(ngModel)]="novoQuarto.tipo" placeholder="Tipo (ex: Suite Luxo)" name="tipo">
-      <button type="button" class="btn-secondary" (click)="criarQuarto()">Salvar Quarto</button>
-    </form>
-  </div>
-
   <div *ngIf="mostrarFormReserva" class="form-card form-card-reserva">
     <div class="card-header">
       <h3>Nova Reserva</h3>

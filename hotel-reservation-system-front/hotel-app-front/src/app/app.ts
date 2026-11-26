@@ -39,11 +39,9 @@ export class AppComponent {
     this.menuAberto = !this.menuAberto;
   }
 
-  abrirCadastroQuarto(): void {
+  abrirGestaoAcomodacoes(): void {
     this.menuAberto = false;
-    this.router.navigate(['/reservas'], {
-      queryParams: { acao: 'novo-quarto' }
-    });
+    this.router.navigate(['/acomodacoes']);
   }
 
   abrirGerenciamentoUsuarios(): void {

@@ -26,6 +26,13 @@ namespace HotelApp.Api.Controllers
             return Ok(quartos);
         }
 
+        [Authorize(Roles = "Gestor")]
+        [HttpGet("gestao")]
+        public async Task<ActionResult<List<QuartoGestaoDto>>> ObterParaGestao()
+        {
+            return Ok(await _service.ObterParaGestao());
+        }
+
         [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> getById(int id) {
@@ -43,10 +50,18 @@ namespace HotelApp.Api.Controllers
 
         [Authorize(Roles = "Gestor")]
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] QuartoDto request)
+        public async Task<IActionResult> Post([FromBody] CriarQuartoDto request)
         {
-            await _service.Criar(request.numero, request.tipo);
+            await _service.Criar(request.Numero, request.CategoriaQuartoId);
             return Ok();
+        }
+
+        [Authorize(Roles = "Gestor")]
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Atualizar(int id, [FromBody] AtualizarQuartoDto request)
+        {
+            await _service.Atualizar(id, request.Numero, request.CategoriaQuartoId);
+            return NoContent();
         }
 
         [Authorize(Roles = "Gestor")]

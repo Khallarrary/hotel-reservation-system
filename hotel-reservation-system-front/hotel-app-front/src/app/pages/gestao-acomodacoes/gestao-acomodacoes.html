@@ -1,0 +1,159 @@
+<section class="gestao">
+  <header class="gestao-header">
+    <h1>Gestão de Acomodações</h1>
+    @if (aba() === 'quartos') {
+      <button type="button" class="acao-principal" (click)="abrirQuarto()"
+              [disabled]="carregando() || erroLista() || salvando() || !temCategoriaAtiva() || formularioQuarto !== null">
+        Novo quarto
+      </button>
+    } @else {
+      <button type="button" class="acao-principal" (click)="abrirCategoria()"
+              [disabled]="carregando() || erroLista() || salvando() || formularioCategoria !== null">
+        Nova categoria
+      </button>
+    }
+  </header>
+
+  <nav class="abas" aria-label="Gestão de acomodações">
+    <a routerLink="/acomodacoes" [attr.aria-current]="aba() === 'quartos' ? 'page' : null">Quartos</a>
+    <a routerLink="/acomodacoes" [queryParams]="{ aba: 'categorias' }"
+       [attr.aria-current]="aba() === 'categorias' ? 'page' : null">Categorias</a>
+  </nav>
+
+  @if (sucesso()) {
+    <p class="mensagem sucesso" role="status">{{ sucesso() }}</p>
+  }
+  @if (erroFormulario()) {
+    <p class="mensagem erro" role="alert">{{ erroFormulario() }}</p>
+  }
+
+  @if (carregando()) {
+    <p class="estado" role="status">Carregando acomodações...</p>
+  } @else if (erroLista()) {
+    <div class="estado" role="alert">
+      <p>Não foi possível carregar quartos e categorias.</p>
+      <button type="button" class="acao-secundaria" (click)="carregar()">Tentar novamente</button>
+    </div>
+  } @else if (aba() === 'quartos') {
+    @if (formularioQuarto; as formulario) {
+      <form class="formulario" (ngSubmit)="salvarQuarto()">
+        <h2>{{ formulario.id === null ? 'Novo quarto' : 'Editar quarto' }}</h2>
+        <fieldset [disabled]="salvando()">
+          <label for="quarto-numero">
+            Número
+            <input #primeiroCampo id="quarto-numero" name="numero" [(ngModel)]="formulario.numero" required>
+          </label>
+          <label for="quarto-categoria">
+            Categoria
+            <select id="quarto-categoria" name="categoria" [(ngModel)]="formulario.categoriaQuartoId" required>
+              <option [ngValue]="null" disabled>Selecione uma categoria</option>
+              @for (categoria of categorias(); track categoria.id) {
+                @if (categoria.ativa || categoria.id === formulario.categoriaOriginalId) {
+                  <option [ngValue]="categoria.id">{{ categoria.nome }}{{ categoria.ativa ? '' : ' (inativa)' }}</option>
+                }
+              }
+            </select>
+          </label>
+        </fieldset>
+        <div class="acoes">
+          <button class="acao-secundaria" type="button" (click)="fecharFormulario()" [disabled]="salvando()">Cancelar</button>
+          <button class="acao-principal" type="submit" [disabled]="salvando() || !formulario.numero.trim() || formulario.categoriaQuartoId === null">
+            {{ salvando() ? 'Salvando...' : 'Salvar quarto' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (!temCategoriaAtiva() && !formularioQuarto) {
+      <p class="estado">
+        Nenhuma categoria ativa para novos quartos.
+        <a routerLink="/acomodacoes" [queryParams]="{ aba: 'categorias' }">Ver categorias</a>
+      </p>
+    }
+    @if (!quartos().length && temCategoriaAtiva()) {
+      <p class="estado">Nenhum quarto cadastrado.</p>
+    }
+    @if (quartos().length) {
+      <div class="tabela">
+        <table aria-label="Quartos cadastrados">
+          <thead><tr><th>Número</th><th>Categoria</th><th>Situação</th><th>Ações</th></tr></thead>
+          <tbody>
+            @for (quarto of quartos(); track quarto.id) {
+              <tr>
+                <th scope="row">{{ quarto.numero }}</th>
+                <td>{{ categoriasPorId().get(quarto.categoriaQuartoId)?.nome ?? 'Categoria indisponível' }}</td>
+                <td><span class="status" [class.ativo]="quarto.ativo">{{ quarto.ativo ? 'Ativo' : 'Inativo' }}</span></td>
+                <td>
+                  <button class="acao-secundaria" type="button" (click)="abrirQuarto(quarto)" [disabled]="salvando() || formularioQuarto !== null"
+                          [attr.aria-label]="'Editar quarto ' + quarto.numero">Editar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else {
+    @if (formularioCategoria; as formulario) {
+      <form class="formulario" #categoriaForm="ngForm" (ngSubmit)="salvarCategoria()">
+        <h2>{{ formulario.id === null ? 'Nova categoria' : 'Editar categoria' }}</h2>
+        <fieldset [disabled]="salvando()">
+          <label for="categoria-nome">
+            Nome
+            <input #primeiroCampo id="categoria-nome" name="nome" [(ngModel)]="formulario.dados.nome" maxlength="100" required>
+          </label>
+          <label for="categoria-descricao" class="campo-largo">
+            Descrição
+            <textarea id="categoria-descricao" name="descricao" [(ngModel)]="formulario.dados.descricao" maxlength="500" rows="2"></textarea>
+          </label>
+          <label for="categoria-capacidade">
+            Capacidade física
+            <input id="categoria-capacidade" type="number" name="capacidadeFisica"
+                   [(ngModel)]="formulario.dados.capacidadeFisica" min="1" step="1" required>
+          </label>
+          <label for="categoria-limite">
+            Limite comercial
+            <input id="categoria-limite" type="number" name="limiteComercial"
+                   [(ngModel)]="formulario.dados.limiteComercial" min="1" step="1" required>
+          </label>
+        </fieldset>
+        <div class="acoes">
+          <button class="acao-secundaria" type="button" (click)="fecharFormulario()" [disabled]="salvando()">Cancelar</button>
+          <button class="acao-principal" type="submit" [disabled]="salvando() || categoriaForm.invalid || !formulario.dados.nome.trim()">
+            {{ salvando() ? 'Salvando...' : 'Salvar categoria' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (!categorias().length) {
+      <p class="estado">Nenhuma categoria cadastrada.</p>
+    } @else {
+      <div class="tabela">
+        <table aria-label="Categorias cadastradas">
+          <thead><tr><th>Categoria</th><th>Capacidade física</th><th>Limite comercial</th><th>Quartos</th><th>Situação</th><th>Ações</th></tr></thead>
+          <tbody>
+            @for (categoria of categorias(); track categoria.id) {
+              <tr>
+                <th scope="row">
+                  {{ categoria.nome }}
+                  @if (categoria.descricao) {
+                    <small>{{ categoria.descricao }}</small>
+                  }
+                </th>
+                <td>{{ categoria.capacidadeFisica }}</td>
+                <td>{{ categoria.limiteComercial }}</td>
+                <td>{{ quartosPorCategoria().get(categoria.id) ?? 0 }}</td>
+                <td><span class="status" [class.ativo]="categoria.ativa">{{ categoria.ativa ? 'Ativa' : 'Inativa' }}</span></td>
+                <td>
+                  <button class="acao-secundaria" type="button" (click)="abrirCategoria(categoria)" [disabled]="salvando() || formularioCategoria !== null"
+                          [attr.aria-label]="'Editar categoria ' + categoria.nome">Editar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

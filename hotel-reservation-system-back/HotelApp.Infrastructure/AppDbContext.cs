@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using HotelApp.Domain;
 
-
 public class AppDbContext : DbContext
 {
     public DbSet <Reserva> Reservas { get; set; }
@@ -13,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet <Hotel> Hoteis { get; set; }
     public DbSet<Hospede> Hospedes { get; set; }
     public DbSet<ReservaHospede> ReservaHospedes { get; set; }
+    public DbSet<CategoriaQuarto> CategoriaQuartos { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -37,6 +37,22 @@ public class AppDbContext : DbContext
             .HasOne<Hotel>()
             .WithMany() 
             .HasForeignKey(u => u.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Quarto>()
+            .HasOne<CategoriaQuarto>()
+            .WithMany()
+            .HasForeignKey(q => new 
+            { 
+                q.HotelId, 
+                q.CategoriaQuartoId 
+            })
+            .HasPrincipalKey(c => new 
+            { 
+                c.HotelId,
+                c.Id
+                
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Quarto>()
@@ -122,6 +138,33 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Reserva>()
         .Navigation(reserva => reserva.Hospedes)
         .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        modelBuilder.Entity<CategoriaQuarto>(entity =>
+        {
+            entity.Property(categoria => categoria.Nome)
+            .HasMaxLength(CategoriaQuarto.TamanhoMaximoNome)
+            .IsRequired();
+
+            entity.Property(categoria => categoria.Descricao)
+            .HasMaxLength(CategoriaQuarto.TamanhoMaximoDescricao);
+
+            entity.HasIndex(categoria => new
+            {
+                categoria.HotelId, categoria.Nome
+            }).IsUnique();
+
+            entity.HasOne<Hotel>().WithMany()
+            .HasForeignKey(categoria => categoria.HotelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            entity.ToTable("CategoriaQuartos", tabela =>
+            {
+                tabela.HasCheckConstraint("CK_CategoriaQuartos_CapacidadeFisica", "\"CapacidadeFisica\" > 0");
+
+                tabela.HasCheckConstraint("CK_CategoriaQuartos_LimiteComercial",
+                "\"LimiteComercial\" > 0 AND \"LimiteComercial\" <= \"CapacidadeFisica\"");
+            });
+        });
     }
 
 }

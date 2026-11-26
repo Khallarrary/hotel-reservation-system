@@ -33,6 +33,8 @@ namespace HotelApp.Infrastructure
             await _context.SaveChangesAsync();
         }
 
+        public Task SalvarAlteracoesAsync() => _context.SaveChangesAsync();
+
         public async Task RemoverAsync(int quartoId, int hotelId)
         {
             var quarto = await _context.Quartos.FirstOrDefaultAsync(q => q.Id == quartoId && q.HotelId == hotelId);

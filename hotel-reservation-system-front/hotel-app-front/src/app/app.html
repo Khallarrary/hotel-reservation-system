@@ -47,9 +47,9 @@
 
           <div class="menu-divider"></div>
 
-          <button *ngIf="ehGestor()" type="button" class="menu-item" (click)="abrirCadastroQuarto()">
-            <span class="menu-item-icon">+</span>
-            Criar quarto
+          <button *ngIf="ehGestor()" type="button" class="menu-item" (click)="abrirGestaoAcomodacoes()">
+            <span class="menu-item-icon" aria-hidden="true">&#9881;</span>
+            Gestão de Acomodações
           </button>
 
           <button *ngIf="ehGestor()" type="button" class="menu-item" (click)="abrirGerenciamentoUsuarios()">

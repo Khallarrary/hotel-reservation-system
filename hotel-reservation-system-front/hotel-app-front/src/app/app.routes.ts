@@ -4,6 +4,7 @@ import { ReservasLista } from './pages/reservas-lista/reservas-lista';
 import { ReservaCaixa } from './pages/reserva-caixa/reserva-caixa';
 import { Login } from './pages/login/login'
 import { authGuard } from '../app/guards/auth-guard';
+import { gestorGuard } from './guards/gestor-guard';
 import { Usuarios } from '../app/pages/usuarios/usuarios';
 
 export const routes: Routes = [
@@ -12,5 +13,11 @@ export const routes: Routes = [
   { path: 'reservas-lista', component: ReservasLista, canActivate: [authGuard] },
   { path: 'reservas/:id/caixa', component: ReservaCaixa, canActivate: [authGuard] },
   { path: 'login', component: Login },
-  { path: 'usuarios', component: Usuarios, canActivate: [authGuard] }
+  { path: 'usuarios', component: Usuarios, canActivate: [authGuard] },
+  {
+    path: 'acomodacoes',
+    loadComponent: () => import('./pages/gestao-acomodacoes/gestao-acomodacoes')
+      .then(modulo => modulo.GestaoAcomodacoes),
+    canActivate: [authGuard, gestorGuard]
+  }
 ]
